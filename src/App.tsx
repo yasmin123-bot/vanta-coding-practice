@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { messages, type Locale } from './i18n/messages';
+import StartLesson from './components/StartLesson';
 
 function readSavedLocale(): Locale {
   try {
@@ -12,21 +13,114 @@ function readSavedLocale(): Locale {
 function App() {
   const [locale, setLocale] = useState<Locale>(readSavedLocale);
   const [menuOpen, setMenuOpen] = useState(false);
+  const heroLogoRef = useRef<HTMLDivElement>(null);
+  const coreIdeaRef = useRef<HTMLElement>(null);
+  const journeyRef = useRef<HTMLElement>(null);
   const copy = messages[locale];
   const isArabic = locale === 'ar';
+  const isLessonRoute = window.location.pathname.replace(/\/+$/, '') === '/lesson/start';
 
   useEffect(() => {
     document.documentElement.lang = locale;
     document.documentElement.dir = isArabic ? 'rtl' : 'ltr';
-    document.title = copy.metaTitle;
-    document.querySelector('meta[name="description"]')?.setAttribute('content', copy.metaDescription);
+    document.title = isLessonRoute ? copy.lesson.metaTitle : copy.metaTitle;
+    document.querySelector('meta[name="description"]')?.setAttribute(
+      'content',
+      isLessonRoute ? copy.lesson.metaDescription : copy.metaDescription,
+    );
 
     try {
       window.localStorage.setItem('vanta-locale', locale);
     } catch {
       // The language switch still works for this session when storage is unavailable.
     }
-  }, [isArabic, locale]);
+  }, [isArabic, isLessonRoute, locale]);
+
+  useEffect(() => {
+    const logo = heroLogoRef.current;
+    if (!logo) return;
+
+    let revealFrame = window.requestAnimationFrame(() => {
+      logo.classList.add('is-revealed');
+    });
+    let scrollFrame = 0;
+    let isAwayFromTop = window.scrollY > 48;
+    logo.classList.toggle('is-scrolled', isAwayFromTop);
+
+    const syncScrollState = () => {
+      if (scrollFrame !== 0) return;
+
+      scrollFrame = window.requestAnimationFrame(() => {
+        scrollFrame = 0;
+        const nextAwayState = window.scrollY > 48;
+        if (nextAwayState !== isAwayFromTop) {
+          logo.classList.toggle('is-scrolled', nextAwayState);
+          isAwayFromTop = nextAwayState;
+        }
+      });
+    };
+
+    window.addEventListener('scroll', syncScrollState, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', syncScrollState);
+      window.cancelAnimationFrame(revealFrame);
+      if (scrollFrame !== 0) window.cancelAnimationFrame(scrollFrame);
+    };
+  }, []);
+
+  useEffect(() => {
+    const section = coreIdeaRef.current;
+    if (!section) return;
+
+    if (
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+      typeof IntersectionObserver === 'undefined'
+    ) {
+      section.classList.add('is-visible');
+      return;
+    }
+
+    section.classList.add('is-pending');
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        section.classList.remove('is-pending');
+        section.classList.add('is-visible');
+        observer.unobserve(section);
+      },
+      { threshold: 0.16, rootMargin: '0px 0px -6% 0px' },
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const section = journeyRef.current;
+    if (!section) return;
+
+    if (
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+      typeof IntersectionObserver === 'undefined'
+    ) {
+      section.classList.add('is-visible');
+      return;
+    }
+
+    section.classList.add('is-pending');
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        section.classList.remove('is-pending');
+        section.classList.add('is-visible');
+        observer.unobserve(section);
+      },
+      { threshold: 0.16, rootMargin: '0px 0px -6% 0px' },
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
 
   const switchLocale = () => {
     setLocale((current) => (current === 'ar' ? 'en' : 'ar'));
@@ -34,6 +128,10 @@ function App() {
   };
 
   const closeMenu = () => setMenuOpen(false);
+
+  if (isLessonRoute) {
+    return <StartLesson locale={locale} onSwitchLocale={switchLocale} />;
+  }
 
   return (
     <div className={`app-shell ${isArabic ? 'is-arabic' : 'is-english'}`}>
@@ -94,45 +192,114 @@ function App() {
             <p className="hero-note"><span className="note-mark" aria-hidden="true">✦</span>{copy.hero.note}</p>
           </div>
 
-          <aside className="hero-visual" aria-label={isArabic ? 'رسم توضيحي لفلسفة التعلّم في VANTA' : 'Illustration of the VANTA learning philosophy'}>
-            <div className="visual-corner visual-corner-top" aria-hidden="true" />
-            <div className="visual-corner visual-corner-bottom" aria-hidden="true" />
-            <div className="visual-orbit orbit-one" aria-hidden="true" />
-            <div className="visual-orbit orbit-two" aria-hidden="true" />
-            <div className="visual-core">
-              <span className="visual-index">01 / 06</span>
-              <img className="visual-logo" src="/brand/vanta-logo.png" alt="" />
-              <span className="visual-core-label">{copy.hero.visualLabel}</span>
+          <div className="hero-visual">
+            <div
+              ref={heroLogoRef}
+              className="hero-brand-lockup"
+              role="img"
+              aria-label="VANTA — Create Beyond>"
+            >
+              <img
+                className="hero-brand-emblem"
+                src="/brand/vanta-emblem.png"
+                alt=""
+                aria-hidden="true"
+                width={145}
+                height={121}
+                draggable={false}
+              />
+              <img
+                className="hero-brand-wordmark"
+                src="/brand/vanta-wordmark.png"
+                alt=""
+                aria-hidden="true"
+                width={287}
+                height={72}
+                draggable={false}
+              />
             </div>
-            <div className="visual-copy-card">
-              <span className="visual-kicker">{copy.hero.visualLabel}</span>
-              <h2>{copy.hero.visualTitle}</h2>
-              <p>{copy.hero.visualBody}</p>
-              <div className="visual-card-footer">
-                <span className="signal-dot" aria-hidden="true" />
-                <span>{copy.hero.visualFoot}</span>
-              </div>
-            </div>
-            <span className="visual-coordinate coordinate-one" aria-hidden="true">V / 001</span>
-            <span className="visual-coordinate coordinate-two" aria-hidden="true">LEARN — BUILD</span>
-          </aside>
+          </div>
         </section>
 
-        <section className="journey-section section-frame" id="journey" aria-labelledby="journey-title">
+        <section
+          ref={coreIdeaRef}
+          className="core-idea-section section-frame"
+          id="approach"
+          aria-labelledby="core-idea-title"
+        >
+          <div className="core-idea-copy">
+            <p className="eyebrow"><span className="eyebrow-line" />{copy.coreIdea.eyebrow}</p>
+            <h2 id="core-idea-title" className="core-idea-title">{copy.coreIdea.title}</h2>
+            <p className="core-idea-description">{copy.coreIdea.description}</p>
+            <div className="core-idea-roadmap">
+              <span className="core-idea-roadmap-label">{copy.coreIdea.visionLabel}</span>
+              <p>{copy.coreIdea.roadmapNote}</p>
+            </div>
+          </div>
+
+          <div className="learning-model" role="group" aria-labelledby="learning-loop-title">
+            <div className="learning-model-header">
+              <h3 id="learning-loop-title" className="learning-model-title">{copy.coreIdea.loopLabel}</h3>
+              <span className="learning-model-code" aria-hidden="true">V / 01</span>
+            </div>
+            <ol className="learning-steps">
+              {copy.coreIdea.steps.map((step, index) => (
+                <li className="learning-step" key={step.title}>
+                  <span className="learning-step-number" aria-hidden="true">0{index + 1}</span>
+                  <div className="learning-step-copy">
+                    <h4>{step.title}</h4>
+                    <p>{step.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <div className="learning-structure">
+              <p className="learning-structure-label">{copy.coreIdea.structureLabel}</p>
+              <ul className="learning-structure-list">
+                {copy.coreIdea.structure.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section
+          ref={journeyRef}
+          className="journey-section section-frame"
+          id="journey"
+          aria-labelledby="journey-title"
+        >
           <div className="section-heading">
             <p className="eyebrow"><span className="eyebrow-line" />{copy.journey.eyebrow}</p>
             <h2 id="journey-title">{copy.journey.title}</h2>
             <p className="section-description">{copy.journey.description}</p>
+            <p className="journey-roadmap-note">
+              <span className="note-mark" aria-hidden="true">✦</span>
+              {copy.journey.roadmapNote}
+            </p>
           </div>
           <ol className="journey-list">
-            {copy.journey.steps.map((step, index) => (
-              <li className="journey-step" key={step.title}>
-                <span className="step-number">0{index + 1}</span>
-                <span className="step-connector" aria-hidden="true" />
-                <h3>{step.title}</h3>
-                <p>{step.body}</p>
-              </li>
-            ))}
+            {copy.journey.steps.map((step, index) => {
+              const stageContent = (
+                <>
+                  <span className="step-number" aria-hidden="true">0{index + 1}</span>
+                  <div className="journey-step-copy">
+                    <p className="journey-step-level">{step.level}</p>
+                    <h3>{step.title}</h3>
+                    <p>{step.body}</p>
+                  </div>
+                </>
+              );
+
+              return (
+                <li className={`journey-step ${index === 0 ? 'journey-step-is-link' : ''}`} key={step.title}>
+                  {index === 0 ? (
+                    <a className="journey-stage-link" href="/lesson/start">
+                      {stageContent}
+                    </a>
+                  ) : stageContent}
+                </li>
+              );
+            })}
           </ol>
         </section>
 
