@@ -5,7 +5,8 @@
 - The VANTA logo and wordmark in `public/brand/vanta-logo.png` are a direct crop of the user-provided VANTA brand identity reference image (provided with the task).
 - Crop bounds in the 1536 × 1024 reference: x=88–530, y=26–147. The logo was not redrawn or redesigned.
 - The crop retains the reference's dark background so the original mark and wordmark remain intact. Replace it only if the user supplies an official standalone asset with equivalent or higher fidelity.
-- The original HTML exercise is preserved as content data in `src/content/initialHtmlExercise.ts` for a later learning feature; it is not presented as a working code runner in this landing-page task.
+- `public/brand/vanta-emblem.png` and `public/brand/vanta-wordmark.png` are transparent layers derived from that same reference crop; they preserve the supplied logo artwork and are not newly generated or redesigned.
+- The original HTML exercise remains preserved in `src/content/initialHtmlExercise.ts` and is reused in the available five-lesson HTML Fundamentals path. Code examples are read-only; the application does not execute code.
 
 ## Design tokens
 

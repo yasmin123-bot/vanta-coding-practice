@@ -1,3 +1,5 @@
+import { learningSystemMessages, type LearningSystemCopy } from './learningSystem';
+
 export type Locale = 'ar' | 'en';
 
 type NumberedItem = {
@@ -126,9 +128,13 @@ type LandingCopy = {
     title: string;
     description: string;
     roadmapNote: string;
+    pathCatalogAction: string;
+    availableStatus: string;
+    futureStatus: string;
     steps: JourneyItem[];
   };
   lesson: LessonCopy;
+  learningSystem: LearningSystemCopy;
   vision: {
     eyebrow: string;
     title: string;
@@ -188,11 +194,11 @@ export const messages: Record<Locale, LandingCopy> = {
       eyebrow: 'فكرة VANTA',
       title: 'مش مجرد كورس... اتعلّم بالممارسة',
       description:
-        'VANTA منصة عملية لتعلّم البرمجة للمبتدئين. تكتب الشيفرة بنفسك، تشغّلها، تكتشف الخطأ وتفهم كيف تصلحه. ومع مسارات ودروس متدرجة، تنتقل من الأساسيات إلى تحديات ومشاريع تنمّي مهارتك في حلّ المشكلات.',
+        'VANTA منصة عملية لتعلّم البرمجة للمبتدئين. تقوم رؤيتها على أن يكتب المتعلم الشيفرة ويفهم أخطاءه ويصلحها؛ وتبدأ التجربة الحالية بمسار HTML ودروسه، بينما تظل أدوات التشغيل والمساعدة والتحديات ضمن الرؤية المستقبلية.',
       visionLabel: 'رؤية المنصة — تُبنى على مراحل',
       roadmapNote:
-        'هذا وصف للتجربة المستهدفة؛ المسارات والدروس، تشغيل الشيفرة، المساعدة الذكية والتلميحات، التحديات والمشاريع والمسابقات ليست وظائف مفعّلة في النسخة التأسيسية.',
-      loopLabel: 'حلقة التعلّم',
+        'مسار أساسيات HTML وخمسة دروسه متاحة الآن. تشغيل الشيفرة والمساعدة الذكية والتلميحات والتحديات والمشاريع والمسابقات ما زالت ضمن الرؤية المستقبلية.',
+      loopLabel: 'حلقة التعلّم المستهدفة',
       steps: [
         { title: 'اكتب', body: 'ابدأ بالشيفرة بنفسك، لا بالمشاهدة وحدها.' },
         { title: 'شغّل', body: 'جرّبها ولاحظ ما تعلّمك إياه النتيجة.' },
@@ -208,7 +214,10 @@ export const messages: Record<Locale, LandingCopy> = {
       description:
         'خمس محطات مقترحة تساعد المبتدئ على فهم المفاهيم، ثم تطبيقها تدريجيًا حتى يجمعها في مشاريع صغيرة.',
       roadmapNote:
-        'تصوّر للمسار المستقبلي؛ لا توجد دروس أو تحديات أو مشاريع أو متابعة تقدّم مفعّلة حاليًا.',
+        'ابدأ بدرس HTML، أو افتح مسار الأساسيات المتاح. الممارسة والتحديات والمشاريع محطات مستقبلية وليست مفعّلة بعد.',
+      pathCatalogAction: 'استكشف كل مسارات التعلّم',
+      availableStatus: 'متاح الآن',
+      futureStatus: 'ضمن الرؤية المستقبلية',
       steps: [
         {
           title: 'البداية',
@@ -241,14 +250,14 @@ export const messages: Record<Locale, LandingCopy> = {
       metaTitle: 'VANTA — أساسيات HTML',
       metaDescription: 'درس HTML تفاعلي من ست خطوات واختبار قصير بخمسة أسئلة.',
       stageLabel: '01 / البداية • الأساسيات',
-      backToJourney: 'العودة إلى رحلة التعلّم',
+      backToJourney: 'العودة إلى مسار HTML',
       eyebrow: 'البداية • أساسيات HTML',
       title: 'أول صفحة لك بـ HTML',
       intro: 'تعلّم فكرة HTML خطوة بخطوة، ثم اختبر فهمك بمثال بسيط وأسئلة قصيرة.',
       objectiveLabel: 'هدف الدرس',
       objectiveText: 'افهم كيف تصف HTML الصفحة، وما الفرق بين الوسم والعنصر، وكيف تكوّن عنوانًا وفقرة.',
       learningProgress: 'الشرح {current} / {total}',
-      learningProgressNote: 'مؤشر مؤقت داخل الدرس الحالي؛ لا يتم حفظ التقدّم.',
+      learningProgressNote: 'مؤشر داخل هذا الدرس؛ موضع الشرح لا يُحفظ عند مغادرته.',
       learningLabel: 'افهم الفكرة',
       htmlStructureCaption: 'بنية الصفحة ومحتواها',
       learningSteps: [
@@ -278,20 +287,22 @@ export const messages: Record<Locale, LandingCopy> = {
       paragraphRole: 'فقرة ترحيب',
       practiceLabel: 'تطبيق سريع',
       quizTitle: 'خمسة أسئلة قصيرة',
-      quizIntro: 'سؤال واحد في كل مرة. إذا أخطأت، سنوضح السبب ونترك لك فرصة للمحاولة.',
+      quizIntro: 'اختَر أفضل إجابة من أربعة اختيارات. إذا أخطأت، سنوضح الفكرة ونترك لك فرصة للمحاولة.',
       quizProgress: 'السؤال {current} / {total}',
       quizProgressNote: 'الإجابات والنتيجة مؤقتة ولا يتم حفظها.',
       questions: [
         {
           id: 'opening-tag',
-          prompt: 'أي جزء هو وسم الفتح في عنصر العنوان؟',
+          prompt: 'أي جزء هو وسم الفتح لعنصر عنوان رئيسي؟',
           choices: [
             { id: 'h1', label: '<h1>', kind: 'code' },
             { id: 'closing-h1', label: '</h1>', kind: 'code' },
+            { id: 'p-open', label: '<p>', kind: 'code' },
+            { id: 'plain-h1', label: 'h1 من دون أقواس زاوية', kind: 'text' },
           ],
           correctChoiceId: 'h1',
-          correctFeedback: 'صحيح. وسم الفتح يحدد بداية العنوان، ولا يحتوي على شرطة مائلة.',
-          incorrectFeedback: 'ربما اختلط عليك الفتح والإغلاق. الشرطة المائلة / تعني أن الوسم يغلق العنصر؛ وسم الفتح هو <h1>.',
+          correctFeedback: 'صحيح. يبدأ عنصر العنوان بوسم الفتح <h1>، من دون شرطة مائلة.',
+          incorrectFeedback: 'وسم الفتح يُكتب بين < و > ويبدأ العنصر. الشرطة المائلة في </h1> تعني الإغلاق، أما <p> فيبدأ فقرة.',
           reviewTopic: 'وسم الفتح ووسم الإغلاق',
         },
         {
@@ -300,10 +311,12 @@ export const messages: Record<Locale, LandingCopy> = {
           choices: [
             { id: 'main-heading', label: 'أنه عنوان رئيسي', kind: 'text' },
             { id: 'paragraph', label: 'أنه فقرة', kind: 'text' },
+            { id: 'subheading', label: 'أنه عنوان فرعي', kind: 'text' },
+            { id: 'link', label: 'أنه رابط', kind: 'text' },
           ],
           correctChoiceId: 'main-heading',
           correctFeedback: 'أحسنت. هذا الوسم يوضح أن المحتوى عنوان رئيسي، وليس فقرة.',
-          incorrectFeedback: 'اختلط عليك نوعا المحتوى: <h1> للعنوان الرئيسي، أما <p> فيستخدم للفقرة.',
+          incorrectFeedback: '<h1> يعرّف عنوان الصفحة أو موضوعها الأهم؛ <p> للفقرة، و<h2> لعنوان فرعي، و<a> للرابط.',
           reviewTopic: 'الفرق بين العنوان والفقرة',
         },
         {
@@ -312,10 +325,12 @@ export const messages: Record<Locale, LandingCopy> = {
           choices: [
             { id: 'whole-element', label: '<h1>Hello</h1>', kind: 'code' },
             { id: 'opening-only', label: '<h1>', kind: 'code' },
+            { id: 'missing-close', label: '<h1>Hello', kind: 'code' },
+            { id: 'closing-only', label: '</h1>', kind: 'code' },
           ],
           correctChoiceId: 'whole-element',
           correctFeedback: 'بالضبط. العنصر هو وسم الفتح والمحتوى ووسم الإغلاق معًا.',
-          incorrectFeedback: 'هنا اختلط الوسم بالعنصر: <h1> هو الوسم فقط، أما <h1>Hello</h1> فهو العنصر كاملًا.',
+          incorrectFeedback: 'العنصر الكامل يجمع وسم الفتح <h1> والمحتوى Hello ووسم الإغلاق </h1>؛ أي جزء منفرد لا يكفي.',
           reviewTopic: 'الفرق بين الوسم والعنصر',
         },
         {
@@ -324,10 +339,12 @@ export const messages: Record<Locale, LandingCopy> = {
           choices: [
             { id: 'valid-paragraph', label: '<p>Welcome to VANTA.</p>', kind: 'code' },
             { id: 'wrong-closing-tag', label: '<p>Welcome to VANTA.</h1>', kind: 'code' },
+            { id: 'wrong-opener', label: '<h1>Welcome to VANTA.</h1>', kind: 'code' },
+            { id: 'wrong-close-div', label: '<p>Welcome to VANTA.</div>', kind: 'code' },
           ],
           correctChoiceId: 'valid-paragraph',
           correctFeedback: 'صحيح. تبدأ الفقرة بوسم <p> وتنتهي بالوسم المطابق </p>.',
-          incorrectFeedback: 'انتبه لتطابق الوسمين: فتحت الفقرة بـ <p>، لذلك يجب إغلاقها بـ </p> وليس وسم العنوان.',
+          incorrectFeedback: 'الفقرة الصحيحة تبدأ بـ <p> وتنتهي بـ </p>. وسم <h1> ينشئ عنوانًا، كما يجب أن يطابق وسم الإغلاق وسم الفتح.',
           reviewTopic: 'وسم الفقرة وإغلاقه الصحيح',
         },
         {
@@ -336,10 +353,12 @@ export const messages: Record<Locale, LandingCopy> = {
           choices: [
             { id: 'heading-paragraph', label: 'عنوان رئيسي يتبعه نص ترحيبي في فقرة', kind: 'text' },
             { id: 'two-paragraphs', label: 'فقرتان متتاليتان', kind: 'text' },
+            { id: 'paragraph-heading', label: 'فقرة يتبعها عنوان رئيسي', kind: 'text' },
+            { id: 'heading-link', label: 'عنوان يتبعه رابط', kind: 'text' },
           ],
           correctChoiceId: 'heading-paragraph',
           correctFeedback: 'رائع. السطر الأول عنوان رئيسي، والثاني فقرة ترحيب.',
-          incorrectFeedback: 'اقرأ الوسم في بداية كل سطر: <h1> يحدد العنوان، و <p> تحدد الفقرة.',
+          incorrectFeedback: 'اقرأ وسم بداية كل سطر: <h1> يعني عنوانًا رئيسيًا أولًا، ثم <p> تعني فقرة ترحيب، لا فقرة ثانية أو رابطًا.',
           reviewTopic: 'قراءة العنوان والفقرة معًا',
         },
       ],
@@ -359,13 +378,14 @@ export const messages: Record<Locale, LandingCopy> = {
         three: 'كويس! الأساس موجود. راجع النقاط المحددة وحاول مرة أخرى.',
         low: 'ولا يهمك! الخطأ جزء من التعلّم. راجع النقاط المحددة وابدأ من جديد.',
       },
-      resultNote: 'الدرجة للمراجعة فقط، وليست حكمًا على مستواك. النتيجة مؤقتة ولا يتم حفظها.',
+      resultNote: 'الدرجة للمراجعة فقط. إكمال الدرس يظهر في جلسة المتصفح الحالية، ولا تُحفظ النتيجة أو البيانات بشكل دائم.',
       reviewTitle: 'نقاط للمراجعة',
       noMissedQuestions: 'أجبت عن كل الأسئلة بشكل صحيح من أول محاولة.',
       retryQuiz: 'إعادة الاختبار',
       outcomeLabel: 'بعد هذا الدرس',
       outcomeBody: 'ستكون قادرًا على قراءة HTML بسيطة، وفهم الفرق بين الوسم والعنصر، واستخدام <h1> للعنوان و <p> للفقرة.',
     },
+    learningSystem: learningSystemMessages.ar,
     vision: {
       eyebrow: 'لماذا VANTA؟',
       title: 'البرمجة تُفهم حين تضع يدك عليها.',
@@ -390,12 +410,12 @@ export const messages: Record<Locale, LandingCopy> = {
       eyebrow: 'أفق VANTA',
       title: 'بيئة برمجية تتكوّن خطوة بخطوة.',
       description:
-        'هذه محاور في رؤية المنتج، وليست وظائف مفعّلة في هذه النسخة التأسيسية.',
+        'مسار HTML متاح الآن؛ أمّا تشغيل الشيفرة والمساعدة الذكية والتحديات والمشاريع الأوسع فما زالت ضمن خارطة الطريق.',
       status: 'ضمن خارطة المنصة',
       cards: [
         {
-          title: 'مسارات ومشاريع',
-          body: 'رحلات مترابطة من أساسيات الويب إلى مشاريع عملية قابلة للتوسّع.',
+          title: 'مسارات ومشاريع أوسع',
+          body: 'مسار أساسيات HTML متاح؛ مسارات CSS وJavaScript والمشاريع العملية الأوسع مخططة للمستقبل.',
         },
         {
           title: 'مساعد يعلّمك التفكير',
@@ -452,11 +472,11 @@ export const messages: Record<Locale, LandingCopy> = {
       eyebrow: 'THE VANTA APPROACH',
       title: 'Not just a course. Learn by building.',
       description:
-        'VANTA is a practical coding-learning platform for beginners. You write and run code, find mistakes, understand why they happen, and fix them. Structured paths and lessons lead toward practical challenges and projects that build real coding and problem-solving skills.',
+        'VANTA is a practical coding-learning platform for beginners. Its vision is to help learners write code, understand mistakes, and fix them. The current experience begins with an HTML path and lessons; code execution, assistance, and challenges remain future directions.',
       visionLabel: 'THE PLATFORM VISION — BUILT IN STAGES',
       roadmapNote:
-        'This describes the intended experience. Paths and lessons, code execution, AI assistance and hints, challenges, projects, and competitions are not active features in this foundation release.',
-      loopLabel: 'THE LEARNING LOOP',
+        'The HTML Fundamentals path and its five lessons are available now. Code execution, AI assistance and hints, challenges, projects, and competitions remain future directions.',
+      loopLabel: 'THE INTENDED LEARNING LOOP',
       steps: [
         { title: 'Write', body: 'Start by writing code, not only watching.' },
         { title: 'Run', body: 'Try it and learn from the result.' },
@@ -472,7 +492,10 @@ export const messages: Record<Locale, LandingCopy> = {
       description:
         'Five proposed stages for beginners: build a foundation, practice step by step, then bring those skills together in small projects.',
       roadmapNote:
-        'A roadmap concept only—not active lessons, challenges, projects, or progress tracking.',
+        'Start opens the HTML introduction; Fundamentals opens the available HTML path. Practice, Challenges, and Projects remain future stages.',
+      pathCatalogAction: 'Explore all learning paths',
+      availableStatus: 'Available now',
+      futureStatus: 'Future direction',
       steps: [
         {
           title: 'Start',
@@ -505,14 +528,14 @@ export const messages: Record<Locale, LandingCopy> = {
       metaTitle: 'VANTA — HTML Fundamentals',
       metaDescription: 'A six-step introduction to HTML with a five-question interactive practice check.',
       stageLabel: '01 / START · FUNDAMENTALS',
-      backToJourney: 'Back to the learning journey',
+      backToJourney: 'Back to the HTML path',
       eyebrow: 'START · HTML FUNDAMENTALS',
       title: 'Your first HTML page',
       intro: 'Learn what HTML does one small step at a time, then check your understanding with a tiny example.',
       objectiveLabel: 'LEARNING OBJECTIVE',
       objectiveText: 'Understand how HTML describes a page, how a tag differs from an element, and how to write a heading and a paragraph.',
       learningProgress: 'Learning {current} / {total}',
-      learningProgressNote: 'A temporary indicator for this lesson only; progress is not saved.',
+      learningProgressNote: 'This lesson’s reading position is temporary and resets when you leave.',
       learningLabel: 'LEARN',
       htmlStructureCaption: 'Page structure + content',
       learningSteps: [
@@ -542,7 +565,7 @@ export const messages: Record<Locale, LandingCopy> = {
       paragraphRole: 'Welcome paragraph',
       practiceLabel: 'PRACTICE',
       quizTitle: 'Five quick questions',
-      quizIntro: 'One question at a time. If you miss one, we’ll explain why and let you try again.',
+      quizIntro: 'Choose the best answer from four options. If you miss one, we’ll explain the idea and let you try again.',
       quizProgress: 'Question {current} / {total}',
       quizProgressNote: 'Your answers and result are temporary and are not saved.',
       questions: [
@@ -552,10 +575,12 @@ export const messages: Record<Locale, LandingCopy> = {
           choices: [
             { id: 'h1', label: '<h1>', kind: 'code' },
             { id: 'closing-h1', label: '</h1>', kind: 'code' },
+            { id: 'p-open', label: '<p>', kind: 'code' },
+            { id: 'plain-h1', label: 'h1 without angle brackets', kind: 'text' },
           ],
           correctChoiceId: 'h1',
-          correctFeedback: 'Correct. The opening tag marks where the heading begins and has no slash.',
-          incorrectFeedback: 'It is easy to mix these up. The slash / marks the closing tag; <h1> is the opening tag.',
+          correctFeedback: 'Correct. A heading element begins with the opening tag <h1>, without a slash.',
+          incorrectFeedback: 'An opening tag is written inside < and > and starts the element. The slash in </h1> marks closing; <p> opens a paragraph.',
           reviewTopic: 'Opening and closing tags',
         },
         {
@@ -564,10 +589,12 @@ export const messages: Record<Locale, LandingCopy> = {
           choices: [
             { id: 'main-heading', label: 'It is the main heading', kind: 'text' },
             { id: 'paragraph', label: 'It is a paragraph', kind: 'text' },
+            { id: 'subheading', label: 'It is a subsection heading', kind: 'text' },
+            { id: 'link', label: 'It is a link', kind: 'text' },
           ],
           correctChoiceId: 'main-heading',
           correctFeedback: 'That’s right. This tag identifies the content as a main heading, not a paragraph.',
-          incorrectFeedback: 'These two content types are easy to mix up: <h1> is for a main heading, while <p> is for a paragraph.',
+          incorrectFeedback: '<h1> identifies the page’s main heading. <p> is for a paragraph, <h2> for a subsection heading, and <a> for a link.',
           reviewTopic: 'Headings versus paragraphs',
         },
         {
@@ -576,10 +603,12 @@ export const messages: Record<Locale, LandingCopy> = {
           choices: [
             { id: 'whole-element', label: '<h1>Hello</h1>', kind: 'code' },
             { id: 'opening-only', label: '<h1>', kind: 'code' },
+            { id: 'missing-close', label: '<h1>Hello', kind: 'code' },
+            { id: 'closing-only', label: '</h1>', kind: 'code' },
           ],
           correctChoiceId: 'whole-element',
           correctFeedback: 'Exactly. The element includes the opening tag, content, and closing tag together.',
-          incorrectFeedback: 'This is the tag-versus-element mix-up: <h1> is only the tag; <h1>Hello</h1> is the complete element.',
+          incorrectFeedback: 'A complete element includes the opening tag <h1>, its content Hello, and the closing tag </h1>; one part alone is not enough.',
           reviewTopic: 'Tag versus element',
         },
         {
@@ -588,10 +617,12 @@ export const messages: Record<Locale, LandingCopy> = {
           choices: [
             { id: 'valid-paragraph', label: '<p>Welcome to VANTA.</p>', kind: 'code' },
             { id: 'wrong-closing-tag', label: '<p>Welcome to VANTA.</h1>', kind: 'code' },
+            { id: 'wrong-opener', label: '<h1>Welcome to VANTA.</h1>', kind: 'code' },
+            { id: 'wrong-close-div', label: '<p>Welcome to VANTA.</div>', kind: 'code' },
           ],
           correctChoiceId: 'valid-paragraph',
           correctFeedback: 'Correct. <p> opens a paragraph and its matching </p> closes it.',
-          incorrectFeedback: 'Check that the tags match: a paragraph opened with <p> must close with </p>, not a heading tag.',
+          incorrectFeedback: 'A paragraph starts with <p> and ends with </p>. <h1> creates a heading, and every closing tag must match its opening tag.',
           reviewTopic: 'Paragraph tags and matching closers',
         },
         {
@@ -600,10 +631,12 @@ export const messages: Record<Locale, LandingCopy> = {
           choices: [
             { id: 'heading-paragraph', label: 'A main heading followed by a welcome paragraph', kind: 'text' },
             { id: 'two-paragraphs', label: 'Two paragraphs in a row', kind: 'text' },
+            { id: 'paragraph-heading', label: 'A paragraph followed by a main heading', kind: 'text' },
+            { id: 'heading-link', label: 'A heading followed by a link', kind: 'text' },
           ],
           correctChoiceId: 'heading-paragraph',
           correctFeedback: 'That’s it. The first line is a main heading; the second is a welcome paragraph.',
-          incorrectFeedback: 'Look at each line’s opening tag: <h1> marks the heading, and <p> marks the paragraph.',
+          incorrectFeedback: 'Read each line’s opening tag: <h1> means a main heading first, then <p> means a welcome paragraph—not another paragraph or a link.',
           reviewTopic: 'Reading a heading and paragraph together',
         },
       ],
@@ -623,13 +656,14 @@ export const messages: Record<Locale, LandingCopy> = {
         three: 'Good start! Review the marked ideas, then give it another go.',
         low: 'No worries—getting things wrong is part of learning. Review the ideas and start again.',
       },
-      resultNote: 'Your score is for reflection, not a judgment of your ability. It is temporary and is not saved.',
+      resultNote: 'Your score is for reflection. Lesson completion is shown for this browser session only; the score and personal data are not stored permanently.',
       reviewTitle: 'Ideas to review',
       noMissedQuestions: 'You answered every question correctly on the first try.',
       retryQuiz: 'Try the quiz again',
       outcomeLabel: 'AFTER THIS LESSON',
       outcomeBody: 'You can read simple HTML, tell a tag from an element, and use <h1> for a heading and <p> for a paragraph.',
     },
+    learningSystem: learningSystemMessages.en,
     vision: {
       eyebrow: 'WHY VANTA?',
       title: 'Programming makes sense when you get hands-on.',
@@ -654,12 +688,12 @@ export const messages: Record<Locale, LandingCopy> = {
       eyebrow: 'THE VANTA HORIZON',
       title: 'A programming environment, built one step at a time.',
       description:
-        'These are product directions, not features enabled in this foundation release.',
+        'The HTML path is available now; code execution, AI assistance, challenges, and broader projects remain on the roadmap.',
       status: 'On the platform roadmap',
       cards: [
         {
-          title: 'Paths and projects',
-          body: 'Connected journeys from web fundamentals to practical, expandable projects.',
+          title: 'More paths and projects',
+          body: 'HTML Fundamentals is available; CSS and JavaScript paths and broader practical projects are planned.',
         },
         {
           title: 'An assistant that teaches thinking',

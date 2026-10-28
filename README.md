@@ -1,6 +1,8 @@
 # VANTA — Coding Practice for Beginners
 
-The current milestone establishes the frontend foundation and bilingual landing page. It intentionally does not implement accounts, backend persistence, code execution, AI assistance, projects, or competitions.
+VANTA Learning System v1 includes a bilingual landing page and an available HTML Fundamentals path with five beginner lessons. Lessons use guided explanations, read-only code examples, and interactive four-option quizzes with retry feedback. Completion is temporary for the current browser session; quiz scores and personal learning profiles are not stored permanently.
+
+The CSS and JavaScript paths are still planned. This release does not include accounts, backend persistence, code execution, AI assistance, or competitions; broader project features remain part of the product roadmap.
 
 ## Run locally
 
@@ -19,11 +21,17 @@ npm run preview
 
 ## Structure
 
-- `src/App.tsx` — landing page and working locale/menu interactions.
-- `src/i18n/messages.ts` — Arabic and English copy for one shared UI.
-- `src/content/initialHtmlExercise.ts` — useful lesson/challenge content preserved from the original prototype for a later learning feature; it does not execute code.
-- `src/styles/` — VANTA tokens and responsive presentation styles.
-- `public/brand/vanta-logo.png` — logo/wordmark crop from the supplied identity reference; not redrawn.
+- `src/App.tsx` — bilingual landing page and route selection for learning paths and lessons.
+- `src/components/StartLesson.tsx` — the first HTML lesson and its guided quiz.
+- `src/components/LearningLesson.tsx` — reusable view for the remaining HTML lessons.
+- `src/components/LearningSystemPage.tsx` — path catalog and path outline pages.
+- `src/content/learningSystem.ts` — route catalog and availability status for learning paths.
+- `src/content/initialHtmlExercise.ts` — original HTML exercise content preserved and reused as lesson material; code is displayed for learning and is not executed.
+- `src/i18n/` — Arabic and English landing, path, lesson, and quiz copy.
+- `src/state/sessionProgress.ts` — session-only lesson completion state.
+- `src/utils/quizChoices.ts` — validated randomized option order shared by quizzes.
+- `src/styles/` — VANTA tokens, responsive presentation, and reduced-motion rules.
+- `public/brand/` — existing VANTA logo assets; the mark is preserved, not redesigned.
 - `brand-spec.md` — asset provenance and design tokens.
 
-Arabic is the default locale and uses RTL. The language switch changes page copy, document direction, `lang`, title, and description. The selected locale is remembered locally when browser storage is available.
+Arabic is the default locale and uses RTL; English uses LTR. The language switch updates page copy, document direction, `lang`, title, and description. The selected locale is remembered locally when browser storage is available.

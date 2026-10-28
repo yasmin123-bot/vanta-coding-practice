@@ -1,10 +1,12 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { initialHtmlExercise } from '../content/initialHtmlExercise';
 import { messages, type Locale } from '../i18n/messages';
+import { createQuizChoiceOrder, getOrderedQuizChoices } from '../utils/quizChoices';
 
 type StartLessonProps = {
   locale: Locale;
   onSwitchLocale: () => void;
+  onComplete: () => void;
 };
 
 type LessonFlow = 'learn' | 'quiz' | 'result';
@@ -31,23 +33,34 @@ function interpolateProgress(template: string, current: number, total: number) {
   return template.replace('{current}', String(current)).replace('{total}', String(total));
 }
 
-function StartLesson({ locale, onSwitchLocale }: StartLessonProps) {
+function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
   const pageCopy = messages[locale];
   const copy = pageCopy.lesson;
+  const learningUi = pageCopy.learningSystem.ui;
   const isArabic = locale === 'ar';
   const [flow, setFlow] = useState<LessonFlow>('learn');
   const [learningStepIndex, setLearningStepIndex] = useState(0);
   const [quizIndex, setQuizIndex] = useState(0);
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
+  const [choiceOrderByQuestion, setChoiceOrderByQuestion] = useState<Record<string, string[]>>({});
   const [attempts, setAttempts] = useState(0);
   const [firstTryScore, setFirstTryScore] = useState(0);
   const [missedQuestionIds, setMissedQuestionIds] = useState<string[]>([]);
+  const quizQuestionHeadingRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    if (flow === 'quiz') quizQuestionHeadingRef.current?.focus();
+  }, [flow, quizIndex]);
 
   const headingExample = initialHtmlExercise.lesson.example;
   const anatomyExample = '<h1>Hello</h1>';
   const exampleLines = [headingExample, '<p>Welcome to VANTA.</p>'];
   const activeStep = copy.learningSteps[learningStepIndex];
   const currentQuestion = copy.questions[quizIndex];
+  const orderedChoices = getOrderedQuizChoices(
+    currentQuestion.choices,
+    choiceOrderByQuestion[currentQuestion.id],
+  );
   const answerIsCorrect = selectedChoiceId !== null && selectedChoiceId === currentQuestion.correctChoiceId;
   const progressLabel = flow === 'quiz'
     ? interpolateProgress(copy.quizProgress, quizIndex + 1, copy.questions.length)
@@ -67,6 +80,7 @@ function StartLesson({ locale, onSwitchLocale }: StartLessonProps) {
   const beginQuiz = () => {
     setQuizIndex(0);
     setSelectedChoiceId(null);
+    setChoiceOrderByQuestion(createQuizChoiceOrder(copy.questions));
     setAttempts(0);
     setFirstTryScore(0);
     setMissedQuestionIds([]);
@@ -94,6 +108,7 @@ function StartLesson({ locale, onSwitchLocale }: StartLessonProps) {
 
   const continueQuiz = () => {
     if (quizIndex === copy.questions.length - 1) {
+      onComplete();
       setFlow('result');
       return;
     }
@@ -103,7 +118,7 @@ function StartLesson({ locale, onSwitchLocale }: StartLessonProps) {
     setAttempts(0);
   };
 
-  const resultMessage = firstTryScore === 5
+  const resultMessage = firstTryScore === copy.questions.length
     ? copy.resultMessages.perfect
     : firstTryScore === 4
       ? copy.resultMessages.four
@@ -202,7 +217,7 @@ function StartLesson({ locale, onSwitchLocale }: StartLessonProps) {
   return (
     <div className={`app-shell lesson-shell ${isArabic ? 'is-arabic' : 'is-english'}`}>
       <header className="site-header lesson-header section-frame">
-        <a className="brand-link" href="/#top" aria-label="VANTA — Create Beyond">
+        <a className="brand-link" href="/" aria-label="VANTA — Create Beyond">
           <img src="/brand/vanta-logo.png" alt="VANTA — Create Beyond" />
         </a>
 
@@ -221,7 +236,7 @@ function StartLesson({ locale, onSwitchLocale }: StartLessonProps) {
       </header>
 
       <main className="lesson-main section-frame" aria-labelledby="lesson-title">
-        <a className="lesson-back-link" href="/#journey">
+        <a className="lesson-back-link" href="/paths/html-fundamentals">
           <span aria-hidden="true">↩</span>
           {copy.backToJourney}
         </a>
@@ -325,11 +340,11 @@ function StartLesson({ locale, onSwitchLocale }: StartLessonProps) {
             <article className="lesson-question-surface" key={currentQuestion.id}>
               <div className="lesson-question-heading">
                 <span className="lesson-question-index" dir="ltr">0{quizIndex + 1}</span>
-                <h3><InlineLessonText text={currentQuestion.prompt} /></h3>
+                <h3 ref={quizQuestionHeadingRef} tabIndex={-1}><InlineLessonText text={currentQuestion.prompt} /></h3>
               </div>
 
               <div className="lesson-question-options" role="group" aria-label={currentQuestion.prompt}>
-                {currentQuestion.choices.map((choice) => {
+                {orderedChoices.map((choice) => {
                   const isSelected = selectedChoiceId === choice.id;
                   const isCorrectChoice = choice.id === currentQuestion.correctChoiceId;
                   const stateClass = isSelected
@@ -405,10 +420,20 @@ function StartLesson({ locale, onSwitchLocale }: StartLessonProps) {
                 )}
               </div>
 
-              <button className="button button-primary lesson-flow-button" type="button" onClick={beginQuiz}>
-                {copy.retryQuiz}
-                <span className="button-arrow" aria-hidden="true">↻</span>
-              </button>
+              <div className="learning-result-actions lesson-path-actions">
+                <a className="button button-primary learning-lesson-button" href="/lesson/headings-paragraphs">
+                  {learningUi.nextLesson}
+                  <span className="button-arrow" aria-hidden="true">{isArabic ? '←' : '→'}</span>
+                </a>
+                <button className="button button-quiet learning-lesson-button" type="button" onClick={beginQuiz}>
+                  {copy.retryQuiz}
+                  <span className="button-arrow" aria-hidden="true">↻</span>
+                </button>
+              </div>
+              <nav className="learning-result-navigation" aria-label={isArabic ? 'التنقل بين الدروس' : 'Lesson navigation'}>
+                <a href="/paths/html-fundamentals">{learningUi.returnToPath}</a>
+                <a href="/lesson/headings-paragraphs">{learningUi.nextLesson}</a>
+              </nav>
             </article>
           </section>
         )}

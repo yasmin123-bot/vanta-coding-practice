@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import { resolveVantaRoute } from './content/learningSystem';
 import { messages, type Locale } from './i18n/messages';
+import LearningLesson from './components/LearningLesson';
+import LearningSystemPage from './components/LearningSystemPage';
 import StartLesson from './components/StartLesson';
+import { markLessonCompleted } from './state/sessionProgress';
 
 function readSavedLocale(): Locale {
   try {
@@ -18,15 +22,35 @@ function App() {
   const journeyRef = useRef<HTMLElement>(null);
   const copy = messages[locale];
   const isArabic = locale === 'ar';
-  const isLessonRoute = window.location.pathname.replace(/\/+$/, '') === '/lesson/start';
+  const route = resolveVantaRoute(window.location.pathname);
+  const routeTitle = route.kind === 'lesson'
+    ? route.lessonId === 'html-introduction'
+      ? copy.lesson.metaTitle
+      : copy.learningSystem.lessons[route.lessonId].metaTitle
+    : route.kind === 'learning-path'
+      ? copy.learningSystem.paths[route.pathId].metaTitle
+      : route.kind === 'path-catalog'
+        ? copy.learningSystem.catalog.metaTitle
+        : route.kind === 'not-found'
+          ? copy.learningSystem.ui.notFoundTitle
+          : copy.metaTitle;
+  const routeDescription = route.kind === 'lesson'
+    ? route.lessonId === 'html-introduction'
+      ? copy.lesson.metaDescription
+      : copy.learningSystem.lessons[route.lessonId].metaDescription
+    : route.kind === 'learning-path'
+      ? copy.learningSystem.paths[route.pathId].metaDescription
+      : route.kind === 'path-catalog'
+        ? copy.learningSystem.catalog.metaDescription
+        : copy.metaDescription;
 
   useEffect(() => {
     document.documentElement.lang = locale;
     document.documentElement.dir = isArabic ? 'rtl' : 'ltr';
-    document.title = isLessonRoute ? copy.lesson.metaTitle : copy.metaTitle;
+    document.title = routeTitle;
     document.querySelector('meta[name="description"]')?.setAttribute(
       'content',
-      isLessonRoute ? copy.lesson.metaDescription : copy.metaDescription,
+      routeDescription,
     );
 
     try {
@@ -34,7 +58,7 @@ function App() {
     } catch {
       // The language switch still works for this session when storage is unavailable.
     }
-  }, [isArabic, isLessonRoute, locale]);
+  }, [isArabic, locale, routeDescription, routeTitle]);
 
   useEffect(() => {
     const logo = heroLogoRef.current;
@@ -129,8 +153,21 @@ function App() {
 
   const closeMenu = () => setMenuOpen(false);
 
-  if (isLessonRoute) {
-    return <StartLesson locale={locale} onSwitchLocale={switchLocale} />;
+  if (route.kind === 'lesson') {
+    if (route.lessonId === 'html-introduction') {
+      return (
+        <StartLesson
+          locale={locale}
+          onSwitchLocale={switchLocale}
+          onComplete={() => markLessonCompleted('html-introduction')}
+        />
+      );
+    }
+    return <LearningLesson lessonId={route.lessonId} locale={locale} onSwitchLocale={switchLocale} />;
+  }
+
+  if (route.kind === 'path-catalog' || route.kind === 'learning-path' || route.kind === 'not-found') {
+    return <LearningSystemPage locale={locale} onSwitchLocale={switchLocale} route={route} />;
   }
 
   return (
@@ -276,9 +313,17 @@ function App() {
               <span className="note-mark" aria-hidden="true">✦</span>
               {copy.journey.roadmapNote}
             </p>
+            <a className="journey-catalog-link" href="/paths">
+              {copy.journey.pathCatalogAction}<span aria-hidden="true"> {isArabic ? '←' : '→'}</span>
+            </a>
           </div>
           <ol className="journey-list">
             {copy.journey.steps.map((step, index) => {
+              const stageHref = index === 0
+                ? '/lesson/start'
+                : index === 1
+                  ? '/paths/html-fundamentals'
+                  : null;
               const stageContent = (
                 <>
                   <span className="step-number" aria-hidden="true">0{index + 1}</span>
@@ -286,14 +331,17 @@ function App() {
                     <p className="journey-step-level">{step.level}</p>
                     <h3>{step.title}</h3>
                     <p>{step.body}</p>
+                    <span className={`journey-step-status ${stageHref ? 'is-available' : 'is-future'}`}>
+                      {stageHref ? copy.journey.availableStatus : copy.journey.futureStatus}
+                    </span>
                   </div>
                 </>
               );
 
               return (
-                <li className={`journey-step ${index === 0 ? 'journey-step-is-link' : ''}`} key={step.title}>
-                  {index === 0 ? (
-                    <a className="journey-stage-link" href="/lesson/start">
+                <li className={`journey-step ${stageHref ? 'journey-step-is-link' : ''}`} key={step.title}>
+                  {stageHref ? (
+                    <a className="journey-stage-link" href={stageHref}>
                       {stageContent}
                     </a>
                   ) : stageContent}

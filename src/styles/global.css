@@ -3203,6 +3203,15 @@ button.lesson-flow-button {
   line-height: 1.7;
 }
 
+.lesson-question-heading h3:focus {
+  outline: none;
+}
+
+.lesson-question-heading h3:focus-visible {
+  outline: 2px solid var(--color-copper-light);
+  outline-offset: 5px;
+}
+
 .lesson-question-options {
   gap: 10px;
   margin-top: 0;
