@@ -58,7 +58,6 @@ export type LearningSystemCopy = {
     eyebrow: string;
     title: string;
     description: string;
-    sessionNote: string;
   };
   paths: Record<LearningPathId, LearningPathCopy>;
   lessons: Record<AdditionalHtmlLessonId, LearningLessonCopy>;
@@ -73,11 +72,18 @@ export type LearningSystemCopy = {
     viewOutline: string;
     notAvailableYet: string;
     pathProgress: string;
+    pathLevelLabel: string;
+    beginnerLevel: string;
+    foundationalLevel: string;
+    pathNotStarted: string;
+    pathInProgress: string;
+    pathCompleted: string;
+    lessonCountLabel: string;
+    plannedLessonsUnavailable: string;
+    sequenceEyebrow: string;
     completedStatus: string;
     nextStatus: string;
     availableStatus: string;
-    sessionProgress: string;
-    sessionNote: string;
     continueLearning: string;
     startPath: string;
     openLesson: string;
@@ -128,7 +134,6 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
       eyebrow: 'مسارات VANTA',
       title: 'طريق واضح، خطوة بعد خطوة.',
       description: 'ابدأ بمسار HTML العملي. المسارات الأخرى معروضة بوضوح كخطط مستقبلية، وليست دروسًا متاحة بعد.',
-      sessionNote: 'يظهر إكمال دروس HTML في جلسة هذا المتصفح فقط. لا توجد حسابات أو مزامنة أو حفظ دائم للتقدم.',
     },
     paths: {
       'html-fundamentals': {
@@ -548,11 +553,18 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
       viewOutline: 'عرض التصوّر',
       notAvailableYet: 'لا توجد دروس متاحة في هذا المسار بعد.',
       pathProgress: 'تقدّم المسار',
-      completedStatus: 'أُنجز في هذه الجلسة',
+      pathLevelLabel: 'المستوى',
+      beginnerLevel: 'مبتدئ',
+      foundationalLevel: 'أساسيات',
+      pathNotStarted: 'لم يبدأ بعد',
+      pathInProgress: 'قيد التعلّم',
+      pathCompleted: 'مكتمل',
+      lessonCountLabel: '{count} دروس متاحة',
+      plannedLessonsUnavailable: 'الدروس غير متاحة بعد؛ هذا المسار ما زال مخططًا.',
+      sequenceEyebrow: 'تسلسل التعلّم',
+      completedStatus: 'مكتمل',
       nextStatus: 'الخطوة التالية',
       availableStatus: 'درس متاح',
-      sessionProgress: 'أكملت {completed} من {total} دروس في جلسة المتصفح الحالية.',
-      sessionNote: 'التقدّم مؤقت في هذه الجلسة فقط، ولا يُحفظ بعد إغلاقها.',
       continueLearning: 'تابع من الدرس التالي',
       startPath: 'ابدأ المسار',
       openLesson: 'افتح الدرس',
@@ -580,7 +592,7 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
       perfectResult: 'أحسنت. فهمك لهذه الأفكار واضح، ويمكنك الانتقال لما بعدها.',
       goodResult: 'عمل جيد. راجع النقاط المحددة إذا احتجت، ثم واصل التعلّم.',
       keepPracticingResult: 'الخطأ جزء من التعلّم. راجع النقاط المحددة وجرب الاختبار مرة أخرى.',
-      resultNote: 'اكتمل الدرس في جلسة المتصفح الحالية فقط. لا توجد حسابات أو مزامنة أو حفظ دائم.',
+      resultNote: 'تعكس النتيجة إجابات المحاولة الأولى فقط؛ ولا تُحفظ اختياراتك في الأسئلة.',
       reviewTitle: 'نقاط تستحق المراجعة',
       noMissedQuestions: 'أجبت عن كل الأسئلة بشكل صحيح من المحاولة الأولى.',
       outcomeLabel: 'ما أصبحت قادرًا عليه',
@@ -601,7 +613,6 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
       eyebrow: 'VANTA LEARNING PATHS',
       title: 'A clear route, one step at a time.',
       description: 'Start with the practical HTML path. Other paths are clearly marked as plans, not lessons you can take yet.',
-      sessionNote: 'HTML lesson completion is shown only for this browser tab session. There are no accounts, syncing, or permanent progress storage.',
     },
     paths: {
       'html-fundamentals': {
@@ -1021,11 +1032,18 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
       viewOutline: 'View outline',
       notAvailableYet: 'No lessons are available in this path yet.',
       pathProgress: 'Path progress',
-      completedStatus: 'Completed this session',
+      pathLevelLabel: 'Level',
+      beginnerLevel: 'Beginner',
+      foundationalLevel: 'Foundations',
+      pathNotStarted: 'Not started',
+      pathInProgress: 'In progress',
+      pathCompleted: 'Completed',
+      lessonCountLabel: '{count} lessons available',
+      plannedLessonsUnavailable: 'Lessons are not available yet; this path is still planned.',
+      sequenceEyebrow: 'LEARNING SEQUENCE',
+      completedStatus: 'Completed',
       nextStatus: 'Up next',
       availableStatus: 'Available lesson',
-      sessionProgress: '{completed} of {total} lessons completed in this browser session.',
-      sessionNote: 'Progress is temporary for this session only and is not saved after it ends.',
       continueLearning: 'Continue to the next lesson',
       startPath: 'Start the path',
       openLesson: 'Open lesson',
@@ -1053,7 +1071,7 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
       perfectResult: 'Well done. You have a clear grasp of these ideas and can move on.',
       goodResult: 'Good work. Review any marked ideas if needed, then keep learning.',
       keepPracticingResult: 'Mistakes are part of learning. Review the marked ideas and try the quiz again.',
-      resultNote: 'This lesson is marked complete only for the current browser session. There are no accounts, syncing, or permanent storage.',
+      resultNote: 'Your score reflects first attempts only; answer choices are not stored.',
       reviewTitle: 'Ideas to review',
       noMissedQuestions: 'You answered every question correctly on the first try.',
       outcomeLabel: 'WHAT YOU CAN NOW DO',

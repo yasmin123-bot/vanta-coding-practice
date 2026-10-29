@@ -1,6 +1,9 @@
-import { HTML_LESSON_IDS, LEARNING_PATHS, getHtmlLessonHref, getLearningPathHref, type LearningPathId, type PathStatus } from '../content/learningSystem';
+import { HTML_LESSON_IDS, HTML_PATH_ID, LEARNING_PATHS, getHtmlLessonHref, getLearningPathHref, type LearningPathId, type PathStatus } from '../content/learningSystem';
 import { messages, type Locale } from '../i18n/messages';
-import { readSessionProgress } from '../state/sessionProgress';
+import { getStudentPortalCopy } from '../i18n/studentPortal';
+import { useAuth } from '../auth/AuthProvider';
+import { useStudentProgress } from '../state/StudentProgressProvider';
+import { summarizeHtmlLearningProgress } from '../utils/learningProgress';
 import LearningHeader from './LearningHeader';
 
 type LearningSystemRoute =
@@ -34,13 +37,18 @@ function getUi(locale: Locale) {
 function LearningSystemPage({ locale, onSwitchLocale, route }: LearningSystemPageProps) {
   const landingCopy = messages[locale];
   const copy = landingCopy.learningSystem;
+  const portalCopy = getStudentPortalCopy(locale);
   const ui = copy.ui;
   const isArabic = locale === 'ar';
-  const progress = readSessionProgress();
-  const completed = new Set(progress.completedLessonIds);
-  const completedCount = progress.completedLessonIds.length;
-  const nextLessonId = HTML_LESSON_IDS.find((lessonId) => !completed.has(lessonId))
-    ?? HTML_LESSON_IDS[HTML_LESSON_IDS.length - 1];
+  const { user } = useAuth();
+  const studentProgress = useStudentProgress();
+  const isAuthenticated = Boolean(user);
+  const pathStarted = studentProgress.paths.some((path) => path.path_id === HTML_PATH_ID);
+  const progressSummary = summarizeHtmlLearningProgress(studentProgress.lessons, pathStarted);
+  const completed = progressSummary.completedLessonIds;
+  const completedCount = progressSummary.completedLessonCount;
+  const progressGate = isAuthenticated && !studentProgress.hasLoaded
+    && (studentProgress.loading || studentProgress.error);
 
   let metaStageLabel: string | undefined;
   if (route.kind === 'learning-path') {
@@ -55,12 +63,22 @@ function LearningSystemPage({ locale, onSwitchLocale, route }: LearningSystemPag
         locale={locale}
         onSwitchLocale={onSwitchLocale}
         allPathsLabel={ui.allPaths}
-        homeLabel={ui.home}
         stageLabel={metaStageLabel}
       />
 
       <main className="learning-system-main section-frame">
-        {route.kind === 'path-catalog' && (
+        {isAuthenticated && studentProgress.loading && !studentProgress.hasLoaded ? (
+          <p className="student-loading-state" role="status"><span className="student-loading-mark" aria-hidden="true" />{portalCopy.common.loading}</p>
+        ) : isAuthenticated && studentProgress.error && !studentProgress.hasLoaded ? (
+          <section className="student-gate-panel" aria-labelledby="learning-data-error-title">
+            <p className="eyebrow"><span className="eyebrow-line" />VANTA / {portalCopy.common.paths}</p>
+            <h1 id="learning-data-error-title">{portalCopy.common.loadErrorTitle}</h1>
+            <p>{portalCopy.common.loadErrorBody}</p>
+            <button className="button button-primary" type="button" onClick={() => { void studentProgress.refresh(); }}>
+              {portalCopy.common.retry}
+            </button>
+          </section>
+        ) : !progressGate && route.kind === 'path-catalog' && (
           <>
             <header className="learning-system-intro">
               <p className="eyebrow"><span className="eyebrow-line" />{copy.catalog.eyebrow}</p>
@@ -71,9 +89,19 @@ function LearningSystemPage({ locale, onSwitchLocale, route }: LearningSystemPag
             <ol className="learning-path-catalog" aria-label={copy.catalog.title}>
               {LEARNING_PATHS.map((path, index) => {
                 const pathCopy = copy.paths[path.id];
-                const pathProgress = path.id === 'html-fundamentals'
-                  ? fillTemplate(ui.sessionProgress, { completed: completedCount, total: HTML_LESSON_IDS.length })
+                const isHtmlPath = path.id === HTML_PATH_ID;
+                const pathProgress = isHtmlPath
+                  ? fillTemplate(portalCopy.dashboard.pathProgress, {
+                    completed: new Intl.NumberFormat(isArabic ? 'ar' : 'en-US').format(completedCount),
+                    total: new Intl.NumberFormat(isArabic ? 'ar' : 'en-US').format(HTML_LESSON_IDS.length),
+                  })
                   : pathCopy.summary;
+                const pathLevel = isHtmlPath ? ui.beginnerLevel : ui.foundationalLevel;
+                const lessonAvailability = isHtmlPath
+                  ? fillTemplate(ui.lessonCountLabel, { count: new Intl.NumberFormat(isArabic ? 'ar' : 'en-US').format(HTML_LESSON_IDS.length) })
+                  : ui.plannedLessonsUnavailable;
+                const studentPathState = progressSummary.pathCompleted ? ui.pathCompleted
+                  : pathStarted ? ui.pathInProgress : ui.pathNotStarted;
                 return (
                   <li className={`learning-path-catalog-row path-status-${path.status}`} key={path.id}>
                     <a className="learning-path-catalog-link" href={getLearningPathHref(path.id)}>
@@ -82,6 +110,11 @@ function LearningSystemPage({ locale, onSwitchLocale, route }: LearningSystemPag
                         <span className="learning-path-status path-status-label">{statusLabel(path.status, ui)}</span>
                         <strong>{pathCopy.title}</strong>
                         <span>{pathProgress}</span>
+                        <span className="learning-path-catalog-meta">
+                          <span>{ui.pathLevelLabel}: {pathLevel}</span>
+                          <span>{lessonAvailability}</span>
+                          {isHtmlPath && <span>{studentPathState}</span>}
+                        </span>
                       </span>
                       <span className="learning-path-open" aria-hidden="true">{isArabic ? '←' : '→'}</span>
                       <span className="visually-hidden">{path.status === 'available' ? ui.openPath : ui.viewOutline}</span>
@@ -90,21 +123,24 @@ function LearningSystemPage({ locale, onSwitchLocale, route }: LearningSystemPag
                 );
               })}
             </ol>
-            <p className="learning-session-note"><span aria-hidden="true">✦</span>{copy.catalog.sessionNote}</p>
+            <p className="learning-session-note"><span aria-hidden="true">✦</span>{isAuthenticated ? portalCopy.common.accountOnly : portalCopy.progress.catalogNote}</p>
+            {studentProgress.error && <p className="student-form-error" role="alert">{portalCopy.common.dataError}</p>}
           </>
         )}
 
-        {route.kind === 'learning-path' && (() => {
+        {!progressGate && route.kind === 'learning-path' && (() => {
           const path = LEARNING_PATHS.find((item) => item.id === route.pathId);
           const pathCopy = copy.paths[route.pathId];
           const pathIsAvailable = path?.status === 'available';
           const summaries = pathCopy.lessonSummaries ?? [];
-          const progressPercent = pathIsAvailable ? (completedCount / HTML_LESSON_IDS.length) * 100 : 0;
-          const allComplete = pathIsAvailable && completedCount === HTML_LESSON_IDS.length;
-          const nextIndex = allComplete
-            ? HTML_LESSON_IDS.length - 1
-            : HTML_LESSON_IDS.findIndex((lessonId) => !completed.has(lessonId));
-          const nextLesson = pathIsAvailable && summaries[nextIndex] ? summaries[nextIndex] : null;
+          const progressPercent = pathIsAvailable && isAuthenticated ? (completedCount / HTML_LESSON_IDS.length) * 100 : 0;
+          const allComplete = pathIsAvailable && progressSummary.pathCompleted;
+          const nextLesson = pathIsAvailable
+            ? summaries.find((lesson) => lesson.id === progressSummary.resumeLessonId) ?? null
+            : null;
+          const pathState = allComplete ? ui.pathCompleted
+            : pathStarted ? ui.pathInProgress : ui.pathNotStarted;
+          const pathLevel = pathIsAvailable ? ui.beginnerLevel : ui.foundationalLevel;
 
           return (
             <>
@@ -124,6 +160,14 @@ function LearningSystemPage({ locale, onSwitchLocale, route }: LearningSystemPag
                 </div>
                 <p className="learning-system-lead">{pathCopy.summary}</p>
               </header>
+
+              <div className="learning-path-meta" aria-label={pathCopy.title}>
+                <span><strong>{ui.pathLevelLabel}:</strong> {pathLevel}</span>
+                <span>{pathIsAvailable
+                  ? fillTemplate(ui.lessonCountLabel, { count: new Intl.NumberFormat(isArabic ? 'ar' : 'en-US').format(summaries.length) })
+                  : ui.plannedLessonsUnavailable}</span>
+                {pathIsAvailable && <span className="student-path-state">{pathState}</span>}
+              </div>
 
               <div className="learning-path-facts">
                 <section className="learning-path-fact" aria-labelledby="path-audience-title">
@@ -149,7 +193,10 @@ function LearningSystemPage({ locale, onSwitchLocale, route }: LearningSystemPag
                 <section className="learning-path-progress" aria-labelledby="path-progress-title">
                   <div className="learning-path-progress-copy">
                     <h2 id="path-progress-title">{ui.pathProgress}</h2>
-                    <p>{fillTemplate(ui.sessionProgress, { completed: completedCount, total: HTML_LESSON_IDS.length })}</p>
+                    <p>{fillTemplate(portalCopy.dashboard.pathProgress, {
+                      completed: new Intl.NumberFormat(isArabic ? 'ar' : 'en-US').format(completedCount),
+                      total: new Intl.NumberFormat(isArabic ? 'ar' : 'en-US').format(HTML_LESSON_IDS.length),
+                    })}</p>
                   </div>
                   <div
                     className="learning-path-progress-track"
@@ -157,14 +204,20 @@ function LearningSystemPage({ locale, onSwitchLocale, route }: LearningSystemPag
                     aria-label={ui.pathProgress}
                     aria-valuemin={0}
                     aria-valuemax={HTML_LESSON_IDS.length}
-                    aria-valuenow={completedCount}
+                    aria-valuenow={isAuthenticated ? completedCount : 0}
                   >
                     <span style={{ width: `${progressPercent}%` }} />
                   </div>
-                  <p className="learning-session-note">{ui.sessionNote}</p>
+                  <p className="learning-session-note">{portalCopy.common.accountOnly}</p>
+                  {studentProgress.error && (
+                    <p className="student-form-error" role="alert">
+                      {portalCopy.common.dataError}{' '}
+                      <button type="button" onClick={() => { void studentProgress.refresh(); }}>{portalCopy.common.retry}</button>
+                    </p>
+                  )}
                   {nextLesson && (
                     <a className="button button-primary learning-path-continue" href={getHtmlLessonHref(nextLesson.id)}>
-                      {allComplete ? ui.openLesson : completedCount > 0 ? ui.continueLearning : ui.startPath}
+                      {allComplete ? ui.openLesson : pathStarted ? ui.continueLearning : ui.startPath}
                       <span className="button-arrow" aria-hidden="true">{isArabic ? '←' : '→'}</span>
                     </a>
                   )}
@@ -174,20 +227,21 @@ function LearningSystemPage({ locale, onSwitchLocale, route }: LearningSystemPag
               <section className="learning-path-sequence" aria-labelledby="path-sequence-title">
                 <div className="learning-path-sequence-heading">
                   <div>
-                    <p className="eyebrow"><span className="eyebrow-line" />{isArabic ? 'تسلسل تعلّم' : 'LEARNING SEQUENCE'}</p>
+                    <p className="eyebrow"><span className="eyebrow-line" />{ui.sequenceEyebrow}</p>
                     <h2 id="path-sequence-title">{pathCopy.sequenceLabel}</h2>
                   </div>
-                  {pathIsAvailable && <span className="learning-sequence-count" dir="ltr">{summaries.length.toString().padStart(2, '0')} {isArabic ? 'دروس' : 'LESSONS'}</span>}
+                  {pathIsAvailable && <span className="learning-sequence-count">{fillTemplate(ui.lessonCountLabel, { count: new Intl.NumberFormat(isArabic ? 'ar' : 'en-US').format(summaries.length) })}</span>}
                 </div>
 
                 {pathIsAvailable ? (
                   <ol className="learning-path-lessons">
                     {summaries.map((lesson, index) => {
                       const isComplete = completed.has(lesson.id);
-                      const isNext = !allComplete && lesson.id === nextLessonId;
+                      const isNext = !allComplete && lesson.id === progressSummary.recommendedLessonId;
+                      const isCurrent = !isComplete && lesson.id === progressSummary.lastOpenedLessonId;
                       const stateLabel = isComplete ? ui.completedStatus : isNext ? ui.nextStatus : ui.availableStatus;
                       return (
-                        <li className={`learning-path-lesson ${isComplete ? 'is-complete' : ''} ${isNext ? 'is-next' : ''}`} key={lesson.id}>
+                        <li className={`learning-path-lesson ${isComplete ? 'is-complete' : ''} ${isNext ? 'is-next' : ''} ${isCurrent ? 'is-current' : ''}`} key={lesson.id}>
                           <a href={getHtmlLessonHref(lesson.id)} className="learning-path-lesson-link">
                             <span className="learning-path-lesson-marker" aria-hidden="true">{isComplete ? '✓' : String(index + 1).padStart(2, '0')}</span>
                             <span className="learning-path-lesson-copy">
@@ -223,7 +277,7 @@ function LearningSystemPage({ locale, onSwitchLocale, route }: LearningSystemPag
           );
         })()}
 
-        {route.kind === 'not-found' && (
+        {!progressGate && route.kind === 'not-found' && (
           <section className="learning-not-found" aria-labelledby="learning-not-found-title">
             <p className="eyebrow"><span className="eyebrow-line" />VANTA</p>
             <h1 id="learning-not-found-title">{ui.notFoundTitle}</h1>

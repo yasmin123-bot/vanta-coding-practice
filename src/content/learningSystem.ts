@@ -21,6 +21,8 @@ export const HTML_LESSON_IDS = [
 
 export type HtmlLessonId = (typeof HTML_LESSON_IDS)[number];
 export type AdditionalHtmlLessonId = Exclude<HtmlLessonId, 'html-introduction'>;
+export type StudentAuthMode = 'login' | 'signup' | 'forgot-password' | 'reset-password' | 'callback';
+export type StudentProtectedPage = 'dashboard' | 'profile';
 
 export const HTML_LESSON_ROUTES: Record<HtmlLessonId, string> = {
   'html-introduction': '/lesson/start',
@@ -43,12 +45,21 @@ export type VantaRoute =
   | { kind: 'path-catalog' }
   | { kind: 'learning-path'; pathId: LearningPathId }
   | { kind: 'lesson'; lessonId: HtmlLessonId }
+  | { kind: 'student-auth'; mode: StudentAuthMode }
+  | { kind: 'student-area'; page: StudentProtectedPage }
   | { kind: 'not-found' };
 
 const validPathIds = new Set<string>(LEARNING_PATH_IDS);
 const lessonIdByRoute = new Map(
   Object.entries(HTML_LESSON_ROUTES).map(([lessonId, route]) => [route, lessonId as HtmlLessonId]),
 );
+const authModeByRoute = new Map<string, StudentAuthMode>([
+  ['/login', 'login'],
+  ['/signup', 'signup'],
+  ['/forgot-password', 'forgot-password'],
+  ['/reset-password', 'reset-password'],
+  ['/auth/callback', 'callback'],
+]);
 
 export function getLearningPathHref(pathId: LearningPathId): string {
   return `/paths/${pathId}`;
@@ -62,6 +73,11 @@ export function resolveVantaRoute(pathname: string): VantaRoute {
   const normalizedPath = pathname.replace(/\/+$/, '') || '/';
   if (normalizedPath === '/') return { kind: 'landing' };
   if (normalizedPath === '/paths') return { kind: 'path-catalog' };
+  if (normalizedPath === '/dashboard') return { kind: 'student-area', page: 'dashboard' };
+  if (normalizedPath === '/profile') return { kind: 'student-area', page: 'profile' };
+
+  const authMode = authModeByRoute.get(normalizedPath);
+  if (authMode) return { kind: 'student-auth', mode: authMode };
 
   const pathMatch = normalizedPath.match(/^\/paths\/([^/]+)$/);
   if (pathMatch && validPathIds.has(pathMatch[1])) {

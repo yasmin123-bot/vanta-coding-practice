@@ -5,7 +5,9 @@ import {
   type AdditionalHtmlLessonId,
 } from '../content/learningSystem';
 import { messages, type Locale } from '../i18n/messages';
-import { markLessonCompleted } from '../state/sessionProgress';
+import { getStudentPortalCopy } from '../i18n/studentPortal';
+import { useAuth } from '../auth/AuthProvider';
+import { useStudentProgress } from '../state/StudentProgressProvider';
 import { createQuizChoiceOrder, getOrderedQuizChoices } from '../utils/quizChoices';
 import LearningHeader from './LearningHeader';
 
@@ -13,6 +15,7 @@ export type LearningLessonProps = {
   lessonId: AdditionalHtmlLessonId;
   locale: Locale;
   onSwitchLocale: () => void;
+  onComplete: (score: number, total: number) => Promise<boolean>;
 };
 
 type LessonFlow = 'learn' | 'quiz' | 'result';
@@ -39,11 +42,14 @@ function InlineCodeText({ text }: { text: string }) {
   );
 }
 
-function LearningLesson({ lessonId, locale, onSwitchLocale }: LearningLessonProps) {
+function LearningLesson({ lessonId, locale, onSwitchLocale, onComplete }: LearningLessonProps) {
   const landingCopy = messages[locale];
   const systemCopy = landingCopy.learningSystem;
   const copy = systemCopy.lessons[lessonId];
   const ui = systemCopy.ui;
+  const portalCopy = getStudentPortalCopy(locale);
+  const auth = useAuth();
+  const studentProgress = useStudentProgress();
   const isArabic = locale === 'ar';
   const lessonIndex = HTML_LESSON_IDS.indexOf(lessonId);
   const previousLessonId = lessonIndex > 0 ? HTML_LESSON_IDS[lessonIndex - 1] : null;
@@ -59,6 +65,7 @@ function LearningLesson({ lessonId, locale, onSwitchLocale }: LearningLessonProp
   const [attempts, setAttempts] = useState(0);
   const [firstTryScore, setFirstTryScore] = useState(0);
   const [missedQuestionIds, setMissedQuestionIds] = useState<string[]>([]);
+  const [progressSaveState, setProgressSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   const currentStep = copy.steps[stepIndex];
   const currentQuestion = copy.questions[questionIndex];
@@ -97,6 +104,7 @@ function LearningLesson({ lessonId, locale, onSwitchLocale }: LearningLessonProp
     setAttempts(0);
     setFirstTryScore(0);
     setMissedQuestionIds([]);
+    setProgressSaveState('idle');
     setFlow('quiz');
   };
 
@@ -117,10 +125,24 @@ function LearningLesson({ lessonId, locale, onSwitchLocale }: LearningLessonProp
     setSelectedChoiceId(null);
   };
 
+  const persistQuizResult = async () => {
+    if (!auth.user || auth.setupState !== 'ready') {
+      setProgressSaveState('idle');
+      return;
+    }
+    setProgressSaveState('saving');
+    try {
+      const saved = await onComplete(firstTryScore, copy.questions.length);
+      setProgressSaveState(saved ? 'saved' : 'error');
+    } catch {
+      setProgressSaveState('error');
+    }
+  };
+
   const continueQuiz = () => {
     if (questionIndex === copy.questions.length - 1) {
-      markLessonCompleted(lessonId);
       setFlow('result');
+      void persistQuizResult();
       return;
     }
     setQuestionIndex((current) => current + 1);
@@ -139,7 +161,6 @@ function LearningLesson({ lessonId, locale, onSwitchLocale }: LearningLessonProp
         locale={locale}
         onSwitchLocale={onSwitchLocale}
         allPathsLabel={ui.allPaths}
-        homeLabel={ui.home}
         stageLabel={copy.eyebrow}
       />
 
@@ -158,6 +179,11 @@ function LearningLesson({ lessonId, locale, onSwitchLocale }: LearningLessonProp
             <span>{copy.objectiveLabel}</span>
             <p><InlineCodeText text={copy.objectiveText} /></p>
           </div>
+          {auth.setupState === 'ready' && !auth.user && (
+            <p className="student-progress-notice">{portalCopy.common.signInToSave} <a href="/login">{portalCopy.nav.login}</a></p>
+          )}
+          {auth.setupState !== 'ready' && <p className="student-progress-notice">{portalCopy.progress.saveUnavailable}</p>}
+          {studentProgress.error && progressSaveState === 'idle' && <p className="student-form-error" role="alert">{portalCopy.common.savingError}</p>}
         </header>
 
         {flow === 'learn' && currentStep && (
@@ -324,6 +350,18 @@ function LearningLesson({ lessonId, locale, onSwitchLocale }: LearningLessonProp
               <p className="learning-result-score-label">{ui.scoreLabel}</p>
               <p className="learning-result-message">{resultMessage}</p>
               <p className="learning-result-note">{ui.resultNote}</p>
+              {progressSaveState !== 'idle' && (
+                <div className={`learning-progress-save-state ${progressSaveState === 'error' ? 'is-error' : ''}`} role="status" aria-live="polite">
+                  <p>{progressSaveState === 'saving' ? portalCopy.common.savingProgress
+                    : progressSaveState === 'saved' ? portalCopy.common.progressSaved
+                      : portalCopy.common.progressSaveFailed}</p>
+                  {progressSaveState === 'error' && (
+                    <button className="button button-quiet" type="button" onClick={() => { void persistQuizResult(); }}>
+                      {portalCopy.common.retryProgressSave}
+                    </button>
+                  )}
+                </div>
+              )}
 
               <section className="learning-result-outcome" aria-labelledby="learning-outcome-title">
                 <h3 id="learning-outcome-title">{copy.outcomeLabel}</h3>

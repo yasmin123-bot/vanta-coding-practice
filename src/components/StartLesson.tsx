@@ -1,12 +1,15 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { initialHtmlExercise } from '../content/initialHtmlExercise';
 import { messages, type Locale } from '../i18n/messages';
+import { getStudentPortalCopy } from '../i18n/studentPortal';
+import { useAuth } from '../auth/AuthProvider';
+import { useStudentProgress } from '../state/StudentProgressProvider';
 import { createQuizChoiceOrder, getOrderedQuizChoices } from '../utils/quizChoices';
 
 type StartLessonProps = {
   locale: Locale;
   onSwitchLocale: () => void;
-  onComplete: () => void;
+  onComplete: (score: number, total: number) => Promise<boolean>;
 };
 
 type LessonFlow = 'learn' | 'quiz' | 'result';
@@ -37,6 +40,9 @@ function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
   const pageCopy = messages[locale];
   const copy = pageCopy.lesson;
   const learningUi = pageCopy.learningSystem.ui;
+  const portalCopy = getStudentPortalCopy(locale);
+  const auth = useAuth();
+  const studentProgress = useStudentProgress();
   const isArabic = locale === 'ar';
   const [flow, setFlow] = useState<LessonFlow>('learn');
   const [learningStepIndex, setLearningStepIndex] = useState(0);
@@ -46,6 +52,7 @@ function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
   const [attempts, setAttempts] = useState(0);
   const [firstTryScore, setFirstTryScore] = useState(0);
   const [missedQuestionIds, setMissedQuestionIds] = useState<string[]>([]);
+  const [progressSaveState, setProgressSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const quizQuestionHeadingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -84,6 +91,7 @@ function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
     setAttempts(0);
     setFirstTryScore(0);
     setMissedQuestionIds([]);
+    setProgressSaveState('idle');
     setFlow('quiz');
   };
 
@@ -106,10 +114,24 @@ function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
     setSelectedChoiceId(null);
   };
 
+  const persistQuizResult = async () => {
+    if (!auth.user || auth.setupState !== 'ready') {
+      setProgressSaveState('idle');
+      return;
+    }
+    setProgressSaveState('saving');
+    try {
+      const saved = await onComplete(firstTryScore, copy.questions.length);
+      setProgressSaveState(saved ? 'saved' : 'error');
+    } catch {
+      setProgressSaveState('error');
+    }
+  };
+
   const continueQuiz = () => {
     if (quizIndex === copy.questions.length - 1) {
-      onComplete();
       setFlow('result');
+      void persistQuizResult();
       return;
     }
 
@@ -249,6 +271,11 @@ function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
             <span className="lesson-objective-label">{copy.objectiveLabel}</span>
             <p>{copy.objectiveText}</p>
           </div>
+          {auth.setupState === 'ready' && !auth.user && (
+            <p className="student-progress-notice">{portalCopy.common.signInToSave} <a href="/login">{portalCopy.nav.login}</a></p>
+          )}
+          {auth.setupState !== 'ready' && <p className="student-progress-notice">{portalCopy.progress.saveUnavailable}</p>}
+          {studentProgress.error && progressSaveState === 'idle' && <p className="student-form-error" role="alert">{portalCopy.common.savingError}</p>}
         </header>
 
         {flow === 'learn' && activeStep && (
@@ -408,6 +435,18 @@ function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
               <p className="lesson-result-score-label">{copy.scoreLabel}</p>
               <p className="lesson-result-message">{resultMessage}</p>
               <p className="lesson-result-note">{copy.resultNote}</p>
+              {progressSaveState !== 'idle' && (
+                <div className={`lesson-progress-save-state ${progressSaveState === 'error' ? 'is-error' : ''}`} role="status" aria-live="polite">
+                  <p>{progressSaveState === 'saving' ? portalCopy.common.savingProgress
+                    : progressSaveState === 'saved' ? portalCopy.common.progressSaved
+                      : portalCopy.common.progressSaveFailed}</p>
+                  {progressSaveState === 'error' && (
+                    <button className="button button-quiet" type="button" onClick={() => { void persistQuizResult(); }}>
+                      {portalCopy.common.retryProgressSave}
+                    </button>
+                  )}
+                </div>
+              )}
 
               <div className="lesson-review-topics">
                 <h3>{copy.reviewTitle}</h3>
