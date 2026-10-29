@@ -86,6 +86,39 @@ export type Database = {
           },
         ];
       };
+      practice_drafts: {
+        Row: {
+          user_id: string;
+          exercise_id: HtmlLessonId;
+          html_code: string;
+          css_code: string;
+          js_code: string;
+          draft_version: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          exercise_id: HtmlLessonId;
+          html_code?: string;
+          css_code?: string;
+          js_code?: string;
+          draft_version?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          exercise_id?: HtmlLessonId;
+          html_code?: string;
+          css_code?: string;
+          js_code?: string;
+          draft_version?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

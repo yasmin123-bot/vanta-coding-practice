@@ -10,6 +10,8 @@ import { useAuth } from '../auth/AuthProvider';
 import { useStudentProgress } from '../state/StudentProgressProvider';
 import { createQuizChoiceOrder, getOrderedQuizChoices } from '../utils/quizChoices';
 import LearningHeader from './LearningHeader';
+import PracticeStudio from './PracticeStudio';
+import { practiceStudioMessages } from '../i18n/practiceStudio';
 
 export type LearningLessonProps = {
   lessonId: AdditionalHtmlLessonId;
@@ -18,7 +20,7 @@ export type LearningLessonProps = {
   onComplete: (score: number, total: number) => Promise<boolean>;
 };
 
-type LessonFlow = 'learn' | 'quiz' | 'result';
+type LessonFlow = 'learn' | 'practice' | 'quiz' | 'result';
 
 function fillTemplate(template: string, current: number, total: number) {
   return template.replace('{current}', String(current)).replace('{total}', String(total));
@@ -58,6 +60,7 @@ function LearningLesson({ lessonId, locale, onSwitchLocale, onComplete }: Learni
   const questionHeadingRef = useRef<HTMLHeadingElement>(null);
   const hasRendered = useRef(false);
   const [flow, setFlow] = useState<LessonFlow>('learn');
+  const [practiceOpened, setPracticeOpened] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
@@ -88,6 +91,7 @@ function LearningLesson({ lessonId, locale, onSwitchLocale, onComplete }: Learni
       : ui.keepPracticingResult;
   const previousLesson = previousLessonId ? getHtmlLessonHref(previousLessonId) : null;
   const nextLesson = nextLessonId ? getHtmlLessonHref(nextLessonId) : null;
+  const practiceUi = practiceStudioMessages[locale];
 
   useEffect(() => {
     if (hasRendered.current) {
@@ -106,6 +110,11 @@ function LearningLesson({ lessonId, locale, onSwitchLocale, onComplete }: Learni
     setMissedQuestionIds([]);
     setProgressSaveState('idle');
     setFlow('quiz');
+  };
+
+  const openPractice = () => {
+    setPracticeOpened(true);
+    setFlow('practice');
   };
 
   const chooseAnswer = (choiceId: string) => {
@@ -252,12 +261,25 @@ function LearningLesson({ lessonId, locale, onSwitchLocale, onComplete }: Learni
                     {ui.nextStep}<span aria-hidden="true">{isArabic ? '←' : '→'}</span>
                   </button>
                 ) : (
-                  <button className="button button-primary learning-lesson-button" type="button" onClick={beginQuiz}>
-                    {ui.startQuiz}<span aria-hidden="true">{isArabic ? '←' : '→'}</span>
+                  <button className="button button-primary learning-lesson-button" type="button" onClick={openPractice}>
+                    {practiceUi.openPractice}<span aria-hidden="true">{isArabic ? '←' : '→'}</span>
                   </button>
                 )}
               </div>
             </article>
+          </section>
+        )}
+
+        {practiceOpened && (
+          <section className="learning-practice-shell" hidden={flow !== 'practice'}>
+            <PracticeStudio
+              lessonId={lessonId}
+              lessonTitle={copy.title}
+              locale={locale}
+              isVisible={flow === 'practice'}
+              onBackToLesson={() => setFlow('learn')}
+              onContinueToQuiz={beginQuiz}
+            />
           </section>
         )}
 

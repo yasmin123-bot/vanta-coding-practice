@@ -2,9 +2,11 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 import { initialHtmlExercise } from '../content/initialHtmlExercise';
 import { messages, type Locale } from '../i18n/messages';
 import { getStudentPortalCopy } from '../i18n/studentPortal';
+import { practiceStudioMessages } from '../i18n/practiceStudio';
 import { useAuth } from '../auth/AuthProvider';
 import { useStudentProgress } from '../state/StudentProgressProvider';
 import { createQuizChoiceOrder, getOrderedQuizChoices } from '../utils/quizChoices';
+import PracticeStudio from './PracticeStudio';
 
 type StartLessonProps = {
   locale: Locale;
@@ -12,7 +14,7 @@ type StartLessonProps = {
   onComplete: (score: number, total: number) => Promise<boolean>;
 };
 
-type LessonFlow = 'learn' | 'quiz' | 'result';
+type LessonFlow = 'learn' | 'practice' | 'quiz' | 'result';
 
 function InlineLessonText({ text }: { text: string }) {
   const parts = text.split(/(<\/?[a-z][a-z0-9]*>)/gi);
@@ -40,11 +42,13 @@ function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
   const pageCopy = messages[locale];
   const copy = pageCopy.lesson;
   const learningUi = pageCopy.learningSystem.ui;
+  const practiceUi = practiceStudioMessages[locale];
   const portalCopy = getStudentPortalCopy(locale);
   const auth = useAuth();
   const studentProgress = useStudentProgress();
   const isArabic = locale === 'ar';
   const [flow, setFlow] = useState<LessonFlow>('learn');
+  const [practiceOpened, setPracticeOpened] = useState(false);
   const [learningStepIndex, setLearningStepIndex] = useState(0);
   const [quizIndex, setQuizIndex] = useState(0);
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
@@ -93,6 +97,11 @@ function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
     setMissedQuestionIds([]);
     setProgressSaveState('idle');
     setFlow('quiz');
+  };
+
+  const openPractice = () => {
+    setPracticeOpened(true);
+    setFlow('practice');
   };
 
   const chooseAnswer = (choiceId: string) => {
@@ -324,16 +333,29 @@ function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
                 type="button"
                 onClick={() => {
                   if (learningStepIndex === copy.learningSteps.length - 1) {
-                    beginQuiz();
+                    openPractice();
                   } else {
                     setLearningStepIndex((current) => current + 1);
                   }
                 }}
               >
-                {learningStepIndex === copy.learningSteps.length - 1 ? copy.startQuiz : copy.nextStep}
+                {learningStepIndex === copy.learningSteps.length - 1 ? practiceUi.openPractice : copy.nextStep}
                 <span className="button-arrow" aria-hidden="true">{isArabic ? '←' : '→'}</span>
               </button>
             </nav>
+          </section>
+        )}
+
+        {practiceOpened && (
+          <section className="lesson-practice-shell" hidden={flow !== 'practice'}>
+            <PracticeStudio
+              lessonId="html-introduction"
+              lessonTitle={copy.title}
+              locale={locale}
+              isVisible={flow === 'practice'}
+              onBackToLesson={() => setFlow('learn')}
+              onContinueToQuiz={beginQuiz}
+            />
           </section>
         )}
 

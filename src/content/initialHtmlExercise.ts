@@ -1,6 +1,6 @@
 /**
- * Preserved from the original prototype for the future learning/challenge system.
- * Reference content only: this module does not render a code editor or execute code.
+ * Starter learning content preserved from the original prototype and used by the
+ * current HTML introduction practice workspace.
  */
 export const initialHtmlExercise = {
   id: 'html-first-heading',

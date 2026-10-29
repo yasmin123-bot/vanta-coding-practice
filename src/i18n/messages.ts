@@ -194,10 +194,10 @@ export const messages: Record<Locale, LandingCopy> = {
       eyebrow: 'فكرة VANTA',
       title: 'مش مجرد كورس... اتعلّم بالممارسة',
       description:
-        'VANTA منصة عملية لتعلّم البرمجة للمبتدئين. تقوم رؤيتها على أن يكتب المتعلم الشيفرة ويفهم أخطاءه ويصلحها؛ وتبدأ التجربة الحالية بمسار HTML ودروسه، بينما تظل أدوات التشغيل والمساعدة والتحديات ضمن الرؤية المستقبلية.',
+        'VANTA منصة عملية للمبتدئين. في مسار HTML الحالي يمكنك كتابة الشيفرة وتشغيل معاينة معزولة وفحص متطلبات التمرين؛ أما المساعدة الذكية والتحديات والمشاريع والمسابقات فما زالت ضمن الرؤية المستقبلية.',
       visionLabel: 'رؤية المنصة — تُبنى على مراحل',
       roadmapNote:
-        'مسار أساسيات HTML وخمسة دروسه متاحة الآن. تشغيل الشيفرة والمساعدة الذكية والتلميحات والتحديات والمشاريع والمسابقات ما زالت ضمن الرؤية المستقبلية.',
+        'مسار أساسيات HTML ودروسه الخمسة متاحة مع محرر ومعاينة معزولة؛ حفظ المسودات يتطلب تسجيل الدخول. المساعدة الذكية والتلميحات والتحديات والمشاريع والمسابقات ما زالت ضمن الرؤية المستقبلية.',
       loopLabel: 'حلقة التعلّم المستهدفة',
       steps: [
         { title: 'اكتب', body: 'ابدأ بالشيفرة بنفسك، لا بالمشاهدة وحدها.' },
@@ -282,7 +282,7 @@ export const messages: Record<Locale, LandingCopy> = {
       closingTagLabel: 'وسم الإغلاق',
       exampleLabel: 'مثال عملي',
       exampleTitle: 'عنوان وفقرة في صفحة واحدة',
-      exampleNote: 'للقراءة فقط · لا ينفّذ هذا الدرس الكود.',
+      exampleNote: 'المثال للشرح؛ جرّب تعديل شيفرتك في مساحة الممارسة أدناه.',
       headingRole: 'عنوان رئيسي',
       paragraphRole: 'فقرة ترحيب',
       practiceLabel: 'تطبيق سريع',
@@ -472,10 +472,10 @@ export const messages: Record<Locale, LandingCopy> = {
       eyebrow: 'THE VANTA APPROACH',
       title: 'Not just a course. Learn by building.',
       description:
-        'VANTA is a practical coding-learning platform for beginners. Its vision is to help learners write code, understand mistakes, and fix them. The current experience begins with an HTML path and lessons; code execution, assistance, and challenges remain future directions.',
+        'VANTA is a practical coding-learning platform for beginners. The current HTML path lets learners write code, run an isolated preview, and check exercise requirements; AI assistance, challenges, projects, and competitions remain future directions.',
       visionLabel: 'THE PLATFORM VISION — BUILT IN STAGES',
       roadmapNote:
-        'The HTML Fundamentals path and its five lessons are available now. Code execution, AI assistance and hints, challenges, projects, and competitions remain future directions.',
+        'The HTML Fundamentals path and all five lessons include an editor and isolated preview; draft saving requires sign-in. AI assistance and hints, challenges, projects, and competitions remain future directions.',
       loopLabel: 'THE INTENDED LEARNING LOOP',
       steps: [
         { title: 'Write', body: 'Start by writing code, not only watching.' },
@@ -560,7 +560,7 @@ export const messages: Record<Locale, LandingCopy> = {
       closingTagLabel: 'Closing tag',
       exampleLabel: 'A PRACTICAL EXAMPLE',
       exampleTitle: 'A heading and paragraph on one page',
-      exampleNote: 'Read-only · This lesson does not run code.',
+      exampleNote: 'The example above explains the concept; edit and run your code in Practice Studio below.',
       headingRole: 'Main heading',
       paragraphRole: 'Welcome paragraph',
       practiceLabel: 'PRACTICE',

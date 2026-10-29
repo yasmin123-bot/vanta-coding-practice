@@ -9,6 +9,7 @@ import './styles/tokens.css';
 import './styles/global.css';
 import './styles/learning-system.css';
 import './styles/student-portal.css';
+import './styles/practice-studio.css';
 import App from './App';
 import { AuthProvider } from './auth/AuthProvider';
 import { StudentProgressProvider } from './state/StudentProgressProvider';

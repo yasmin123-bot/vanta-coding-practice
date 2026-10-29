@@ -162,7 +162,7 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
           { id: 'html-first-page', title: 'ابنِ أول صفحة HTML', summary: 'جمع المفاهيم داخل وثيقة HTML كاملة ومقروءة.' },
         ],
         outline: [],
-        availableNote: 'الدروس الخمسة متاحة. أمثلة الشيفرة للقراءة فقط؛ لا يوجد محرّر أو تشغيل حقيقي للكود.',
+        availableNote: 'تتضمن الدروس الخمسة محررًا ومعاينة متصفح معزولة. يمكن للمتعلم المسجّل حفظ المسودات؛ وفحص المهمة لا يُكمل الدرس أو الاختبار.',
         plannedNote: '',
       },
       'css-fundamentals': {
@@ -465,7 +465,7 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
           },
           {
             title: 'اقرأ الوثيقة كاملة',
-            body: 'لاحظ كيف تجمع الوثيقة تعريف الصفحة ومعلوماتها ومحتواها. المثال للقراءة فقط؛ لا يوجد محرر أو تشغيل للكود في هذا المسار.',
+            body: 'لاحظ كيف تجمع الوثيقة تعريف الصفحة ومعلوماتها ومحتواها. المثال للشرح، ثم جرّب تركيب وثيقتك في مساحة الممارسة ومعاينة المتصفح المعزولة.',
             code: [
               { code: '<!DOCTYPE html>', note: 'إعلان نوع الوثيقة' },
               { code: '<html lang="en">', note: 'العنصر الجذر ولغة المستند' },
@@ -641,7 +641,7 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
           { id: 'html-first-page', title: 'Build Your First HTML Page', summary: 'Bring the ideas together in a complete, readable document.' },
         ],
         outline: [],
-        availableNote: 'All five lessons are available. Code examples are read-only; there is no code editor or execution.',
+        availableNote: 'All five lessons include a code editor and isolated browser preview. Signed-in learners can save practice drafts; checking a task does not complete a lesson or quiz.',
         plannedNote: '',
       },
       'css-fundamentals': {
@@ -944,7 +944,7 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
           },
           {
             title: 'Read the whole document',
-            body: 'Notice how the document type, page information, and visible content fit together. This is a read-only example; there is no editor or code execution in this path.',
+            body: 'Notice how the document type, page information, and visible content fit together. This example explains the structure; then try building your own in the practice editor and isolated browser preview.',
             code: [
               { code: '<!DOCTYPE html>', note: 'Document type declaration' },
               { code: '<html lang="en">', note: 'Root element and document language' },
