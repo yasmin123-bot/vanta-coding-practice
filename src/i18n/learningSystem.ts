@@ -1,4 +1,4 @@
-import type { AdditionalHtmlLessonId, HtmlLessonId, LearningPathId } from '../content/learningSystem';
+import type { AdditionalHtmlLessonId, FoundationLessonId, LearningPathId } from '../content/learningSystem';
 import type { Locale } from './messages';
 
 type CodeLineCopy = { code: string; note: string };
@@ -18,7 +18,7 @@ type LearningQuestion = {
   incorrectFeedback: string;
   reviewTopic: string;
 };
-type LearningLessonCopy = {
+export type LearningLessonCopy = {
   metaTitle: string;
   metaDescription: string;
   eyebrow: string;
@@ -31,7 +31,7 @@ type LearningLessonCopy = {
   outcomeLabel: string;
   outcomeText: string;
 };
-type PathLessonSummary = { id: HtmlLessonId; title: string; summary: string };
+export type PathLessonSummary = { id: FoundationLessonId; title: string; summary: string };
 type LearningPathCopy = {
   metaTitle: string;
   metaDescription: string;
@@ -129,15 +129,15 @@ export type LearningSystemCopy = {
 export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
   ar: {
     catalog: {
-      metaTitle: 'مسارات التعلّم — VANTA',
-      metaDescription: 'استكشف مسارات تعلّم البرمجة في VANTA، وابدأ بمسار HTML المتاح الآن.',
-      eyebrow: 'مسارات VANTA',
+      metaTitle: 'مسارات التعلّم — Mabda',
+      metaDescription: 'استكشف مسارات Mabda المتاحة للمبتدئين في HTML وCSS وJavaScript.',
+      eyebrow: 'مسارات Mabda',
       title: 'طريق واضح، خطوة بعد خطوة.',
-      description: 'ابدأ بمسار HTML العملي. المسارات الأخرى معروضة بوضوح كخطط مستقبلية، وليست دروسًا متاحة بعد.',
+      description: 'تعلّم أساسيات الويب عبر مسارات HTML وCSS وJavaScript المتاحة، مع ممارسة قصيرة داخل كل درس.',
     },
     paths: {
       'html-fundamentals': {
-        metaTitle: 'مسار أساسيات HTML — VANTA',
+        metaTitle: 'مسار أساسيات HTML — Mabda',
         metaDescription: 'خمسة دروس مترابطة لتعلّم HTML من البداية، مع تطبيق قصير في كل درس.',
         eyebrow: 'المسار 01 · متاح الآن',
         title: 'أساسيات HTML',
@@ -166,42 +166,42 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
         plannedNote: '',
       },
       'css-fundamentals': {
-        metaTitle: 'مسار أساسيات CSS — مخطط | VANTA',
-        metaDescription: 'تصوّر مستقبلي لمسار CSS في VANTA؛ الدروس لم تُفعّل بعد.',
-        eyebrow: 'المسار 02 · مخطط',
+        metaTitle: 'مسار أساسيات CSS — Mabda',
+        metaDescription: 'ثمانية دروس عملية للمبتدئين لتنسيق عناصر HTML باستخدام CSS.',
+        eyebrow: 'المسار 02 · متاح الآن',
         title: 'أساسيات CSS',
-        summary: 'المسار القادم لتنسيق صفحات الويب والتحكم في مظهرها بطريقة منظمة ومتجاوبة.',
+        summary: 'تعلّم ربط CSS بصفحة HTML، واختيار العناصر، ثم التحكم بالألوان والخطوط والمسافات والتخطيط المتجاوب.',
         forWhomLabel: 'لمن هذا المسار؟',
-        forWhom: 'لمن أنهى أساسيات HTML ويريد تنسيق المحتوى الذي بناه.',
-        outcomesLabel: 'الاتجاه المقصود',
-        outcomes: ['اختيار العناصر بمحددات CSS.', 'ضبط الألوان والخطوط والمسافات.', 'فهم نموذج الصندوق والتخطيط.', 'إنشاء واجهات تتكيف مع أحجام الشاشات.'],
-        conceptsLabel: 'مفاهيم مخططة',
-        concepts: ['المحددات', 'الألوان والخطوط', 'نموذج الصندوق', 'Flexbox و Grid', 'التجاوب'],
-        sequenceLabel: 'الترتيب المقترح',
-        outline: ['ربط CSS بصفحة HTML واختيار العناصر', 'الألوان والطباعة والتباين', 'نموذج الصندوق والمسافات', 'التخطيط باستخدام Flexbox و Grid', 'قواعد التجاوب للشاشات المختلفة'],
-        availableNote: '',
-        plannedNote: 'هذا مخطط تعلّم مستقبلي فقط. لا توجد دروس CSS أو تمارين تفاعلية متاحة حاليًا.',
+        forWhom: 'للمبتدئ الذي يعرف أساسيات HTML ويريد تحسين مظهر صفحات الويب.',
+        outcomesLabel: 'بعد المسار ستستطيع',
+        outcomes: ['اختيار عناصر HTML بمحددات واضحة.', 'تطبيق الألوان والخطوط والمسافات.', 'شرح نموذج الصندوق وترتيب العناصر.', 'إنشاء قواعد تستجيب لحجم الشاشة.'],
+        conceptsLabel: 'المفاهيم',
+        concepts: ['ربط CSS وكتابة المحددات', 'الألوان والخلفيات', 'الطباعة ومقروئية النص', 'نموذج الصندوق والتخطيط', 'Flexbox والتجاوب'],
+        sequenceLabel: 'تسلسل الدروس',
+        outline: [],
+        availableNote: 'تضم الدروس الثمانية محررًا ومعاينة معزولة وتمرينًا يتحقق من متطلبات CSS المحددة. تشغيل المعاينة منفصل عن تحقق التمرين والاختبار.',
+        plannedNote: '',
       },
       'javascript-fundamentals': {
-        metaTitle: 'مسار أساسيات JavaScript — مخطط | VANTA',
-        metaDescription: 'تصوّر مستقبلي لمسار JavaScript في VANTA؛ الدروس لم تُفعّل بعد.',
-        eyebrow: 'المسار 03 · مخطط',
+        metaTitle: 'مسار أساسيات JavaScript — Mabda',
+        metaDescription: 'تسعة دروس عملية للمبتدئين حول قيم JavaScript وشروطها ودوالها وتفاعلها مع الصفحة.',
+        eyebrow: 'المسار 03 · متاح الآن',
         title: 'أساسيات JavaScript',
-        summary: 'مسار مستقبلي لإضافة السلوك والتفاعل إلى صفحات الويب بعد تعلّم البنية والتنسيق.',
+        summary: 'ابدأ بكتابة قيم ومتغيرات، ثم تعلّم اتخاذ القرار والدوال والمصفوفات والتعامل مع عناصر الصفحة والأحداث.',
         forWhomLabel: 'لمن هذا المسار؟',
-        forWhom: 'لمن لديه أساس في HTML وCSS ويريد بدء البرمجة بلغة JavaScript.',
-        outcomesLabel: 'الاتجاه المقصود',
-        outcomes: ['تخزين القيم واستخدامها.', 'اتخاذ قرارات بالشروط.', 'تكرار التعليمات بطريقة مفهومة.', 'تقسيم السلوك إلى دوال صغيرة.'],
-        conceptsLabel: 'مفاهيم مخططة',
-        concepts: ['المتغيرات والقيم', 'الشروط', 'الحلقات', 'الدوال', 'الأحداث'],
-        sequenceLabel: 'الترتيب المقترح',
-        outline: ['القيم والمتغيرات وأنواع البيانات الأولية', 'الشروط واتخاذ القرار', 'الحلقات والتكرار', 'الدوال والمدخلات والمخرجات', 'الأحداث والتفاعل مع الصفحة'],
-        availableNote: '',
-        plannedNote: 'هذا مخطط تعلّم مستقبلي فقط. لا توجد دروس JavaScript أو شيفرة قابلة للتشغيل هنا.',
+        forWhom: 'للمبتدئ الذي تعرّف على بنية HTML وتنسيق CSS ويريد إضافة سلوك وتفاعل للصفحة.',
+        outcomesLabel: 'بعد المسار ستستطيع',
+        outcomes: ['تعريف المتغيرات واستخدام أنواع البيانات الأساسية.', 'كتابة شروط تقارن القيم.', 'إنشاء دوال ومصفوفات صغيرة.', 'قراءة عناصر الصفحة والاستجابة للأحداث.'],
+        conceptsLabel: 'المفاهيم',
+        concepts: ['المتغيرات وأنواع البيانات', 'المعاملات والشروط', 'الدوال والمصفوفات', 'اختيار عناصر الصفحة', 'الأحداث والتفاعل'],
+        sequenceLabel: 'تسلسل الدروس',
+        outline: [],
+        availableNote: 'تضم الدروس التسعة محرر JavaScript ومعاينة معزولة وتمرينًا يتحقق من بنية الكود المطلوبة. التشغيل لا يكمل الدرس أو الاختبار تلقائيًا.',
+        plannedNote: '',
       },
       'programming-fundamentals': {
-        metaTitle: 'مبادئ البرمجة — اتجاه مستقبلي | VANTA',
-        metaDescription: 'اتجاه مستقبلي في VANTA لتعلّم التفكير والمفاهيم المشتركة بين لغات البرمجة.',
+        metaTitle: 'مبادئ البرمجة — اتجاه مستقبلي | Mabda',
+        metaDescription: 'اتجاه مستقبلي في Mabda لتعلّم التفكير والمفاهيم المشتركة بين لغات البرمجة.',
         eyebrow: 'اتجاه مستقبلي',
         title: 'مبادئ البرمجة',
         summary: 'مسار مقترح لتعلّم المفاهيم المشتركة بين اللغات قبل التعمق في تقنية بعينها.',
@@ -217,8 +217,8 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
         plannedNote: 'اتجاه منتج مستقبلي؛ لا يوجد مسار أو درس قابل للفتح في هذه النسخة.',
       },
       'problem-solving': {
-        metaTitle: 'حل المشكلات — اتجاه مستقبلي | VANTA',
-        metaDescription: 'اتجاه مستقبلي في VANTA لتنمية مهارات التفكير وحل المشكلات.',
+        metaTitle: 'حل المشكلات — اتجاه مستقبلي | Mabda',
+        metaDescription: 'اتجاه مستقبلي في Mabda لتنمية مهارات التفكير وحل المشكلات.',
         eyebrow: 'اتجاه مستقبلي',
         title: 'حل المشكلات',
         summary: 'اتجاه مقترح لممارسة التفكير المنهجي: افهم المطلوب، جرّب فكرة، ثم راجع النتيجة.',
@@ -236,7 +236,7 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
     },
     lessons: {
       'html-headings-paragraphs': {
-        metaTitle: 'العناوين والفقرات في HTML — VANTA',
+        metaTitle: 'العناوين والفقرات في HTML — Mabda',
         metaDescription: 'تعلّم تنظيم صفحة HTML بالعناوين والفقرات في درس قصير وتفاعلي.',
         eyebrow: 'أساسيات HTML · الدرس 02',
         title: 'رتّب أفكارك بالعناوين والفقرات',
@@ -307,7 +307,7 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
         outcomeText: 'ستستطيع بناء عنوان رئيسي وعناوين فرعية وفقرات بترتيب يساعد القارئ على فهم الصفحة.',
       },
       'html-links-navigation': {
-        metaTitle: 'الروابط والتنقّل في HTML — VANTA',
+        metaTitle: 'الروابط والتنقّل في HTML — Mabda',
         metaDescription: 'تعلّم عنصر الرابط a والوجهة href من خلال أمثلة وتمرين قصير.',
         eyebrow: 'أساسيات HTML · الدرس 03',
         title: 'اربط بين الصفحات',
@@ -318,14 +318,14 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
           {
             title: 'عنصر a يصنع رابطًا',
             body: 'نكتب نص الرابط بين وسمَي <a> و </a>. اجعل النص مفهومًا حتى يعرف القارئ إلى أين سيقوده الرابط.',
-            code: [{ code: '<a href="/about">About VANTA</a>', note: 'نص ظاهر يمكن للقارئ فتحه' }],
+            code: [{ code: '<a href="/about">About Mabda</a>', note: 'نص ظاهر يمكن للقارئ فتحه' }],
           },
           {
             title: 'href تحدد الوجهة',
             body: 'السمة href تكتب داخل وسم الفتح، وقيمتها هي المسار أو العنوان المقصود. السمة تصف العنصر، أما نص الرابط فيبقى بين الوسمين.',
             code: [
               { code: '<a href="/about">', note: 'وسم فتح مع وجهة داخل href' },
-              { code: '  About VANTA', note: 'النص الذي يراه القارئ' },
+              { code: '  About Mabda', note: 'النص الذي يراه القارئ' },
               { code: '</a>', note: 'وسم الإغلاق' },
             ],
           },
@@ -375,7 +375,7 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
         outcomeText: 'ستستطيع قراءة عنصر a، وفهم href، وكتابة رابط يصف وجهته بوضوح.',
       },
       'html-images-attributes': {
-        metaTitle: 'الصور والسمات في HTML — VANTA',
+        metaTitle: 'الصور والسمات في HTML — Mabda',
         metaDescription: 'تعلّم src وalt وسمات الصور في HTML، مع تركيز على النص البديل المفيد.',
         eyebrow: 'أساسيات HTML · الدرس 04',
         title: 'أضف صورة تصف معناها',
@@ -439,7 +439,7 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
         outcomeText: 'ستستطيع كتابة عنصر صورة بسمتَي src وalt، واختيار نص بديل يشرح معناها.',
       },
       'html-first-page': {
-        metaTitle: 'ابنِ أول صفحة HTML — VANTA',
+        metaTitle: 'ابنِ أول صفحة HTML — Mabda',
         metaDescription: 'اجمع مفاهيم HTML في وثيقة كاملة، ثم راجع فهمك في اختبار ختامي.',
         eyebrow: 'أساسيات HTML · الدرس 05',
         title: 'ابنِ أول صفحة HTML',
@@ -545,7 +545,7 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
     ui: {
       allPaths: 'كل المسارات',
       home: 'الصفحة الرئيسية',
-      backToPath: 'العودة إلى مسار HTML',
+      backToPath: 'العودة إلى المسار',
       available: 'متاح الآن',
       planned: 'مخطط',
       future: 'اتجاه مستقبلي',
@@ -572,8 +572,8 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
       learnLabel: 'افهم الفكرة',
       practiceLabel: 'تحقّق من فهمك',
       stepProgress: 'الخطوة {current} من {total}',
-      lessonProgressNote: 'شرح قصير، ثم تطبيق. لا يوجد تشغيل حقيقي للشيفرة.',
-      codeExampleLabel: 'مثال HTML للقراءة',
+      lessonProgressNote: 'خطوات قصيرة تساعدك على الفهم، ثم تطبيق عملي داخل مساحة التدريب.',
+      codeExampleLabel: 'مثال برمجي للقراءة',
       codeReadOnly: 'للقراءة فقط',
       previousStep: 'السابق',
       nextStep: 'التالي',
@@ -603,20 +603,20 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
       returnToPath: 'العودة إلى صفحة المسار',
       notFoundTitle: 'هذه الصفحة غير موجودة',
       notFoundBody: 'الرابط لا يطابق صفحة أو درسًا متاحًا. ارجع إلى المسارات واختر ما تريد تعلّمه.',
-      backHome: 'العودة إلى VANTA',
+      backHome: 'العودة إلى Mabda',
     },
   },
   en: {
     catalog: {
-      metaTitle: 'Learning Paths — VANTA',
-      metaDescription: 'Explore VANTA coding paths and begin with the available HTML Fundamentals path.',
-      eyebrow: 'VANTA LEARNING PATHS',
+      metaTitle: 'Learning Paths — Mabda',
+      metaDescription: 'Explore Mabda beginner learning paths in HTML, CSS, and JavaScript.',
+      eyebrow: 'Mabda LEARNING PATHS',
       title: 'A clear route, one step at a time.',
-      description: 'Start with the practical HTML path. Other paths are clearly marked as plans, not lessons you can take yet.',
+      description: 'Explore active beginner paths in HTML, CSS, and JavaScript, with practical exercises inside each lesson.',
     },
     paths: {
       'html-fundamentals': {
-        metaTitle: 'HTML Fundamentals Path — VANTA',
+        metaTitle: 'HTML Fundamentals Path — Mabda',
         metaDescription: 'Five connected beginner lessons covering HTML from the first tag to a complete page.',
         eyebrow: 'PATH 01 · AVAILABLE NOW',
         title: 'HTML Fundamentals',
@@ -645,42 +645,42 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
         plannedNote: '',
       },
       'css-fundamentals': {
-        metaTitle: 'CSS Fundamentals Path — Planned | VANTA',
-        metaDescription: 'The planned VANTA CSS path outline; lessons are not available yet.',
-        eyebrow: 'PATH 02 · PLANNED',
+        metaTitle: 'CSS Fundamentals Path — Mabda',
+        metaDescription: 'Eight practical beginner lessons for styling HTML elements with CSS.',
+        eyebrow: 'PATH 02 · AVAILABLE NOW',
         title: 'CSS Fundamentals',
-        summary: 'The next planned path will cover styling web pages and controlling their appearance in a structured, responsive way.',
+        summary: 'Connect CSS to HTML, select elements, then style color, typography, spacing, layout, and responsive pages.',
         forWhomLabel: 'Who this path is for',
-        forWhom: 'Learners who have completed HTML basics and want to style the content they have built.',
-        outcomesLabel: 'Intended direction',
-        outcomes: ['Select elements with CSS selectors.', 'Set colors, typography, and spacing.', 'Understand the box model and layout.', 'Create interfaces that adapt to screen sizes.'],
-        conceptsLabel: 'Planned concepts',
-        concepts: ['Selectors', 'Color and type', 'Box model', 'Flexbox and Grid', 'Responsive styling'],
-        sequenceLabel: 'Proposed sequence',
-        outline: ['Connect CSS to HTML and select elements', 'Color, typography, and contrast', 'Box model and spacing', 'Layout with Flexbox and Grid', 'Responsive rules for different screens'],
-        availableNote: '',
-        plannedNote: 'This is a future learning outline only. No CSS lessons or interactive exercises are available yet.',
+        forWhom: 'Beginners who know basic HTML and want to improve the appearance of web pages.',
+        outcomesLabel: 'By the end, you can',
+        outcomes: ['Select HTML elements with clear selectors.', 'Apply color, typography, and spacing.', 'Explain the box model and basic layout.', 'Write rules that adapt to screen size.'],
+        conceptsLabel: 'Concepts',
+        concepts: ['Connecting CSS and selectors', 'Colors and backgrounds', 'Readable typography', 'Box model and layout', 'Flexbox and responsive rules'],
+        sequenceLabel: 'Lesson sequence',
+        outline: [],
+        availableNote: 'All eight lessons include a CSS editor, isolated preview, and an exercise-specific code check. Running the preview remains separate from exercise and quiz completion.',
+        plannedNote: '',
       },
       'javascript-fundamentals': {
-        metaTitle: 'JavaScript Fundamentals Path — Planned | VANTA',
-        metaDescription: 'The planned VANTA JavaScript path outline; lessons are not available yet.',
-        eyebrow: 'PATH 03 · PLANNED',
+        metaTitle: 'JavaScript Fundamentals Path — Mabda',
+        metaDescription: 'Nine practical beginner lessons on JavaScript values, conditions, functions, and page interaction.',
+        eyebrow: 'PATH 03 · AVAILABLE NOW',
         title: 'JavaScript Fundamentals',
-        summary: 'A future path for adding behavior and interaction to web pages after learning structure and styling.',
+        summary: 'Start with values and variables, then learn decisions, functions, arrays, page elements, and events.',
         forWhomLabel: 'Who this path is for',
-        forWhom: 'Learners with HTML and CSS basics who are ready to begin programming with JavaScript.',
-        outcomesLabel: 'Intended direction',
-        outcomes: ['Store and use values.', 'Make decisions with conditions.', 'Repeat instructions clearly.', 'Organize behavior into small functions.'],
-        conceptsLabel: 'Planned concepts',
-        concepts: ['Variables and values', 'Conditions', 'Loops', 'Functions', 'Events'],
-        sequenceLabel: 'Proposed sequence',
-        outline: ['Values, variables, and primitive data', 'Conditions and decisions', 'Loops and repetition', 'Functions, inputs, and outputs', 'Events and page interaction'],
-        availableNote: '',
-        plannedNote: 'This is a future learning outline only. No JavaScript lessons or executable code are available here.',
+        forWhom: 'Beginners familiar with HTML structure and CSS styling who want to add behavior and interaction.',
+        outcomesLabel: 'By the end, you can',
+        outcomes: ['Declare variables and use basic data types.', 'Write conditions that compare values.', 'Create small functions and arrays.', 'Select page elements and respond to events.'],
+        conceptsLabel: 'Concepts',
+        concepts: ['Variables and data types', 'Operators and conditions', 'Functions and arrays', 'Selecting page elements', 'Events and interaction'],
+        sequenceLabel: 'Lesson sequence',
+        outline: [],
+        availableNote: 'All nine lessons include a JavaScript editor, isolated preview, and an exercise-specific structural code check. Running code does not complete a lesson or quiz automatically.',
+        plannedNote: '',
       },
       'programming-fundamentals': {
-        metaTitle: 'Programming Fundamentals — Future Direction | VANTA',
-        metaDescription: 'A future VANTA direction for learning concepts shared across programming languages.',
+        metaTitle: 'Programming Fundamentals — Future Direction | Mabda',
+        metaDescription: 'A future Mabda direction for learning concepts shared across programming languages.',
         eyebrow: 'FUTURE DIRECTION',
         title: 'Programming Fundamentals',
         summary: 'A proposed path for learning ideas shared across programming languages before specializing in a technology.',
@@ -696,8 +696,8 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
         plannedNote: 'This is a future product direction; no learning path or lesson is available in this release.',
       },
       'problem-solving': {
-        metaTitle: 'Problem Solving — Future Direction | VANTA',
-        metaDescription: 'A future VANTA direction for building structured thinking and problem-solving skills.',
+        metaTitle: 'Problem Solving — Future Direction | Mabda',
+        metaDescription: 'A future Mabda direction for building structured thinking and problem-solving skills.',
         eyebrow: 'FUTURE DIRECTION',
         title: 'Problem Solving',
         summary: 'A proposed direction for practicing structured thinking: understand the task, try an idea, and review the result.',
@@ -715,7 +715,7 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
     },
     lessons: {
       'html-headings-paragraphs': {
-        metaTitle: 'Headings and Paragraphs in HTML — VANTA',
+        metaTitle: 'Headings and Paragraphs in HTML — Mabda',
         metaDescription: 'Learn to organize an HTML page with headings and paragraphs in a short interactive lesson.',
         eyebrow: 'HTML FUNDAMENTALS · LESSON 02',
         title: 'Organize ideas with headings and paragraphs',
@@ -786,7 +786,7 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
         outcomeText: 'You can create a main heading, subsections, and paragraphs in an order that helps readers understand a page.',
       },
       'html-links-navigation': {
-        metaTitle: 'Links and Navigation in HTML — VANTA',
+        metaTitle: 'Links and Navigation in HTML — Mabda',
         metaDescription: 'Learn the a element and href destination with examples and a short practice check.',
         eyebrow: 'HTML FUNDAMENTALS · LESSON 03',
         title: 'Connect pages with links',
@@ -797,14 +797,14 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
           {
             title: 'The a element creates a link',
             body: 'Write the link text between <a> and </a>. Make the words meaningful so readers can understand where the link leads.',
-            code: [{ code: '<a href="/about">About VANTA</a>', note: 'Visible text a reader can open' }],
+            code: [{ code: '<a href="/about">About Mabda</a>', note: 'Visible text a reader can open' }],
           },
           {
             title: 'href holds the destination',
             body: 'The href attribute goes in the opening tag, and its value is the path or address to visit. The attribute describes the link; the readable text stays between the tags.',
             code: [
               { code: '<a href="/about">', note: 'Opening tag with a destination in href' },
-              { code: '  About VANTA', note: 'Text the reader sees' },
+              { code: '  About Mabda', note: 'Text the reader sees' },
               { code: '</a>', note: 'Closing tag' },
             ],
           },
@@ -854,7 +854,7 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
         outcomeText: 'You can read an a element, understand href, and write a link whose text clearly describes its destination.',
       },
       'html-images-attributes': {
-        metaTitle: 'Images and Attributes in HTML — VANTA',
+        metaTitle: 'Images and Attributes in HTML — Mabda',
         metaDescription: 'Learn src, alt, and HTML image attributes, with a focus on useful alternative text.',
         eyebrow: 'HTML FUNDAMENTALS · LESSON 04',
         title: 'Add an image and describe it',
@@ -918,7 +918,7 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
         outcomeText: 'You can write an image element with src and alt, and choose alternative text that communicates its meaning.',
       },
       'html-first-page': {
-        metaTitle: 'Build Your First HTML Page — VANTA',
+        metaTitle: 'Build Your First HTML Page — Mabda',
         metaDescription: 'Bring HTML concepts together in a complete document, then review them with a final quiz.',
         eyebrow: 'HTML FUNDAMENTALS · LESSON 05',
         title: 'Build your first HTML page',
@@ -1024,7 +1024,7 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
     ui: {
       allPaths: 'All learning paths',
       home: 'Home',
-      backToPath: 'Back to HTML path',
+      backToPath: 'Back to path',
       available: 'Available now',
       planned: 'Planned',
       future: 'Future direction',
@@ -1051,8 +1051,8 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
       learnLabel: 'UNDERSTAND',
       practiceLabel: 'CHECK YOUR UNDERSTANDING',
       stepProgress: 'Step {current} of {total}',
-      lessonProgressNote: 'Short explanations, then practice. Code is not executed.',
-      codeExampleLabel: 'HTML example for reading',
+      lessonProgressNote: 'Short steps build understanding before you practice in the code studio.',
+      codeExampleLabel: 'Read-only code example',
       codeReadOnly: 'READ ONLY',
       previousStep: 'Previous',
       nextStep: 'Next',
@@ -1082,7 +1082,7 @@ export const learningSystemMessages: Record<Locale, LearningSystemCopy> = {
       returnToPath: 'Return to path overview',
       notFoundTitle: 'This page is not here',
       notFoundBody: 'The address does not match an available page or lesson. Return to the paths and choose what to learn next.',
-      backHome: 'Back to VANTA',
+      backHome: 'Back to Mabda',
     },
   },
 };

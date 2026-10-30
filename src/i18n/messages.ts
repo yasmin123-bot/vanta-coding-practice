@@ -169,35 +169,35 @@ type LandingCopy = {
 
 export const messages: Record<Locale, LandingCopy> = {
   ar: {
-    metaTitle: 'VANTA — تعلّم، مارس، ابنِ',
-    metaDescription: 'VANTA — تعلّم البرمجة بالممارسة، وابنِ ما يتجاوز المعتاد.',
+    metaTitle: 'مبدأ — تعلّم البرمجة بالممارسة',
+    metaDescription: 'مبدأ من VANTA: تعلّم أساسيات HTML وCSS وJavaScript عبر دروس قصيرة، واكتب الكود وجرّبه وافهم أخطاءه.',
     nav: {
       vision: 'الرؤية',
       journey: 'رحلة التعلّم',
       platform: 'ما نبنيه',
-      about: 'عن VANTA',
+      about: 'عن Mabda',
       menu: 'القائمة',
       closeMenu: 'إغلاق القائمة',
       switchLanguage: 'Switch to English',
     },
     hero: {
-      eyebrow: 'تعلّم • مارس • ابنِ • نافس',
+      eyebrow: 'مبدأ / تعلّم البرمجة بالممارسة',
       titleFirst: 'ابدأ من الصفر.',
-      titleAccent: 'وابنِ ما يتجاوز المعتاد.',
+      titleAccent: 'بأساسيات الويب.',
       description:
-        'VANTA مساحة تعلّم برمجة للمبتدئين، تبدأ بالفضول وتكبر مع كل سطر تكتبه وكل مشكلة تتعلّم حلّها.',
-      primaryAction: 'اكتشف رحلة VANTA',
+        'Mabda مساحة تعلّم برمجة للمبتدئين، تبدأ بالفضول وتكبر مع كل سطر تكتبه وكل مشكلة تتعلّم حلّها.',
+      primaryAction: 'استكشف رحلة التعلّم',
       secondaryAction: 'ما الذي نؤمن به؟',
       note: 'تعلّم بالممارسة، لا بالمشاهدة فقط.',
     },
     coreIdea: {
-      eyebrow: 'فكرة VANTA',
+      eyebrow: 'فكرة Mabda',
       title: 'مش مجرد كورس... اتعلّم بالممارسة',
       description:
-        'VANTA منصة عملية للمبتدئين. في مسار HTML الحالي يمكنك كتابة الشيفرة وتشغيل معاينة معزولة وفحص متطلبات التمرين؛ أما المساعدة الذكية والتحديات والمشاريع والمسابقات فما زالت ضمن الرؤية المستقبلية.',
+        'Mabda منصة عملية للمبتدئين تضم 22 درسًا في مسارات HTML وCSS وJavaScript. اكتب الشيفرة، وشغّل معاينة معزولة، وافحص متطلبات التمرين؛ أما المساعدة الذكية والتحديات والمشاريع والمسابقات فما زالت ضمن الرؤية المستقبلية.',
       visionLabel: 'رؤية المنصة — تُبنى على مراحل',
       roadmapNote:
-        'مسار أساسيات HTML ودروسه الخمسة متاحة مع محرر ومعاينة معزولة؛ حفظ المسودات يتطلب تسجيل الدخول. المساعدة الذكية والتلميحات والتحديات والمشاريع والمسابقات ما زالت ضمن الرؤية المستقبلية.',
+        'مسارات HTML وCSS وJavaScript ودروسها الـ22 متاحة مع محررات ومعاينة معزولة؛ حفظ التقدم والمسودات يتطلب تسجيل الدخول. المساعدة الذكية والتلميحات والتحديات والمشاريع والمسابقات ما زالت ضمن الرؤية المستقبلية.',
       loopLabel: 'حلقة التعلّم المستهدفة',
       steps: [
         { title: 'اكتب', body: 'ابدأ بالشيفرة بنفسك، لا بالمشاهدة وحدها.' },
@@ -214,7 +214,7 @@ export const messages: Record<Locale, LandingCopy> = {
       description:
         'خمس محطات مقترحة تساعد المبتدئ على فهم المفاهيم، ثم تطبيقها تدريجيًا حتى يجمعها في مشاريع صغيرة.',
       roadmapNote:
-        'ابدأ بدرس HTML، أو افتح مسار الأساسيات المتاح. الممارسة والتحديات والمشاريع محطات مستقبلية وليست مفعّلة بعد.',
+        'ابدأ بدرس HTML أو مسار الأساسيات؛ مساحة الممارسة متاحة داخل الدروس. التحديات والمشاريع والممارسة المستقلة مراحل مخططة.',
       pathCatalogAction: 'استكشف كل مسارات التعلّم',
       availableStatus: 'متاح الآن',
       futureStatus: 'ضمن الرؤية المستقبلية',
@@ -227,7 +227,7 @@ export const messages: Record<Locale, LandingCopy> = {
         {
           title: 'الأساسيات',
           level: 'تأسيس',
-          body: 'افهم المتغيرات والشروط والحلقات والدوال.',
+          body: 'افهم بنية HTML والعناوين والروابط والصور.',
         },
         {
           title: 'الممارسة',
@@ -247,7 +247,7 @@ export const messages: Record<Locale, LandingCopy> = {
       ],
     },
     lesson: {
-      metaTitle: 'VANTA — أساسيات HTML',
+      metaTitle: 'Mabda — أساسيات HTML',
       metaDescription: 'درس HTML تفاعلي من ست خطوات واختبار قصير بخمسة أسئلة.',
       stageLabel: '01 / البداية • الأساسيات',
       backToJourney: 'العودة إلى مسار HTML',
@@ -289,7 +289,7 @@ export const messages: Record<Locale, LandingCopy> = {
       quizTitle: 'خمسة أسئلة قصيرة',
       quizIntro: 'اختَر أفضل إجابة من أربعة اختيارات. إذا أخطأت، سنوضح الفكرة ونترك لك فرصة للمحاولة.',
       quizProgress: 'السؤال {current} / {total}',
-      quizProgressNote: 'الإجابات والنتيجة مؤقتة ولا يتم حفظها.',
+      quizProgressNote: 'اختياراتك مؤقتة؛ يُحفظ ملخص النتيجة فقط عند تسجيل الدخول.',
       questions: [
         {
           id: 'opening-tag',
@@ -337,10 +337,10 @@ export const messages: Record<Locale, LandingCopy> = {
           id: 'paragraph-element',
           prompt: 'أي كود ينشئ فقرة HTML صحيحة؟',
           choices: [
-            { id: 'valid-paragraph', label: '<p>Welcome to VANTA.</p>', kind: 'code' },
-            { id: 'wrong-closing-tag', label: '<p>Welcome to VANTA.</h1>', kind: 'code' },
-            { id: 'wrong-opener', label: '<h1>Welcome to VANTA.</h1>', kind: 'code' },
-            { id: 'wrong-close-div', label: '<p>Welcome to VANTA.</div>', kind: 'code' },
+            { id: 'valid-paragraph', label: '<p>Welcome to Mabda.</p>', kind: 'code' },
+            { id: 'wrong-closing-tag', label: '<p>Welcome to Mabda.</h1>', kind: 'code' },
+            { id: 'wrong-opener', label: '<h1>Welcome to Mabda.</h1>', kind: 'code' },
+            { id: 'wrong-close-div', label: '<p>Welcome to Mabda.</div>', kind: 'code' },
           ],
           correctChoiceId: 'valid-paragraph',
           correctFeedback: 'صحيح. تبدأ الفقرة بوسم <p> وتنتهي بالوسم المطابق </p>.',
@@ -378,7 +378,7 @@ export const messages: Record<Locale, LandingCopy> = {
         three: 'كويس! الأساس موجود. راجع النقاط المحددة وحاول مرة أخرى.',
         low: 'ولا يهمك! الخطأ جزء من التعلّم. راجع النقاط المحددة وابدأ من جديد.',
       },
-      resultNote: 'الدرجة للمراجعة فقط. إكمال الدرس يظهر في جلسة المتصفح الحالية، ولا تُحفظ النتيجة أو البيانات بشكل دائم.',
+      resultNote: 'الدرجة للمراجعة. للحساب المسجل يُرسل ملخص النتيجة والإكمال للحفظ؛ حالة الحفظ موضّحة أدناه. للزائر تبقى النتيجة داخل الجلسة فقط.',
       reviewTitle: 'نقاط للمراجعة',
       noMissedQuestions: 'أجبت عن كل الأسئلة بشكل صحيح من أول محاولة.',
       retryQuiz: 'إعادة الاختبار',
@@ -387,7 +387,7 @@ export const messages: Record<Locale, LandingCopy> = {
     },
     learningSystem: learningSystemMessages.ar,
     vision: {
-      eyebrow: 'لماذا VANTA؟',
+      eyebrow: 'لماذا Mabda؟',
       title: 'البرمجة تُفهم حين تضع يدك عليها.',
       description:
         'نصمّم تجربة عملية تجعل التعلّم أقرب إلى بناء شيء حقيقي: تكتب، تجرّب، ترى النتيجة، وتفهم الخطوة التالية.',
@@ -407,15 +407,15 @@ export const messages: Record<Locale, LandingCopy> = {
       ],
     },
     platform: {
-      eyebrow: 'أفق VANTA',
+      eyebrow: 'أفق Mabda',
       title: 'بيئة برمجية تتكوّن خطوة بخطوة.',
       description:
-        'مسار HTML متاح الآن؛ أمّا تشغيل الشيفرة والمساعدة الذكية والتحديات والمشاريع الأوسع فما زالت ضمن خارطة الطريق.',
+        'مسارات HTML وCSS وJavaScript الـ22 متاحة الآن مع محررات ومعاينة معزولة. المساعدة الذكية والتحديات والمشاريع ما زالت مخططة.',
       status: 'ضمن خارطة المنصة',
       cards: [
         {
           title: 'مسارات ومشاريع أوسع',
-          body: 'مسار أساسيات HTML متاح؛ مسارات CSS وJavaScript والمشاريع العملية الأوسع مخططة للمستقبل.',
+          body: 'تعلّم أساسيات HTML وCSS وJavaScript عبر 22 درسًا؛ التحديات والمشاريع العملية الأوسع مخططة للمستقبل.',
         },
         {
           title: 'مساعد يعلّمك التفكير',
@@ -428,11 +428,11 @@ export const messages: Record<Locale, LandingCopy> = {
       ],
     },
     about: {
-      eyebrow: 'عن VANTA',
-      title: 'نحن لا نضيف درسًا آخر. نحن نبني مساحة لصناعة المستقبل.',
+      eyebrow: 'عن مبدأ',
+      title: 'منتج تعليمي من فريق VANTA.',
       description:
-        'VANTA مشروع تعلّم برمجة للمبتدئين، ينطلق من إيمان بسيط: الوصول إلى التقنية يبدأ حين تمنح نفسك فرصة أن تجرّب وتبني.',
-      quote: 'حيث ينتهي خيال المعتاد.. تبدأ سيطرة VANTA',
+        'مبدأ هي منصة التعلّم التي يطوّرها فريق VANTA. هوية المنتج مستقلة، وتجربته تبدأ بالشرح والفهم ثم كتابة الكود وتجربته.',
+      quote: 'من VANTA',
     },
     closing: {
       eyebrow: 'تعلّم لتبني',
@@ -441,41 +441,41 @@ export const messages: Record<Locale, LandingCopy> = {
       action: 'عد إلى بداية الرحلة',
     },
     footer: {
-      tagline: 'Create Beyond>',
+      tagline: 'by VANTA',
       backToTop: 'العودة إلى الأعلى',
       copyright: 'بيئة تعلّم برمجة للمبتدئين.',
     },
   },
   en: {
-    metaTitle: 'VANTA — Learn, Practice, Build',
-    metaDescription: 'Learn programming through practice with VANTA, and build beyond the ordinary.',
+    metaTitle: 'Mabda — Coding practice for beginners',
+    metaDescription: 'Mabda by VANTA: learn HTML, CSS, and JavaScript in short lessons, write code, and understand your mistakes.',
     nav: {
       vision: 'Our vision',
       journey: 'The journey',
       platform: 'What we are building',
-      about: 'About VANTA',
+      about: 'About Mabda',
       menu: 'Menu',
       closeMenu: 'Close menu',
       switchLanguage: 'التبديل إلى العربية',
     },
     hero: {
-      eyebrow: 'LEARN • PRACTICE • BUILD • COMPETE',
+      eyebrow: 'MABDA / CODING PRACTICE FOR BEGINNERS',
       titleFirst: 'Start from zero.',
-      titleAccent: 'Build beyond the ordinary.',
+      titleAccent: 'With web fundamentals.',
       description:
-        'VANTA is a place for beginners to learn programming through practice—starting with curiosity and growing with every line you write and every problem you learn to solve.',
-      primaryAction: 'Explore the VANTA journey',
+        'Mabda is a place for beginners to learn programming through practice—starting with curiosity and growing with every line you write and every problem you learn to solve.',
+      primaryAction: 'Explore the learning journey',
       secondaryAction: 'What do we believe?',
       note: 'Learn by doing, not by watching alone.',
     },
     coreIdea: {
-      eyebrow: 'THE VANTA APPROACH',
+      eyebrow: 'THE Mabda APPROACH',
       title: 'Not just a course. Learn by building.',
       description:
-        'VANTA is a practical coding-learning platform for beginners. The current HTML path lets learners write code, run an isolated preview, and check exercise requirements; AI assistance, challenges, projects, and competitions remain future directions.',
+        'Mabda is a practical learning platform for beginners with 22 lessons across HTML, CSS, and JavaScript. Learners write code, run an isolated preview, and check exercise requirements; AI assistance, challenges, projects, and competitions remain future directions.',
       visionLabel: 'THE PLATFORM VISION — BUILT IN STAGES',
       roadmapNote:
-        'The HTML Fundamentals path and all five lessons include an editor and isolated preview; draft saving requires sign-in. AI assistance and hints, challenges, projects, and competitions remain future directions.',
+        'The HTML, CSS, and JavaScript paths include 22 lessons, code editors, and isolated previews; cloud progress and draft saving require sign-in. AI assistance and hints, challenges, projects, and competitions remain future directions.',
       loopLabel: 'THE INTENDED LEARNING LOOP',
       steps: [
         { title: 'Write', body: 'Start by writing code, not only watching.' },
@@ -492,7 +492,7 @@ export const messages: Record<Locale, LandingCopy> = {
       description:
         'Five proposed stages for beginners: build a foundation, practice step by step, then bring those skills together in small projects.',
       roadmapNote:
-        'Start opens the HTML introduction; Fundamentals opens the available HTML path. Practice, Challenges, and Projects remain future stages.',
+        'Start opens the HTML introduction; Fundamentals opens the active HTML, CSS, and JavaScript paths. Practice Studio is available inside lessons; challenges and projects are planned.',
       pathCatalogAction: 'Explore all learning paths',
       availableStatus: 'Available now',
       futureStatus: 'Future direction',
@@ -505,7 +505,7 @@ export const messages: Record<Locale, LandingCopy> = {
         {
           title: 'Fundamentals',
           level: 'FOUNDATION',
-          body: 'Understand variables, conditions, loops, and functions.',
+          body: 'Understand HTML structure, headings, links, and images.',
         },
         {
           title: 'Practice',
@@ -525,7 +525,7 @@ export const messages: Record<Locale, LandingCopy> = {
       ],
     },
     lesson: {
-      metaTitle: 'VANTA — HTML Fundamentals',
+      metaTitle: 'Mabda — HTML Fundamentals',
       metaDescription: 'A six-step introduction to HTML with a five-question interactive practice check.',
       stageLabel: '01 / START · FUNDAMENTALS',
       backToJourney: 'Back to the HTML path',
@@ -567,7 +567,7 @@ export const messages: Record<Locale, LandingCopy> = {
       quizTitle: 'Five quick questions',
       quizIntro: 'Choose the best answer from four options. If you miss one, we’ll explain the idea and let you try again.',
       quizProgress: 'Question {current} / {total}',
-      quizProgressNote: 'Your answers and result are temporary and are not saved.',
+      quizProgressNote: 'Answer selections are temporary; only a result summary is saved when signed in.',
       questions: [
         {
           id: 'opening-tag',
@@ -615,10 +615,10 @@ export const messages: Record<Locale, LandingCopy> = {
           id: 'paragraph-element',
           prompt: 'Which code creates a valid HTML paragraph?',
           choices: [
-            { id: 'valid-paragraph', label: '<p>Welcome to VANTA.</p>', kind: 'code' },
-            { id: 'wrong-closing-tag', label: '<p>Welcome to VANTA.</h1>', kind: 'code' },
-            { id: 'wrong-opener', label: '<h1>Welcome to VANTA.</h1>', kind: 'code' },
-            { id: 'wrong-close-div', label: '<p>Welcome to VANTA.</div>', kind: 'code' },
+            { id: 'valid-paragraph', label: '<p>Welcome to Mabda.</p>', kind: 'code' },
+            { id: 'wrong-closing-tag', label: '<p>Welcome to Mabda.</h1>', kind: 'code' },
+            { id: 'wrong-opener', label: '<h1>Welcome to Mabda.</h1>', kind: 'code' },
+            { id: 'wrong-close-div', label: '<p>Welcome to Mabda.</div>', kind: 'code' },
           ],
           correctChoiceId: 'valid-paragraph',
           correctFeedback: 'Correct. <p> opens a paragraph and its matching </p> closes it.',
@@ -656,7 +656,7 @@ export const messages: Record<Locale, LandingCopy> = {
         three: 'Good start! Review the marked ideas, then give it another go.',
         low: 'No worries—getting things wrong is part of learning. Review the ideas and start again.',
       },
-      resultNote: 'Your score is for reflection. Lesson completion is shown for this browser session only; the score and personal data are not stored permanently.',
+      resultNote: 'Your score is for reflection. Signed-in learners send a result and completion summary for saving; its status appears below. Guest results stay in this session only.',
       reviewTitle: 'Ideas to review',
       noMissedQuestions: 'You answered every question correctly on the first try.',
       retryQuiz: 'Try the quiz again',
@@ -665,7 +665,7 @@ export const messages: Record<Locale, LandingCopy> = {
     },
     learningSystem: learningSystemMessages.en,
     vision: {
-      eyebrow: 'WHY VANTA?',
+      eyebrow: 'WHY Mabda?',
       title: 'Programming makes sense when you get hands-on.',
       description:
         'We are shaping a practical experience that feels like building something real: write, experiment, see what happens, and understand what to do next.',
@@ -685,15 +685,15 @@ export const messages: Record<Locale, LandingCopy> = {
       ],
     },
     platform: {
-      eyebrow: 'THE VANTA HORIZON',
+      eyebrow: 'THE Mabda HORIZON',
       title: 'A programming environment, built one step at a time.',
       description:
-        'The HTML path is available now; code execution, AI assistance, challenges, and broader projects remain on the roadmap.',
+        'All 22 HTML, CSS, and JavaScript lessons are available now with editors and isolated previews. AI assistance, challenges, and projects remain planned.',
       status: 'On the platform roadmap',
       cards: [
         {
           title: 'More paths and projects',
-          body: 'HTML Fundamentals is available; CSS and JavaScript paths and broader practical projects are planned.',
+          body: 'HTML, CSS, and JavaScript fundamentals are available across 22 lessons; challenges and broader practical projects are planned.',
         },
         {
           title: 'An assistant that teaches thinking',
@@ -706,11 +706,11 @@ export const messages: Record<Locale, LandingCopy> = {
       ],
     },
     about: {
-      eyebrow: 'ABOUT VANTA',
-      title: 'Not another course. A space to build what comes next.',
+      eyebrow: 'ABOUT Mabda',
+      title: 'An educational product by VANTA.',
       description:
-        'VANTA is a programming-learning project for beginners, grounded in a simple belief: entering technology starts when you give yourself room to try and build.',
-      quote: 'Where the ordinary ends, VANTA begins.',
+        'Mabda is the learning product developed by the VANTA team. It has its own identity and a practical experience: learn, understand, write code, and try it.',
+      quote: 'by VANTA',
     },
     closing: {
       eyebrow: 'LEARN TO BUILD',
@@ -719,7 +719,7 @@ export const messages: Record<Locale, LandingCopy> = {
       action: 'Back to the beginning',
     },
     footer: {
-      tagline: 'Create Beyond>',
+      tagline: 'by VANTA',
       backToTop: 'Back to top',
       copyright: 'A coding practice environment for beginners.',
     },

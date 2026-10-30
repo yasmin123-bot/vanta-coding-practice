@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { type HtmlLessonId } from '../content/learningSystem';
+import { type FoundationLessonId, type FoundationPathId } from '../content/learningSystem';
 import { useAuth } from '../auth/AuthProvider';
 import { supabaseClient } from '../lib/supabaseClient';
 import {
@@ -25,9 +25,9 @@ type StudentProgressContextValue = StudentDataSnapshot & {
   error: boolean;
   hasLoaded: boolean;
   refresh: () => Promise<boolean>;
-  openPath: (pathId: 'html-fundamentals') => Promise<boolean>;
-  openLesson: (lessonId: HtmlLessonId) => Promise<boolean>;
-  completeLessonQuiz: (lessonId: HtmlLessonId, score: number, total: number) => Promise<boolean>;
+  openPath: (pathId: FoundationPathId) => Promise<boolean>;
+  openLesson: (lessonId: FoundationLessonId) => Promise<boolean>;
+  completeLessonQuiz: (lessonId: FoundationLessonId, score: number, total: number) => Promise<boolean>;
   updateDisplayName: (displayName: string) => Promise<boolean>;
 };
 
@@ -107,16 +107,15 @@ export function StudentProgressProvider({ children }: { children: ReactNode }) {
     return queuedWrite;
   }, [refresh, user]);
 
-  const openPath = useCallback(async (pathId: 'html-fundamentals') => {
-    if (pathId !== 'html-fundamentals') return false;
-    return runWrite(recordPathOpened);
-  }, [runWrite]);
+  const openPath = useCallback(async (pathId: FoundationPathId) => (
+    runWrite((authenticatedUser) => recordPathOpened(authenticatedUser, pathId))
+  ), [runWrite]);
 
-  const openLesson = useCallback(async (lessonId: HtmlLessonId) => (
+  const openLesson = useCallback(async (lessonId: FoundationLessonId) => (
     runWrite((authenticatedUser) => recordLessonOpened(authenticatedUser, lessonId))
   ), [runWrite]);
 
-  const completeLessonQuiz = useCallback(async (lessonId: HtmlLessonId, score: number, total: number) => (
+  const completeLessonQuiz = useCallback(async (lessonId: FoundationLessonId, score: number, total: number) => (
     runWrite((authenticatedUser) => saveLessonQuizResult(authenticatedUser, lessonId, score, total))
   ), [runWrite]);
 
@@ -159,5 +158,5 @@ export function getStudentProgressName(user: User | null, storedName: string) {
   if (storedName.trim()) return storedName.trim();
   const fromMetadata = user?.user_metadata?.full_name ?? user?.user_metadata?.name;
   if (typeof fromMetadata === 'string' && fromMetadata.trim()) return fromMetadata.trim();
-  return user?.email?.split('@')[0] || 'VANTA Learner';
+  return user?.email?.split('@')[0] || 'Mabda Learner';
 }

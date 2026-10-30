@@ -1,11 +1,13 @@
 import type { User } from '@supabase/supabase-js';
-import { HTML_PATH_ID, type HtmlLessonId } from '../content/learningSystem';
+import { getPathForLesson, type FoundationLessonId, type FoundationPathId } from '../content/learningSystem';
 import { supabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
 
 export type StudentProfile = Database['public']['Tables']['profiles']['Row'];
 export type PathProgressRow = Database['public']['Tables']['path_progress']['Row'];
-export type LessonProgressRow = Database['public']['Tables']['lesson_progress']['Row'];
+export type LessonProgressRow = Omit<Database['public']['Tables']['lesson_progress']['Row'], 'lesson_id'> & {
+  lesson_id: FoundationLessonId;
+};
 
 export type StudentDataSnapshot = {
   profile: StudentProfile;
@@ -80,16 +82,20 @@ export async function loadStudentData(user: User): Promise<StudentDataSnapshot> 
   if (pathsResult.error) throw pathsResult.error;
   if (lessonsResult.error) throw lessonsResult.error;
 
-  return { profile, paths: pathsResult.data ?? [], lessons: lessonsResult.data ?? [] };
+  return {
+    profile,
+    paths: pathsResult.data ?? [],
+    lessons: (lessonsResult.data ?? []) as unknown as LessonProgressRow[],
+  };
 }
 
-async function openPath(user: User): Promise<void> {
+async function openPath(user: User, pathId: FoundationPathId): Promise<void> {
   const client = requireClient();
   const userId = requireUserId(user);
   const { error } = await client.from('path_progress').upsert(
     {
       user_id: userId,
-      path_id: HTML_PATH_ID,
+      path_id: pathId,
       last_opened_at: new Date().toISOString(),
     },
     { onConflict: 'user_id,path_id' },
@@ -97,19 +103,19 @@ async function openPath(user: User): Promise<void> {
   if (error) throw error;
 }
 
-export async function recordPathOpened(user: User): Promise<void> {
-  await openPath(user);
+export async function recordPathOpened(user: User, pathId: FoundationPathId): Promise<void> {
+  await openPath(user, pathId);
 }
 
-export async function recordLessonOpened(user: User, lessonId: HtmlLessonId): Promise<void> {
+export async function recordLessonOpened(user: User, lessonId: FoundationLessonId): Promise<void> {
   const client = requireClient();
   const userId = requireUserId(user);
-  await openPath(user);
+  await openPath(user, getPathForLesson(lessonId));
 
   const { error } = await client.from('lesson_progress').upsert(
     {
       user_id: userId,
-      path_id: HTML_PATH_ID,
+      path_id: getPathForLesson(lessonId),
       lesson_id: lessonId,
       last_opened_at: new Date().toISOString(),
     },
@@ -120,7 +126,7 @@ export async function recordLessonOpened(user: User, lessonId: HtmlLessonId): Pr
 
 export async function saveLessonQuizResult(
   user: User,
-  lessonId: HtmlLessonId,
+  lessonId: FoundationLessonId,
   score: number,
   total: number,
 ): Promise<void> {

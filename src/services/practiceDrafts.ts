@@ -1,9 +1,12 @@
 import type { User } from '@supabase/supabase-js';
-import type { HtmlLessonId } from '../content/learningSystem';
+import type { FoundationLessonId } from '../content/learningSystem';
 import { supabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
 
-export type PracticeDraft = Database['public']['Tables']['practice_drafts']['Row'];
+// The generated database types may lag the forward migration that expands exercise_id.
+// Keep the public service type aligned with all active Foundation exercises.
+type DatabasePracticeDraft = Database['public']['Tables']['practice_drafts']['Row'];
+export type PracticeDraft = Omit<DatabasePracticeDraft, 'exercise_id'> & { exercise_id: FoundationLessonId };
 export type PracticeDraftContent = Pick<PracticeDraft, 'html_code' | 'css_code' | 'js_code'>;
 
 const draftColumns = 'user_id,exercise_id,html_code,css_code,js_code,draft_version,created_at,updated_at';
@@ -30,7 +33,7 @@ function validateDraftSize(draft: PracticeDraftContent) {
   if (bytes > maxDraftBytes) throw new Error('Practice draft exceeds the allowed size.');
 }
 
-export async function loadPracticeDraft(user: User, exerciseId: HtmlLessonId): Promise<PracticeDraft | null> {
+export async function loadPracticeDraft(user: User, exerciseId: FoundationLessonId): Promise<PracticeDraft | null> {
   const client = requireClient();
   const userId = requireUserId(user);
   const { data, error } = await client
@@ -41,12 +44,12 @@ export async function loadPracticeDraft(user: User, exerciseId: HtmlLessonId): P
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+  return data as PracticeDraft | null;
 }
 
 export async function savePracticeDraft(
   user: User,
-  exerciseId: HtmlLessonId,
+  exerciseId: FoundationLessonId,
   draft: PracticeDraftContent,
 ): Promise<PracticeDraft> {
   const client = requireClient();
@@ -68,5 +71,5 @@ export async function savePracticeDraft(
   if (!data || data.user_id !== userId || data.exercise_id !== exerciseId) {
     throw new Error('Supabase did not confirm the expected practice draft.');
   }
-  return data;
+  return data as PracticeDraft;
 }

@@ -1,0 +1,52 @@
+[
+  {
+    "file": "header-ar.png",
+    "source": "lockup-ar.png",
+    "backgroundRGB": [
+      255,
+      252,
+      245
+    ],
+    "method": "only exact flat background alpha=0; all RGB pixels unchanged",
+    "sha256": "bf8c57282bfa968884b6b1515228ecbd53719ed62f617d1224f90d3ffc51b09a"
+  },
+  {
+    "file": "header-en.png",
+    "source": "lockup-en.png",
+    "backgroundRGB": [
+      255,
+      252,
+      245
+    ],
+    "method": "only exact flat background alpha=0; all RGB pixels unchanged",
+    "sha256": "57f1cd6f5fcd99348346242ba8d4394ee73783defe3f8328eddb320401e02e28"
+  },
+  {
+    "file": "header-bilingual.png",
+    "source": "lockup-bilingual.png",
+    "backgroundRGB": [
+      255,
+      252,
+      245
+    ],
+    "method": "only exact flat background alpha=0; all RGB pixels unchanged",
+    "sha256": "c52a3bd3acdac65cf979a692d0d950295791c7aaa3795581dd2d45cdcaec2b7b"
+  },
+  {
+    "file": "mark-dark-reference.png",
+    "source": "sources/approved-reference-03.png",
+    "crop": [
+      1007,
+      1109,
+      1159,
+      1204
+    ],
+    "backgroundRGB": [
+      34,
+      40,
+      51
+    ],
+    "method": "existing cream/amber dark-surface mark; only exact background made transparent; no RGB recoloring",
+    "sha256": "2ab71049f144b322d41a621908b4d595cdb940629c94898bd15c8983a3ef9f1c"
+  }
+]

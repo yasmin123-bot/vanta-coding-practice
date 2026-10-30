@@ -1,0 +1,484 @@
+/* Product composition and shared component skin. Functional layouts live in their
+   original stylesheets; semantic colors belong to tokens.css. */
+html { background: var(--color-canvas); }
+html[lang='en'] body { font-family: var(--font-display); }
+html[lang='ar'] :is(h1, h2, h3, .eyebrow) { letter-spacing: 0; }
+:is(h1, h2, h3, p) { text-wrap: pretty; }
+:where(button, a, input, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 4px;
+}
+::selection { background: var(--color-amber); color: var(--color-navy); }
+.mabda-logo { display: block; max-width: 100%; height: auto; object-fit: contain; flex: 0 0 auto; }
+.site-header { min-height: 88px; }
+.brand-link, .learning-system-header .brand-link, .student-auth-header-brand {
+  width: 164px;
+  min-width: 0;
+  max-width: 40vw;
+  min-height: 52px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  flex: 0 0 auto;
+}
+.brand-link .mabda-logo, .student-auth-header-brand .mabda-logo {
+  width: 100%; max-width: 100%; height: auto; filter: none; margin: 0;
+}
+.student-auth-header-brand img:first-child, .student-auth-header-brand img:last-child {
+  width: 100%; height: auto; max-width: 100%;
+}
+.button-primary, .student-auth-submit {
+  color: var(--color-on-primary); background: var(--color-primary); border-color: var(--color-primary);
+}
+.button-primary:hover, .student-auth-submit:hover:not(:disabled) {
+  color: var(--color-on-primary); background: var(--color-primary-hover); border-color: var(--color-primary-hover);
+  box-shadow: none;
+}
+.button-quiet:hover { color: var(--color-ink); background: var(--color-graphite); border-color: var(--color-focus); }
+.button, .language-toggle, .mobile-menu-toggle { min-height: 44px; }
+.language-toggle { color: var(--color-ink); border-color: var(--color-hairline-strong); }
+.student-nav-link, .student-nav-logout, .student-inline-action { min-height: 44px; display: inline-flex; align-items: center; }
+.student-field input { min-height: 48px; color: var(--color-ink); background: var(--color-surface); }
+.student-field input:focus { border-color: var(--color-focus); box-shadow: 0 0 0 3px var(--color-info-bg); }
+.student-password-toggle { min-width: 44px; min-height: 44px; }
+
+/* Landing: editorial teaching space rather than a futuristic studio brand-board. */
+.hero { min-height: 600px; gap: clamp(32px, 5vw, 76px); padding-block: 66px 80px; }
+.hero::before, .hero-brand-lockup::before { content: none; }
+.hero-title, .is-arabic .hero-title {
+  font-size: clamp(2.8rem, 5.1vw, 4.5rem); line-height: 1.2; font-weight: 700;
+}
+.is-arabic .hero-title { line-height: 1.48; }
+.hero-title .accent-text { color: var(--color-ink); }
+.hero-description { max-width: 36rem; font-size: 1rem; line-height: 1.9; margin-top: 20px; }
+.hero-eyebrow { color: var(--color-muted); }
+.eyebrow-line { height: 3px; width: 26px; background: var(--color-amber); }
+.hero-note { color: var(--color-muted); }
+.hero-visual { min-height: 420px; }
+.hero-brand-lockup { width: 100%; max-width: 480px; gap: 0; opacity: 0; transform: translateY(8px); transition: opacity 420ms ease, transform 420ms ease; }
+.hero-brand-lockup.is-revealed { opacity: 1; transform: none; }
+.hero-brand-lockup.is-scrolled { opacity: 0.12; transform: translateY(-6px); }
+.mabda-hero-identity {
+  position: relative; width: 100%; min-height: 290px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 16px; padding: 40px 28px 26px;
+  border: 1px solid var(--color-hairline); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--color-surface);
+}
+.mabda-identity-index { position: absolute; top: 18px; inset-inline-start: 20px; color: var(--color-muted); font: 0.68rem var(--font-code); }
+.mabda-hero-identity .mabda-logo-mark { width: 210px; max-width: 65%; }
+.mabda-hero-identity .mabda-logo-bilingual { width: 260px; max-width: 88%; }
+.mabda-endorsement { color: var(--color-muted); font-family: var(--font-display); font-size: 0.7rem; }
+.mabda-hero-example {
+  width: 100%; padding: 20px 24px 24px; display: grid; gap: 8px;
+  border: 1px solid var(--color-hairline); border-top: 0;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg); background: var(--color-surface);
+  text-align: left; overflow: hidden;
+}
+.mabda-hero-example > span { margin-bottom: 6px; color: var(--color-muted); font: 0.65rem var(--font-code); }
+.mabda-hero-example code { color: var(--color-code-label); font: clamp(0.64rem, 1.1vw, 0.8rem)/1.6 var(--font-code); overflow-wrap: anywhere; }
+.core-idea-section { border-top: 1px solid var(--color-hairline); }
+.learning-model { border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: none; }
+.learning-model-code { color: var(--color-muted); }
+.learning-step-number { color: var(--color-copper); }
+.learning-structure-list li { background: var(--color-canvas); }
+.journey-section::before, .journey-section::after { display: none; }
+.journey-list { border-color: var(--color-hairline); }
+.journey-step::before { background: var(--color-amber); }
+.journey-step .step-number { color: var(--color-ink); }
+.journey-stage-link:hover .step-number { color: var(--color-copper); }
+.journey-step-status.is-available { color: var(--color-success); border-color: var(--color-success); background: var(--color-success-bg); }
+.journey-step-status.is-future { color: var(--color-muted); background: var(--color-graphite); }
+.principle-card { border-color: var(--color-hairline); }
+.principle-card:hover { transform: none; }
+.platform-card { background: var(--color-surface); border-radius: var(--radius-md); box-shadow: none; }
+.roadmap-status { color: var(--color-muted); border-color: var(--color-hairline-strong); }
+.about-stamp { background: transparent; border: 0; padding: 32px; }
+.about-stamp .mabda-logo { width: min(100%, 250px); height: auto; opacity: 1; filter: none; }
+.about-quote { color: var(--color-muted); font-size: 0.9rem; }
+.footer-brand { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.footer-brand .mabda-logo { width: 148px; max-width: 100%; padding: 0; background: transparent; border-radius: 0; }
+.footer-brand span { color: var(--color-muted); font-size: 0.7rem; letter-spacing: 0; }
+
+/* Lessons, paths and quizzes share readable surfaces and unambiguous states. */
+.lesson-main, .learning-system-main { max-width: var(--content-width); }
+.lesson-objective, .lesson-question-surface, .lesson-result-surface,
+.learning-lesson-objective, .learning-question-surface, .learning-result-surface {
+  border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: none;
+}
+.lesson-choice, .learning-choice { border-radius: var(--radius-md); min-height: 52px; }
+.lesson-choice:not(:disabled):hover, .learning-choice:not(:disabled):hover {
+  color: var(--color-ink); background: var(--color-graphite); border-color: var(--color-focus);
+}
+.lesson-choice.is-correct, .lesson-choice.is-answer, .learning-choice.is-correct, .learning-choice.is-answer {
+  color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success);
+}
+.lesson-choice.is-incorrect, .learning-choice.is-incorrect {
+  color: var(--color-danger); background: var(--color-danger-bg); border-color: var(--color-danger);
+}
+.lesson-quiz-feedback.is-correct, .learning-quiz-feedback.is-correct { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success); }
+.lesson-quiz-feedback.is-incorrect, .learning-quiz-feedback.is-incorrect { color: var(--color-danger); background: var(--color-danger-bg); border-color: var(--color-danger); }
+.lesson-quiz-feedback p, .learning-quiz-feedback p { color: inherit; }
+.lesson-flow-progress-fill, .learning-flow-progress-track > span, .learning-path-progress-fill { background: var(--color-progress); }
+.lesson-inline-code { color: var(--color-info); background: var(--color-info-bg); }
+.student-form-error, .student-setup-notice.is-error { color: var(--color-danger); background: var(--color-danger-bg); }
+.student-form-success { color: var(--color-success); background: var(--color-success-bg); }
+.student-progress-notice { color: var(--color-muted); }
+
+/* Keep the Auth form contract. Recompose its old copper visual as a light workbench. */
+.student-auth-page { background: var(--color-canvas); }
+.student-auth-page::before, .student-auth-context::before, .student-auth-panel::before { content: none; }
+.student-auth-panel { background: var(--color-surface); border-color: var(--color-hairline-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-surface); }
+.student-auth-context h1 { color: var(--color-ink); }
+.student-auth-sequence li { color: var(--color-muted); }
+.student-auth-sequence li > span:first-child { color: var(--color-copper); }
+.student-auth-visual :is(.student-wireframe, .student-wireframe-panel) { background: var(--color-surface); }
+.student-auth-mark { color: var(--color-muted); }
+.student-auth-header-label { color: var(--color-muted); }
+
+/* Intro and Auth: a quiet, centered Mabda entrance across both themes. */
+.mabda-intro-page,
+.mabda-auth-page {
+  display: flex;
+  min-height: 100svh;
+  flex-direction: column;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+.mabda-auth-page::before { content: none; }
+.mabda-auth-toolbar {
+  display: flex;
+  width: min(calc(100% - 32px), 760px);
+  min-height: 64px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-inline: auto;
+  padding-block-start: 10px;
+}
+.mabda-auth-main {
+  display: grid;
+  width: min(calc(100% - 32px), 500px);
+  flex: 1;
+  align-content: center;
+  padding-block: 20px 42px;
+}
+.mabda-auth-shell {
+  display: grid;
+  width: 100%;
+  max-width: 420px;
+  justify-items: center;
+  gap: 21px;
+  margin-inline: auto;
+  animation: mabda-auth-arrive 240ms ease-out both;
+}
+.mabda-auth-brand {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+}
+.mabda-auth-brand > .mabda-logo-mark {
+  width: 42px;
+  height: 42px;
+  margin-block-end: 5px;
+}
+.mabda-auth-brand-name {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 1.12rem;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  line-height: 1.4;
+}
+.mabda-auth-brand-name span { color: var(--color-muted); font-weight: 400; }
+.mabda-auth-brand-name b { font-family: var(--font-body); font-weight: 650; }
+.mabda-auth-endorsement {
+  margin: 0;
+  color: var(--color-muted);
+  font-family: var(--font-display);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+}
+.mabda-auth-panel {
+  width: 100%;
+  padding: clamp(20px, 5vw, 32px);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-surface);
+}
+.mabda-auth-panel-head { margin-block-end: 23px; }
+.mabda-auth-panel-head h1 {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: clamp(1.35rem, 5vw, 1.65rem);
+  font-weight: 650;
+  line-height: 1.4;
+}
+.mabda-auth-panel-head p {
+  margin: 8px 0 0;
+  color: var(--color-muted);
+  font-size: 0.86rem;
+  line-height: 1.75;
+}
+.mabda-auth-form { display: grid; gap: 17px; }
+.mabda-auth-field {
+  display: grid;
+  min-width: 0;
+  gap: 7px;
+  color: var(--color-ink);
+  font-size: 0.84rem;
+}
+.mabda-auth-field > label { color: var(--color-ink); font-weight: 550; }
+.mabda-auth-field > input,
+.mabda-auth-password > input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 49px;
+  padding: 11px 13px;
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 0.9rem;
+  transition: border-color var(--motion-fast), background var(--motion-fast);
+}
+.mabda-auth-field > input::placeholder { color: var(--color-placeholder); opacity: 1; }
+.mabda-auth-field > input:focus,
+.mabda-auth-password > input:focus {
+  border-color: var(--color-focus);
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.mabda-auth-field > small { color: var(--color-muted); font-size: 0.74rem; }
+.mabda-auth-password { display: flex; min-width: 0; align-items: stretch; }
+.mabda-auth-password > input { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+.mabda-password-toggle {
+  display: inline-grid;
+  width: 48px;
+  min-width: 48px;
+  min-height: 49px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--color-hairline-strong);
+  border-inline-start: 0;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  cursor: pointer;
+}
+.mabda-password-toggle:hover { background: var(--color-amber); color: var(--color-on-accent); }
+.mabda-auth-submit { width: 100%; justify-content: space-between; margin-block-start: 3px; }
+.mabda-auth-links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-block-start: 19px;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+.mabda-auth-links p { margin: 0; color: inherit; line-height: 1.7; }
+.mabda-auth-links a {
+  color: var(--color-copper-light);
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+  text-underline-offset: 3px;
+}
+.mabda-auth-links a:hover { color: var(--color-ink); }
+.mabda-auth-panel .student-form-error,
+.mabda-auth-panel .student-form-success,
+.mabda-auth-panel .student-setup-notice { margin-block: 0 14px; }
+.mabda-auth-loading-shell { align-content: center; }
+.mabda-auth-loading-shell .student-auth-gateway-status {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  color: var(--color-muted);
+  text-align: center;
+}
+.mabda-auth-loading-shell .student-auth-gateway-status p { margin: 0; color: var(--color-muted); line-height: 1.7; }
+.mabda-auth-loading-title { margin: 0; color: var(--color-muted); font-size: 0.95rem; font-weight: 500; line-height: 1.7; }
+
+.mabda-intro-main {
+  display: grid;
+  width: min(calc(100% - 32px), 720px);
+  flex: 1;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: center;
+  justify-items: center;
+  gap: 34px;
+  padding-block: clamp(44px, 9vh, 94px) clamp(28px, 7vh, 64px);
+  text-align: center;
+}
+.mabda-intro-identity {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 7px;
+  align-self: center;
+  margin: 0;
+  animation: mabda-auth-arrive 280ms ease-out both;
+}
+.mabda-intro-identity > .mabda-logo-mark { width: 54px; height: 54px; margin-block-end: 5px; }
+.mabda-intro-identity .mabda-auth-brand-name { font-size: clamp(1.25rem, 4vw, 1.5rem); }
+.mabda-intro-identity .mabda-auth-endorsement { margin-block-end: 13px; }
+.mabda-intro-tagline {
+  max-width: 34rem;
+  margin: 0;
+  color: var(--color-ink);
+  font-size: clamp(1.3rem, 4vw, 1.9rem);
+  font-weight: 550;
+  line-height: 1.65;
+  text-wrap: balance;
+}
+.mabda-intro-footer { display: grid; width: min(100%, 380px); justify-items: center; align-self: end; gap: 21px; }
+.mabda-intro-secondary {
+  max-width: 32rem;
+  margin: 0;
+  color: var(--color-muted);
+  font-size: clamp(0.88rem, 2.6vw, 1rem);
+  line-height: 1.8;
+  text-wrap: balance;
+}
+.mabda-intro-next { width: 100%; min-height: 52px; justify-content: space-between; }
+.mabda-intro-next > span:last-child { font-size: 1.05rem; }
+@keyframes mabda-auth-arrive { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* Amber-filled states use navy text/icons, not the light foreground role. */
+.student-nav-signup:hover,
+.student-password-toggle:hover,
+.lesson-practice-choice:not(:disabled):hover,
+.lesson-practice-choice.is-correct,
+.lesson-practice-choice.is-answer { color: var(--color-on-accent); }
+.lesson-practice-feedback,
+.lesson-objective,
+.lesson-outcome,
+.lesson-step-outcome,
+.lesson-quiz-feedback:not(.is-correct):not(.is-incorrect) { color: var(--color-on-accent); }
+.lesson-practice-feedback :is(p, .lesson-feedback-mark),
+.lesson-objective :is(p, .lesson-objective-label, .lesson-kicker),
+.lesson-outcome :is(p, .lesson-kicker),
+.lesson-step-outcome :is(p, .lesson-kicker),
+.lesson-quiz-feedback:not(.is-correct):not(.is-incorrect) :is(.lesson-feedback-title, .lesson-feedback-body, .lesson-feedback-mark) {
+  color: var(--color-on-accent);
+}
+@media (max-width: 420px) {
+  .mabda-auth-toolbar { min-height: 58px; }
+  .mabda-auth-toolbar .theme-toggle { padding-inline: 9px; }
+  .mabda-auth-toolbar .theme-toggle span { display: none; }
+  .mabda-auth-main { padding-block: 10px 28px; }
+  .mabda-auth-shell { gap: 16px; }
+  .mabda-auth-brand > .mabda-logo-mark { width: 37px; height: 37px; }
+  .mabda-auth-panel { padding: 19px 17px; }
+  .mabda-auth-panel-head { margin-block-end: 18px; }
+  .mabda-auth-form { gap: 14px; }
+  .mabda-intro-main { gap: 24px; padding-block: 34px 30px; }
+  .mabda-intro-identity { margin: 0; }
+  .mabda-intro-identity > .mabda-logo-mark { width: 48px; height: 48px; }
+  .mabda-intro-footer { gap: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mabda-auth-shell,
+  .mabda-intro-identity { animation: none; }
+}
+
+@media (max-width: 980px) {
+  .hero { grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr); gap: 30px; }
+  .hero-title, .is-arabic .hero-title { font-size: clamp(2.4rem, 5vw, 3.4rem); }
+  .hero-brand-lockup { max-width: 400px; }
+}
+@media (max-width: 760px) {
+  .site-header { gap: 12px; min-height: 80px; }
+  .brand-link, .learning-system-header .brand-link, .student-auth-header-brand { width: 140px; }
+  .hero { grid-template-columns: minmax(0, 1fr); min-height: 0; gap: 36px; padding-block: 42px 52px; }
+  .hero-title, .is-arabic .hero-title { font-size: clamp(2.4rem, 8.8vw, 3.6rem); }
+  .hero-visual { min-height: 0; }
+  .hero-brand-lockup { max-width: 480px; }
+  .hero-brand-lockup.is-scrolled { opacity: 1; transform: none; }
+  .mabda-hero-identity { min-height: 245px; padding-block: 34px 22px; }
+  .mabda-hero-identity .mabda-logo-mark { width: 175px; }
+  .mabda-hero-example { padding: 16px 20px; }
+  .mabda-hero-example code { font-size: 0.7rem; }
+  .student-auth-sequence ol { grid-template-columns: 1fr; gap: 10px; }
+  .student-auth-sequence li { display: flex; align-items: center; gap: 10px; padding: 0; }
+  .student-sequence-arrow { display: none; }
+  .student-auth-header-label { display: none; }
+}
+@media (max-width: 420px) {
+  .section-frame, .site-header, .learning-system-header { width: calc(100% - 32px); }
+  .brand-link, .learning-system-header .brand-link, .student-auth-header-brand { width: 124px; padding: 0; }
+  .language-toggle { min-width: 68px; gap: 5px; }
+  .learning-header-stage, .lesson-stage-index { max-width: 42vw; font-size: 0.64rem; }
+  .hero-actions { gap: 10px; }
+  .hero-actions .button { width: 100%; }
+  .learning-steps { grid-template-columns: 1fr; }
+  .learning-step { min-height: 0; }
+  .mabda-hero-identity .mabda-logo-bilingual { width: 230px; }
+  .mabda-hero-example { padding: 16px; }
+  .mabda-hero-example code { font-size: 0.64rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+  .hero-brand-lockup, .hero-brand-lockup.is-scrolled { opacity: 1; transform: none; }
+}
+
+/* Mobile QA refinements: keep explanatory account steps compact and readable. */
+.about-stamp::before, .about-stamp::after, .platform-card::before { content: none; }
+@media (max-width: 760px) {
+  .student-auth-sequence ol { display: flex; flex-wrap: wrap; gap: 10px 16px; }
+  .student-auth-sequence li { flex: 0 0 auto; flex-direction: row; min-height: 0; gap: 6px; }
+  .student-auth-sequence li strong { font-size: 0.75rem; }
+}
+
+/* Shared, persistent theme control. Light stays the default regardless of OS. */
+.header-preferences { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+.theme-toggle {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  min-height: 44px; min-width: 44px; padding: 0 12px;
+  border: 1px solid var(--color-hairline-strong); border-radius: var(--radius-sm);
+  background: var(--color-surface); color: var(--color-ink); font: inherit; font-size: 0.78rem;
+  cursor: pointer;
+}
+.theme-toggle:hover { background: var(--color-graphite); border-color: var(--color-focus); }
+.theme-toggle svg { flex: 0 0 auto; }
+.student-auth-header .theme-toggle { margin-inline-start: auto; }
+.student-auth-header .language-toggle { margin-inline-start: 0; }
+:is(.language-toggle, .mobile-menu-toggle):hover { color: var(--color-control-hover-ink); }
+.language-toggle:hover .language-toggle-mark { color: var(--color-control-hover-ink); }
+:root[data-theme='dark'] .mabda-hero-example code { color: var(--color-code-label); }
+:root[data-theme='dark'] .site-header :is(.brand-link, .student-auth-header-brand) { justify-content: flex-start; }
+:root[data-theme='dark'] .site-header .mabda-logo { width: auto; max-width: 100%; height: 46px; object-fit: contain; }
+:root[data-theme='dark'] .footer-brand .mabda-logo { width: 90px; }
+:root[data-theme='dark'] :is(.lesson-question-type, .learning-question-type) { color: var(--color-muted); }
+:root[data-theme='dark'] input::placeholder { color: var(--color-placeholder); opacity: 1; }
+:root[data-theme='dark'] :is(.lesson-choice, .learning-choice):disabled { opacity: 1; }
+@media (max-width: 980px) and (min-width: 721px) {
+  .site-header { gap: 14px; }
+  .primary-navigation { gap: 14px; font-size: 0.75rem; }
+  .site-header .brand-link { width: 138px; }
+  .header-preferences .theme-toggle span { display: none; }
+}
+@media (max-width: 760px) {
+  .learning-header-actions { gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+  .theme-toggle { padding-inline: 10px; }
+  .learning-header-actions .theme-toggle span { display: none; }
+}
+@media (max-width: 420px) {
+  .theme-toggle span { display: none; }
+  .header-preferences { gap: 8px; }
+  .site-header { gap: 8px; }
+  .site-header:not(.learning-system-header):not(.student-auth-header) .brand-link { width: 112px; }
+  .site-header .mobile-menu-toggle { margin-inline-start: auto; }
+  .language-toggle { min-width: 62px; padding-inline: 8px; }
+  .theme-toggle { padding-inline: 10px; }
+  :root[data-theme='dark'] .site-header .mabda-logo { height: 42px; }
+}

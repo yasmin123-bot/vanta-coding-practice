@@ -1,5 +1,5 @@
 .practice-studio {
-  --practice-panel: rgba(17, 20, 26, 0.9);
+  --practice-panel: var(--color-surface);
   display: grid;
   gap: clamp(18px, 3vw, 28px);
   margin-block: clamp(26px, 4vw, 44px);
@@ -52,7 +52,7 @@
   padding: 5px 9px;
   border-inline-start: 2px solid var(--color-copper);
   color: var(--color-sand);
-  background: rgba(200, 121, 79, 0.06);
+  background: var(--color-warning-bg);
   font-size: 0.74rem;
 }
 
@@ -61,7 +61,7 @@
   grid-template-columns: minmax(0, 1.25fr) minmax(220px, 0.75fr);
   gap: 0;
   border-block: 1px solid var(--color-hairline-strong);
-  background: linear-gradient(105deg, rgba(200, 121, 79, 0.045), transparent 58%);
+  background: var(--color-surface);
 }
 
 .practice-task-brief article {
@@ -94,7 +94,7 @@
   padding: 11px 13px;
   border: 1px solid var(--color-hairline);
   color: var(--color-muted);
-  background: rgba(23, 26, 32, 0.62);
+  background: var(--color-graphite);
   font-size: 0.76rem;
   line-height: 1.65;
 }
@@ -129,7 +129,7 @@
   overflow: hidden;
   border: 1px solid var(--color-hairline-strong);
   background: var(--practice-panel);
-  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-surface);
 }
 
 .practice-workspace-topbar {
@@ -140,7 +140,7 @@
   gap: 12px;
   padding: 8px 13px;
   border-bottom: 1px solid var(--color-hairline);
-  background: rgba(9, 11, 16, 0.76);
+  background: var(--color-surface);
 }
 
 .practice-workspace-file-label {
@@ -200,7 +200,7 @@
   align-items: stretch;
   overflow-x: auto;
   border-bottom: 1px solid var(--color-hairline);
-  background: #0d1015;
+  background: var(--code-canvas);
   scrollbar-width: thin;
 }
 
@@ -235,7 +235,7 @@
   min-height: 260px;
   flex: 1 1 auto;
   overflow: auto;
-  background: #11141a;
+  background: var(--code-surface);
   direction: ltr;
   text-align: left;
 }
@@ -248,27 +248,27 @@
 
 .practice-codemirror .cm-editor {
   min-height: 260px;
-  background: #11141a;
-  color: #e9d5c8;
+  background: var(--code-surface);
+  color: var(--code-ink);
   font-family: var(--font-code);
   font-size: 0.78rem;
   text-align: left;
 }
 
 .practice-codemirror .cm-editor.cm-focused {
-  outline: 1px solid rgba(225, 163, 126, 0.52);
+  outline: 1px solid var(--code-accent);
   outline-offset: -1px;
 }
 
 .practice-codemirror .cm-gutters {
-  border-inline-end: 1px solid rgba(233, 213, 200, 0.08);
-  color: #737780;
-  background: #0d1015;
+  border-inline-end: 1px solid var(--code-border);
+  color: var(--code-muted);
+  background: var(--code-canvas);
 }
 
 .practice-codemirror .cm-activeLine,
 .practice-codemirror .cm-activeLineGutter {
-  background: rgba(200, 121, 79, 0.075);
+  background: var(--code-canvas);
 }
 
 .practice-editor-help {
@@ -278,6 +278,13 @@
   color: var(--color-muted-dark);
   font-size: 0.66rem;
   line-height: 1.55;
+}
+
+.practice-editor-panel .practice-checklist {
+  margin: 0;
+  padding: 11px 12px 12px;
+  border-top: 1px solid var(--color-hairline);
+  background: var(--color-surface);
 }
 
 .practice-preview-panel {
@@ -316,7 +323,7 @@
   overflow: hidden;
   margin-top: 13px;
   border: 1px solid var(--color-hairline);
-  background: #f7f5f1;
+  background: var(--color-surface);
 }
 
 .practice-preview-canvas iframe {
@@ -325,7 +332,7 @@
   height: 100%;
   min-height: 260px;
   border: 0;
-  background: #fff;
+  background: var(--color-preview-canvas); /* Student document preview is not recolored by the app theme. */
 }
 
 .practice-preview-empty {
@@ -335,7 +342,7 @@
   justify-items: center;
   gap: 12px;
   padding: 20px;
-  color: #575960;
+  color: var(--color-muted);
   text-align: center;
 }
 
@@ -364,15 +371,15 @@
   gap: 5px;
   margin-top: 10px;
   padding: 9px 11px;
-  border-inline-start: 2px solid #d27763;
-  color: #e8b2a5;
-  background: rgba(168, 56, 47, 0.1);
+  border-inline-start: 2px solid var(--color-danger);
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
   font-size: 0.72rem;
 }
 
 .practice-runtime-error code {
   overflow-wrap: anywhere;
-  color: #f2d7ce;
+  color: var(--color-danger);
   font-family: var(--font-code);
   font-size: 0.67rem;
 }
@@ -419,9 +426,32 @@
   font-family: var(--font-code);
 }
 
+.practice-checklist-number {
+  display: inline-grid;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px !important;
+  place-items: center;
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: 50%;
+  color: var(--color-copper-light) !important;
+  font-size: 0.64rem;
+  line-height: 1;
+}
+
 .practice-checklist-items li.is-passed > span,
 .practice-checklist-items li.is-passed strong {
   color: var(--color-copper-light);
+}
+
+.practice-checklist-items li.is-passed .practice-checklist-number {
+  border-color: var(--color-success);
+  color: var(--color-success) !important;
+}
+
+.practice-checklist-items li.is-failed .practice-checklist-number,
+.practice-checklist-items li.is-missing .practice-checklist-number {
+  border-color: var(--color-warning);
 }
 
 .practice-checklist-items strong {
@@ -443,7 +473,7 @@
   padding: 8px 10px;
   border-inline-start: 2px solid var(--color-hairline-strong);
   color: var(--color-muted);
-  background: rgba(200, 121, 79, 0.04);
+  background: var(--color-canvas);
   font-size: 0.68rem;
   line-height: 1.55;
 }
@@ -459,7 +489,7 @@
   gap: 14px;
   padding: 12px 14px;
   border-top: 1px solid var(--color-hairline);
-  background: rgba(9, 11, 16, 0.7);
+  background: var(--color-surface);
 }
 
 .practice-workspace-actions-primary,
@@ -488,7 +518,7 @@
   padding: 9px 13px;
   border-bottom: 1px solid var(--color-hairline);
   color: var(--color-copper-light);
-  background: rgba(200, 121, 79, 0.055);
+  background: var(--color-info-bg);
   font-size: 0.7rem;
   line-height: 1.6;
 }
@@ -557,7 +587,7 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     border-bottom: 1px solid var(--color-hairline);
-    background: #0d1015;
+    background: var(--code-canvas);
   }
 
   .practice-mobile-view-switch button {
@@ -664,14 +694,14 @@
 
 .practice-codemirror .cm-vanta-code-error {
   border-radius: 2px;
-  background: rgba(232, 92, 84, 0.11);
-  text-decoration: underline wavy #ef776f;
+  background: transparent;
+  text-decoration: underline wavy var(--color-danger);
   text-underline-offset: 3px;
 }
 
 .practice-codemirror .cm-vanta-code-warning {
   border-radius: 2px;
-  background: rgba(200, 121, 79, 0.1);
+  background: transparent;
   text-decoration: underline wavy var(--color-copper-light);
   text-underline-offset: 3px;
 }
@@ -685,7 +715,7 @@
 }
 
 .practice-codemirror .cm-gutters .cm-lint-marker-error {
-  background: #ef776f;
+  background: var(--color-danger);
 }
 
 .practice-codemirror .cm-gutters .cm-lint-marker-warning {
@@ -698,7 +728,7 @@
   padding: 11px 12px;
   border-top: 1px solid var(--color-hairline);
   color: var(--color-muted);
-  background: rgba(9, 11, 16, 0.68);
+  background: var(--color-canvas);
   direction: inherit;
 }
 
@@ -728,9 +758,9 @@
 }
 
 .practice-diagnostics-heading > span.has-issues {
-  border-color: rgba(239, 119, 111, 0.55);
-  color: #ff9a92;
-  background: rgba(232, 92, 84, 0.09);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
 }
 
 .practice-diagnostics-heading > span.no-issues {
@@ -768,16 +798,16 @@
   align-items: start;
   gap: 8px;
   padding: 8px 7px;
-  border: 1px solid rgba(239, 119, 111, 0.17);
+  border: 1px solid var(--color-danger);
   color: var(--color-sand);
-  background: rgba(232, 92, 84, 0.045);
+  background: var(--color-danger-bg);
   text-align: start;
   cursor: pointer;
 }
 
 .practice-diagnostic-item.is-warning {
-  border-color: rgba(200, 121, 79, 0.2);
-  background: rgba(200, 121, 79, 0.045);
+  border-color: var(--color-warning);
+  background: var(--color-warning-bg);
 }
 
 .practice-diagnostic-item:disabled {
@@ -789,16 +819,16 @@
   width: 17px;
   height: 17px;
   place-items: center;
-  border: 1px solid rgba(239, 119, 111, 0.45);
+  border: 1px solid var(--color-danger);
   border-radius: 50%;
-  color: #ff9a92;
+  color: var(--color-danger);
   font-family: var(--font-code);
   font-size: 0.7rem;
   line-height: 1;
 }
 
 .practice-diagnostic-item.is-warning .practice-diagnostic-severity {
-  border-color: rgba(200, 121, 79, 0.55);
+  border-color: var(--color-warning);
   color: var(--color-copper-light);
 }
 
@@ -854,7 +884,7 @@
 }
 
 .practice-preview-state.is-failed {
-  color: #ff9a92;
+  color: var(--color-danger);
 }
 
 .practice-preview-state.is-withIssues,
@@ -863,8 +893,8 @@
 }
 
 .practice-preview-status.is-error {
-  border-inline-start-color: #ef776f;
-  color: #ffaaa3;
+  border-inline-start-color: var(--color-danger);
+  color: var(--color-danger);
 }
 
 .practice-preview-status.is-warning {
@@ -892,3 +922,109 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Mabda workbench: only the editor uses the local dark palette. */
+.practice-workspace { border-radius: var(--radius-lg); }
+.practice-editor-tabs { border-color: var(--code-border); }
+.practice-editor-tabs button { color: var(--code-muted); min-height: 44px; }
+.practice-editor-tabs button[aria-selected='true'] { color: var(--code-ink); background: var(--code-surface); }
+.practice-editor-tabs button[aria-selected='true']::after { background: var(--code-accent); }
+.practice-codemirror .cm-gutters { color: var(--code-muted); }
+.practice-codemirror .cm-vanta-code-error { text-decoration-color: var(--code-error); }
+.practice-codemirror .cm-vanta-code-warning { text-decoration-color: var(--code-warning); }
+.practice-codemirror .cm-gutters .cm-lint-marker-error { background: var(--code-error); }
+.practice-codemirror .cm-gutters .cm-lint-marker-warning { background: var(--code-warning); }
+.practice-mobile-view-switch { background: var(--color-surface); }
+.practice-checklist-heading .button, .practice-workspace-actions .button { min-height: 44px; }
+.practice-studio :focus-visible { outline-color: var(--color-focus); }
+.practice-diagnostics-panel { border-bottom: 1px solid var(--color-hairline); }
+.practice-diagnostic-item { border-radius: var(--radius-sm); }
+.practice-checklist-items li.is-passed > span, .practice-checklist-items li.is-passed strong,
+.practice-checklist-summary.is-passed, .practice-diagnostics-heading > span.no-issues { color: var(--color-success); }
+
+.practice-checklist-items li {
+  min-width: 0;
+}
+
+.practice-checklist-items li.is-failed .practice-checklist-state,
+.practice-checklist-items li.is-error .practice-checklist-state {
+  color: var(--color-danger);
+}
+
+.practice-checklist-items li.is-warning .practice-checklist-state,
+.practice-checklist-items li.is-missing .practice-checklist-state {
+  color: var(--color-warning);
+}
+
+.practice-checklist-result {
+  display: grid;
+  min-width: 0;
+  flex: 1 1 auto;
+  gap: 2px;
+}
+
+.practice-checklist-items .practice-checklist-concept,
+.practice-checklist-items .practice-checklist-location {
+  width: fit-content;
+  max-width: 100%;
+  color: var(--color-muted-dark);
+  font-size: 0.62rem;
+  line-height: 1.45;
+}
+
+.practice-checklist-items .practice-checklist-location {
+  font-family: var(--font-code);
+}
+
+.practice-checklist-severity {
+  flex: 0 0 auto;
+  padding: 2px 6px;
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: 999px;
+  color: var(--color-muted);
+  font-size: 0.58rem;
+  line-height: 1.45;
+}
+
+.practice-checklist-severity.is-error {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.practice-checklist-severity.is-warning {
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+
+.practice-checklist-severity.is-hint {
+  border-color: var(--color-hairline-strong);
+  color: var(--color-muted);
+}
+
+.practice-codemirror .cm-vanta-code-hint {
+  border-radius: 2px;
+  background: transparent;
+  text-decoration: underline dotted var(--color-muted);
+  text-underline-offset: 3px;
+}
+
+.practice-codemirror .cm-gutters .cm-lint-marker-info {
+  width: 7px;
+  height: 7px;
+  margin-inline-start: 3px;
+  border-radius: 50%;
+  background: var(--color-muted);
+}
+
+.practice-diagnostic-item.is-info {
+  border-color: var(--color-hairline-strong);
+  background: var(--color-surface);
+}
+
+.practice-diagnostic-item.is-info .practice-diagnostic-severity {
+  border-color: var(--color-muted);
+  color: var(--color-muted);
+}
+
+.practice-codemirror .cm-vanta-code-hint { text-decoration-color: var(--code-muted); }
+.practice-codemirror .cm-gutters .cm-lint-marker-info { background: var(--code-muted); }

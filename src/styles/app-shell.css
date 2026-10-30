@@ -1,0 +1,1138 @@
+.mabda-app-header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 80;
+  width: 100%;
+  color: var(--color-ink);
+  background: var(--color-canvas);
+  border-bottom: 1px solid var(--color-hairline);
+}
+
+.mabda-app-header-inner {
+  width: min(var(--content-width), calc(100% - 40px));
+  min-height: 76px;
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.mabda-app-brand {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.mabda-app-brand .mabda-logo {
+  display: block;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+
+.mabda-app-brand-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.mabda-app-brand-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 760;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.mabda-app-brand-name i {
+  color: var(--color-hairline-strong);
+  font-style: normal;
+  font-weight: 400;
+}
+
+.mabda-app-brand-name b {
+  font-family: var(--font-body);
+  font-weight: 740;
+}
+
+.mabda-app-brand-byline {
+  color: var(--color-muted);
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.045em;
+  line-height: 1;
+}
+
+.mabda-app-header-context {
+  min-width: 0;
+  margin-inline: auto;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.mabda-app-menu-trigger,
+.mabda-app-icon-button {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  transition: background-color var(--motion-fast), border-color var(--motion-fast), transform var(--motion-fast);
+}
+
+.mabda-app-menu-trigger:hover,
+.mabda-app-icon-button:hover {
+  background: var(--color-graphite);
+  border-color: var(--color-hairline-strong);
+}
+
+.mabda-app-menu-trigger:active,
+.mabda-app-icon-button:active {
+  transform: scale(0.98);
+}
+
+.mabda-app-header :focus-visible,
+.mabda-app-drawer :focus-visible,
+.mabda-mobile-nav :focus-visible,
+.mabda-home-page :focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.mabda-app-drawer-layer {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: flex;
+  justify-content: flex-end;
+  background: rgb(8 13 24 / 52%);
+}
+
+:root[dir='rtl'] .mabda-app-drawer-layer {
+  justify-content: flex-start;
+}
+
+.mabda-app-drawer {
+  width: min(420px, calc(100% - 24px));
+  max-height: 100vh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+  padding: calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border-inline-start: 1px solid var(--color-hairline);
+  box-shadow: var(--shadow-surface);
+  animation: mabda-drawer-enter 180ms ease-out both;
+  overscroll-behavior: contain;
+}
+
+.mabda-app-drawer-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.mabda-app-drawer-kicker {
+  margin: 0 0 5px;
+  color: var(--color-muted);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.035em;
+}
+
+.mabda-app-drawer-heading h2,
+.mabda-app-drawer-section h3,
+.mabda-app-preferences h3,
+.mabda-app-account h3 {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 16px;
+  font-weight: 720;
+}
+
+.mabda-app-icon-button {
+  flex: 0 0 auto;
+  width: 44px;
+  padding: 0;
+  background: transparent;
+}
+
+.mabda-app-drawer-nav {
+  display: grid;
+  gap: 5px;
+}
+
+.mabda-app-drawer-link,
+.mabda-app-drawer-paths a {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 11px;
+  color: var(--color-ink);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 620;
+  transition: background-color var(--motion-fast), border-color var(--motion-fast);
+}
+
+.mabda-app-drawer-link:hover,
+.mabda-app-drawer-paths a:hover {
+  background: var(--color-graphite);
+  border-color: var(--color-hairline);
+}
+
+.mabda-app-drawer-link[aria-current='page'],
+.mabda-app-drawer-paths a[aria-current='page'] {
+  color: var(--color-ink);
+  background: var(--color-info-bg);
+  border-color: var(--color-hairline);
+}
+
+.mabda-app-drawer-section,
+.mabda-app-preferences,
+.mabda-app-account {
+  display: grid;
+  gap: 11px;
+}
+
+.mabda-app-drawer-section h3,
+.mabda-app-preferences h3,
+.mabda-app-account h3 {
+  font-size: 13px;
+}
+
+.mabda-app-drawer-paths {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mabda-app-drawer-paths a {
+  justify-content: space-between;
+  min-height: 46px;
+  gap: 8px;
+  padding-inline: 9px;
+  font-size: 12px;
+}
+
+.mabda-app-drawer-paths .programming-language-label {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.mabda-app-path-status {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.mabda-app-path-status.is-available {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+}
+
+.mabda-app-path-status.is-planned {
+  color: var(--color-info);
+  background: var(--color-info-bg);
+}
+
+.mabda-app-quiz-link {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  color: var(--color-ink);
+  background: var(--color-graphite);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+}
+
+.mabda-app-quiz-link > span {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.mabda-app-quiz-link strong {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mabda-app-quiz-link small {
+  color: var(--color-muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.mabda-app-chevron {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+  transform: scaleX(var(--directional-scale, 1));
+}
+
+:root[dir='rtl'] .mabda-app-icon-arrow:not(.mabda-app-chevron) {
+  transform: scaleX(-1);
+}
+
+:root[dir='rtl'] .mabda-app-chevron {
+  --directional-scale: -1;
+}
+
+.mabda-app-future-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mabda-app-future-link {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 5px 8px;
+  padding: 9px;
+  color: var(--color-muted);
+  background: var(--color-canvas);
+  border: 1px dashed var(--color-hairline-strong);
+  border-radius: var(--radius-md);
+}
+
+.mabda-app-future-link span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  font-weight: 620;
+}
+
+.mabda-app-future-link small {
+  grid-column: 2;
+  color: var(--color-muted);
+  font-size: 10px;
+}
+
+.mabda-app-preferences {
+  padding: 13px;
+  background: var(--color-graphite);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg);
+}
+
+.mabda-app-preference-row {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 620;
+}
+
+.mabda-app-preference-row > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mabda-app-preference-row .theme-toggle span {
+  display: inline;
+}
+
+.mabda-app-language-choice {
+  min-height: 38px;
+  padding: 6px 10px;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.mabda-app-account {
+  padding-top: 14px;
+  border-top: 1px solid var(--color-hairline);
+}
+
+.student-nav-actions--compact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.student-nav-actions--compact .student-nav-link,
+.student-nav-actions--compact .student-nav-logout,
+.student-nav-actions--compact .student-nav-signup {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 13px;
+}
+
+.mabda-mobile-nav {
+  position: fixed;
+  z-index: 70;
+  inset-inline: 0;
+  inset-block-end: 0;
+  display: none;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+  padding: 6px 8px calc(7px + env(safe-area-inset-bottom));
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-hairline);
+  box-shadow: 0 -5px 22px rgb(24 38 75 / 7%);
+}
+
+.mabda-mobile-nav-item {
+  min-width: 0;
+  min-height: 54px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 3px 2px;
+  color: var(--color-muted);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-decoration: none;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.mabda-mobile-nav-item span {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.mabda-mobile-nav-item[aria-current='page'],
+.mabda-mobile-nav-item[aria-expanded='true'] {
+  color: var(--color-ink);
+  background: var(--color-info-bg);
+}
+
+.mabda-mobile-nav-item[aria-current='page']::after {
+  width: 16px;
+  height: 2px;
+  content: '';
+  background: var(--color-primary);
+  border-radius: 99px;
+}
+
+/* Product Home */
+.mabda-home-main {
+  width: min(1120px, calc(100% - 40px));
+  margin-inline: auto;
+  padding-block: 30px 72px;
+  color: var(--color-ink);
+}
+
+.mabda-home-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(270px, 0.8fr);
+  align-items: stretch;
+  gap: 24px;
+  padding: clamp(20px, 4vw, 42px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-hairline);
+  border-radius: 24px;
+  box-shadow: var(--shadow-surface);
+}
+
+.mabda-home-hero-copy {
+  min-width: 0;
+  align-self: center;
+}
+
+.mabda-home-eyebrow,
+.mabda-home-section-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 720;
+  letter-spacing: 0.025em;
+}
+
+.mabda-home-eyebrow::before,
+.mabda-home-section-kicker::before {
+  width: 17px;
+  height: 2px;
+  content: '';
+  background: var(--color-primary);
+  border-radius: 99px;
+}
+
+.mabda-home-hero h1 {
+  max-width: 17ch;
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: clamp(30px, 4vw, 47px);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.16;
+}
+
+.mabda-home-hero-lead {
+  max-width: 54ch;
+  margin: 15px 0 20px;
+  color: var(--color-muted);
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.mabda-home-welcome {
+  display: block;
+  margin: 0 0 7px;
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.mabda-home-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.mabda-home-guest-note {
+  max-width: 62ch;
+  margin: 12px 0 0;
+  color: var(--color-muted);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.mabda-home-resume {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px;
+  color: var(--color-ink);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg);
+}
+
+.mabda-home-resume-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mabda-home-resume-path {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mabda-home-resume-path .programming-language-label {
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.mabda-home-resume .mabda-home-state,
+.mabda-home-path-card .mabda-home-state {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 25px;
+  padding: 3px 8px;
+  color: var(--color-info);
+  background: var(--color-info-bg);
+  border: 1px solid var(--color-hairline);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 720;
+}
+
+.mabda-home-state.is-available {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+}
+
+.mabda-home-state.is-planned {
+  color: var(--color-info);
+  background: var(--color-info-bg);
+}
+
+.mabda-home-resume h2 {
+  margin: 3px 0 0;
+  color: var(--color-ink);
+  font-size: 18px;
+  font-weight: 740;
+  line-height: 1.35;
+}
+
+.mabda-home-resume-copy {
+  margin: 8px 0 0;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.mabda-home-resume-meta {
+  display: grid;
+  gap: 8px;
+}
+
+.mabda-home-resume-meta p {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--color-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.mabda-home-resume-meta strong {
+  max-width: 65%;
+  color: var(--color-ink);
+  font-weight: 650;
+  text-align: end;
+}
+
+.mabda-home-progress {
+  height: 7px;
+  overflow: hidden;
+  background: var(--color-graphite-raised);
+  border-radius: 999px;
+}
+
+.mabda-home-progress span {
+  display: block;
+  height: 100%;
+  background: var(--color-progress);
+  border-radius: inherit;
+  transition: width var(--motion-standard);
+}
+
+.mabda-home-resume .button {
+  align-self: flex-start;
+}
+
+.mabda-home-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-block: 17px 30px;
+}
+
+.mabda-home-stat {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 15px;
+  color: var(--color-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+}
+
+.mabda-home-stat strong {
+  color: var(--color-ink);
+  font-size: 18px;
+  font-weight: 760;
+}
+
+.mabda-home-section {
+  margin-block-start: 38px;
+  scroll-margin-top: 90px;
+}
+
+.mabda-home-section-heading {
+  max-width: 720px;
+  margin-block-end: 15px;
+}
+
+.mabda-home-section-heading h2 {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: clamp(21px, 2.7vw, 28px);
+  font-weight: 760;
+  line-height: 1.25;
+}
+
+.mabda-home-section-heading > p:last-child {
+  margin: 7px 0 0;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.mabda-home-path-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.mabda-home-path-card {
+  min-width: 0;
+  min-height: 205px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  padding: 18px;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-surface);
+  text-decoration: none;
+  transition: transform var(--motion-standard), border-color var(--motion-fast), background-color var(--motion-fast);
+}
+
+.mabda-home-path-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-hairline-strong);
+}
+
+.mabda-home-path-card:active {
+  transform: translateY(0);
+}
+
+.mabda-home-path-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mabda-home-path-card h3 {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 16px;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.mabda-home-path-card p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.mabda-home-path-card .programming-language-label {
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 720;
+}
+
+.mabda-home-path-progress {
+  display: grid;
+  gap: 6px;
+  margin-block-start: auto;
+}
+
+.mabda-home-path-progress-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--color-muted);
+  font-size: 10px;
+}
+
+.mabda-home-path-progress .mabda-home-progress {
+  height: 5px;
+}
+
+.mabda-home-path-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-block-start: auto;
+  padding-top: 10px;
+  color: var(--color-ink);
+  border-top: 1px solid var(--color-hairline);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.mabda-home-loop {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg);
+}
+
+.mabda-home-loop li {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 17px 15px;
+  color: var(--color-ink);
+}
+
+.mabda-home-loop li + li {
+  border-inline-start: 1px solid var(--color-hairline);
+}
+
+.mabda-home-loop-index {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  display: inline-grid;
+  place-items: center;
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 780;
+}
+
+.mabda-home-loop li span:last-child {
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 680;
+  line-height: 1.4;
+}
+
+.mabda-home-content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(250px, 0.75fr);
+  gap: 14px;
+}
+
+.mabda-home-feature-panel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 21px;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg);
+}
+
+.mabda-home-feature-panel.is-primary {
+  background: var(--color-graphite);
+}
+
+.mabda-home-feature-icon {
+  width: 42px;
+  height: 42px;
+  display: inline-grid;
+  place-items: center;
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  border-radius: 12px;
+}
+
+.mabda-home-feature-panel h3 {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 16px;
+  font-weight: 740;
+}
+
+.mabda-home-feature-panel p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.mabda-home-feature-panel .button {
+  margin-block-start: auto;
+}
+
+.mabda-home-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.mabda-home-quick-action {
+  min-width: 0;
+  min-height: 108px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  text-align: start;
+  text-decoration: none;
+}
+
+button.mabda-home-quick-action {
+  cursor: pointer;
+  font: inherit;
+}
+
+.mabda-home-quick-action:hover:not([aria-disabled='true']) {
+  background: var(--color-graphite);
+  border-color: var(--color-hairline-strong);
+}
+
+.mabda-home-quick-action[aria-disabled='true'] {
+  color: var(--color-muted);
+  border-style: dashed;
+  cursor: default;
+}
+
+.mabda-home-quick-icon {
+  width: 34px;
+  height: 34px;
+  display: inline-grid;
+  place-items: center;
+  color: var(--color-primary);
+  background: var(--color-info-bg);
+  border-radius: 10px;
+}
+
+.mabda-home-quick-action strong {
+  color: var(--color-ink);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.mabda-home-quick-action small {
+  color: var(--color-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.mabda-home-results {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.mabda-home-results .student-profile-card {
+  min-width: 0;
+}
+
+.mabda-home-vision {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-block-start: 38px;
+  padding: 19px 22px;
+  color: var(--color-ink);
+  background: var(--color-graphite);
+  border: 1px solid var(--color-hairline);
+  border-inline-start: 4px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  scroll-margin-top: 90px;
+}
+
+.mabda-home-vision p {
+  margin: 0;
+  font-family: var(--font-display), var(--font-body);
+  font-size: 17px;
+  font-weight: 720;
+  line-height: 1.5;
+}
+
+.mabda-home-data-note {
+  margin: 22px 0 0;
+  color: var(--color-muted);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+@keyframes mabda-drawer-enter {
+  from { transform: translateX(12px); }
+  to { transform: translateX(0); }
+}
+
+:root[dir='rtl'] .mabda-app-drawer {
+  animation-name: mabda-drawer-enter-rtl;
+}
+
+@keyframes mabda-drawer-enter-rtl {
+  from { transform: translateX(-12px); }
+  to { transform: translateX(0); }
+}
+
+@media (max-width: 980px) {
+  .mabda-home-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(250px, 0.78fr);
+    gap: 17px;
+  }
+
+  .mabda-home-loop li {
+    gap: 8px;
+    padding-inline: 11px;
+  }
+
+  .mabda-home-loop li span:last-child {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 760px) {
+  .mabda-mobile-nav { display: grid; }
+  .mabda-home-main,
+  .learning-system-main,
+  .lesson-main,
+  .student-page-main {
+    padding-bottom: calc(104px + env(safe-area-inset-bottom));
+  }
+
+  .mabda-home-main {
+    width: min(100% - 28px, 680px);
+    padding-top: 18px;
+  }
+
+  .mabda-app-header-inner {
+    width: calc(100% - 28px);
+    min-height: 68px;
+  }
+
+  .mabda-app-header-context { display: none; }
+  .mabda-app-menu-trigger { width: 44px; padding-inline: 0; }
+  .mabda-app-menu-trigger > span { display: none; }
+  .mabda-app-brand .mabda-logo { width: 34px; height: 34px; }
+  .mabda-app-brand-name { font-size: 14px; }
+  .mabda-app-brand-byline { font-size: 10px; }
+
+  .mabda-home-hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    padding: 20px;
+    border-radius: 19px;
+  }
+
+  .mabda-home-hero h1 { max-width: 19ch; font-size: clamp(27px, 7.4vw, 36px); }
+  .mabda-home-hero-lead { margin-block: 10px 15px; font-size: 13px; }
+  .mabda-home-resume { gap: 12px; padding: 15px; }
+  .mabda-home-stats { gap: 7px; margin-block: 12px 22px; }
+  .mabda-home-stat { align-items: flex-start; flex-direction: column; gap: 4px; padding: 10px; font-size: 11px; }
+  .mabda-home-stat strong { font-size: 16px; }
+  .mabda-home-section { margin-block-start: 27px; }
+  .mabda-home-section-heading { margin-block-end: 11px; }
+  .mabda-home-section-heading h2 { font-size: 21px; }
+  .mabda-home-section-heading > p:last-child { font-size: 12px; }
+  .mabda-home-path-grid { grid-template-columns: minmax(0, 1fr); gap: 9px; }
+  .mabda-home-path-card { min-height: unset; gap: 10px; padding: 14px; }
+  .mabda-home-loop { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mabda-home-loop li { min-height: 62px; padding: 10px; }
+  .mabda-home-loop li:nth-child(3) { border-inline-start: 0; border-top: 1px solid var(--color-hairline); }
+  .mabda-home-loop li:nth-child(4) { border-top: 1px solid var(--color-hairline); }
+  .mabda-home-loop-index { width: 27px; height: 27px; }
+  .mabda-home-content-grid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .mabda-home-feature-panel { padding: 16px; }
+  .mabda-home-quick-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .mabda-home-quick-action { min-height: 95px; padding: 10px; }
+  .mabda-home-results { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .mabda-home-vision { align-items: flex-start; flex-direction: column; gap: 6px; margin-block-start: 26px; padding: 15px; }
+  .mabda-home-vision p { font-size: 15px; }
+  .mabda-app-drawer { gap: 15px; padding-inline: 15px; }
+  .mabda-app-drawer-heading h2 { font-size: 15px; }
+}
+
+@media (max-width: 360px) {
+  .mabda-app-header-inner { width: calc(100% - 20px); }
+  .mabda-home-main { width: calc(100% - 20px); }
+  .mabda-app-brand { gap: 7px; }
+  .mabda-app-brand .mabda-logo { width: 30px; height: 30px; }
+  .mabda-app-brand-name { gap: 4px; font-size: 12px; }
+  .mabda-app-menu-trigger { min-width: 40px; min-height: 40px; }
+  .mabda-home-hero { padding: 15px; }
+  .mabda-home-hero h1 { font-size: 27px; }
+  .mabda-home-resume { padding: 12px; }
+  .mabda-mobile-nav { gap: 1px; padding-inline: 3px; }
+  .mabda-mobile-nav-item { font-size: 11px; }
+}
+
+@media (min-width: 761px) {
+  .mabda-home-path-card { min-height: 220px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mabda-app-drawer,
+  .mabda-home-path-card,
+  .mabda-home-progress span,
+  .mabda-app-menu-trigger,
+  .mabda-app-icon-button {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

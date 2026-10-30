@@ -1,60 +1,74 @@
-# VANTA — Coding Practice for Beginners
+# Mabda — مبدأ · by VANTA
 
-VANTA Learning System v1 includes a bilingual landing page and an available HTML Fundamentals path with five beginner lessons. Lessons use guided explanations, read-only code examples, and interactive four-option quizzes with retry feedback. CSS and JavaScript learning paths remain planned.
+Mabda is the beginner coding-learning product developed by the VANTA team. The existing repository and persistence identifiers keep their VANTA names for compatibility; this is not a new application or a new database tenant. VANTA's team logo assets are preserved, not redesigned.
 
-The student account milestone adds real Supabase email/password authentication, optional email confirmation (according to Supabase project settings), password reset, a protected-by-UI dashboard/profile, and account-owned path/lesson progress. Progress is stored in the configured Supabase database and protected by PostgreSQL Row Level Security (RLS). The checked-in migration is applied to the VANTA hosted project; verify migration history before applying it to another project.
+The bilingual product includes a learning Home, path catalog, and three active foundation paths: HTML (5 lessons), CSS (8 lessons), and JavaScript (9 lessons). Each lesson offers explanations, examples, an unsolved Practice Studio exercise, and a four-option quiz with stable randomized options, feedback, retries, and first-attempt scoring. Programming fundamentals beyond these foundations, problem-solving, challenges, projects, AI assistance, and competitions remain planned unless explicitly identified as current functionality.
 
-Quiz scores are client-submitted learning summaries and are not server-verified. They must not be used as trusted awards or credentials. Code examples remain read-only: no code execution, AI assistant, or competitions are implemented.
+Practice Studio uses CodeMirror for HTML, CSS, and JavaScript. It provides static diagnostics with locations and suggestions, an isolated iframe preview, runtime JavaScript feedback, stale-preview status, and a separate exercise checklist. Running code or passing the checklist does not complete a lesson or change a quiz result. Reset restores the unsolved starter locally; it does not overwrite a cloud draft. Signed-in learners can explicitly save and restore their account-owned draft. Guests are told their draft is not cloud-saved. This is educational iframe isolation, not an absolute security guarantee or a full VS Code implementation.
+
+Real Supabase email/password authentication, confirmation/recovery callbacks, dashboard/profile UI guards, and account-owned progress are integrated. RLS is the database authorization boundary; UI route guards are not a substitute for it. Quiz results are client-submitted learning summaries, not server-verified awards or credentials. A live authenticated sign-up/login/recovery/persistence test still requires a usable, confirmed test-account session; build success or guest tests cannot establish it.
 
 ## Run locally
 
 ```sh
-npm install
+npm ci
 cp .env.example .env.local
-# Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in .env.local
+# Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY locally
 npm run dev
 ```
 
-To run the app without Supabase values, leave the environment unset; public learning content remains viewable and account pages explain that Supabase setup is required. Registration, login, database progress, confirmation, and recovery require a configured Supabase project and its matching Auth URL/email settings.
+Without Supabase configuration the public content remains available, while account pages explain the missing setup. Never place database passwords, service-role keys, or secret keys in Vite variables. Only browser-safe URL and publishable-key values belong in `VITE_` configuration. `.env.local` is ignored.
 
-Apply the migration only after selecting the intended Supabase project and reviewing it:
-
-```sh
-supabase link --project-ref <project-ref>
-supabase db push
-```
-
-Never put a Supabase secret/service-role key into a Vite environment variable. `VITE_` values are included in the browser bundle; use a publishable key only.
+The existing migrations and hosted project are the source of truth. Verify the target and migration history before applying to another project; do not reset student data. Brand integration does not require changing Supabase/Auth/RLS settings.
 
 ## Verify
 
 ```sh
 npm run typecheck
+npm test
 npm run build
+git diff --check
 npm run preview
 ```
 
+Unit/contract tests cover locale parity, quiz identity and ordering, progress derivation, safe return paths, unsolved starters, validators, diagnostics locations, and preview document boundaries. They do not prove RLS isolation or authenticated persistence. Browser acceptance evidence and the remaining-work roadmap are documented separately. Vite currently warns about chunks above 500 KB; route/content and parser chunking remain performance work, not a suppressed warning.
+
+Optional browser acceptance uses Python Playwright, installed Chromium, and Node >=22.15. Start a build preview first, then run:
+
+```sh
+BASE_URL=http://127.0.0.1:5175 EVIDENCE_DIR=/tmp/mabda-browser-acceptance python3 tests/browser_acceptance.py
+BASE_URL=http://127.0.0.1:5175 EVIDENCE_DIR=/tmp/mabda-auth-intro-acceptance python3 tests/auth_intro_acceptance.py
+BASE_URL=http://127.0.0.1:5175 EVIDENCE_DIR=/tmp/mabda-app-shell-acceptance python3 tests/app_shell_acceptance.py
+```
+
+Pass `THEME=dark` to the main acceptance harness to exercise the same flow in Dark mode. Additional focused checks use the same `BASE_URL` / `EVIDENCE_DIR` settings:
+
+```sh
+python3 tests/theme_ui_acceptance.py
+python3 tests/theme_practice_acceptance.py
+```
+
+The UI matrix covers 320/390/768/1440px, both themes/locales, header assets, focus, reduced motion, and stored preference. The App Shell matrix additionally covers 1024px, drawer focus trapping/Escape/outside click, existing route destinations, real Practice Studio access, and Home content/statuses. The Auth/Intro matrix checks first-visit gating, return-path preservation, form fields/validation, visibility controls, SPA switching, callback bypass, contrast, RTL/LTR, and overflow. It does not submit credentials or mutate Supabase. The practice checks prove that plain text still renders but fails required-tag checks, and that theme switching preserves editor/quiz state. They never submit an auth form or write a cloud draft.
+
+Set `CHROMIUM_PATH` if the installed browser is not `/usr/bin/chromium`. The harness reads content fixtures through Node's built-in type stripping (currently marked experimental), tests guest routes, mobile/desktop, quiz/retry/scoring, language switching and focus, and writes screenshots/results outside the repository. It does not create accounts, submit authentication forms, or write student data. Live account persistence and RLS isolation need a separate authorized authenticated test.
+
 ## Structure
 
-- `src/App.tsx` — bilingual landing page, route selection, and signed-in learning activity tracking.
-- `src/auth/AuthProvider.tsx` — Supabase Auth session restoration and subscription.
-- `src/lib/supabaseClient.ts` — safe, typed browser client setup.
-- `src/lib/database.types.ts` — types for the profile and progress tables.
-- `src/services/studentData.ts` — profile bootstrap and path/lesson data access.
-- `src/state/StudentProgressProvider.tsx` — account-bound student progress state.
-- `src/components/StudentAccountPages.tsx` — account flows, student dashboard, and profile.
-- `src/components/StudentNavActions.tsx` — session-aware navigation and sign-out.
-- `src/components/StartLesson.tsx` — first HTML lesson and guided quiz.
-- `src/components/LearningLesson.tsx` — reusable view for the remaining HTML lessons.
-- `src/components/LearningSystemPage.tsx` — path catalog and path outline pages.
-- `src/content/learningSystem.ts` — route catalog and learning-path availability status.
-- `src/content/initialHtmlExercise.ts` — original HTML exercise content preserved and reused as lesson material; code is not executed.
-- `src/i18n/` — Arabic/English landing, path, lesson, quiz, and account copy.
-- `supabase/migrations/` — reviewed schema migration with user-owned RLS policies.
-- `docs/supabase-account-progress.md` — setup, security boundary, and official reference links.
-- `src/utils/quizChoices.ts` — validated randomized option order shared by quizzes.
-- `src/styles/` — VANTA tokens, responsive presentation, and reduced-motion rules.
-- `public/brand/` — existing VANTA logo assets; the mark is preserved, not redesigned.
-- `brand-spec.md` — asset provenance and design tokens.
+| Area | Responsibility |
+|---|---|
+| `src/App.tsx`, `src/content/learningSystem.ts` | Existing route resolution, product Home, language, activity tracking |
+| `src/brand/`, `src/components/BrandLogo.tsx` | Mabda identity contract and actual approved Raster logo display |
+| `src/styles/tokens.css`, `src/styles/mabda.css`, `src/styles/app-shell.css` | Semantic palette, typography, shared product composition and App Shell |
+| `src/auth/`, `src/state/`, `src/services/` | Existing Auth, account-bound progress, profile, and draft services |
+| `src/components/StartLesson.tsx`, `LearningLesson.tsx` | HTML lessons and independent quiz flow |
+| `PracticeStudio.tsx`, `PracticeCodeEditor.tsx`, `src/utils/practice*` | Editor, diagnostics, iframe preview, checklist, draft UI |
+| `src/content/initialHtmlExercise.ts` | Preserved original HTML teaching content, still reused |
+| `src/i18n/` | Arabic/English parity, account and learning copy |
+| `supabase/migrations/`, `src/lib/database.types.ts` | Existing reviewed schema and browser types |
+| `public/manus-routes.json` | Static page-route manifest matching current route catalog |
+| `public/brand/mabda/` | Approved source images and documented pixel crops; no traced SVG |
+| `tests/` | Reproducible local contract tests |
 
-Arabic is the default locale and uses RTL; English uses LTR. The language switch updates page copy, document direction, `lang`, title, and description. The selected locale is remembered locally when browser storage is available.
+Arabic is default (RTL); English is LTR. Code always stays LTR. Light is the default theme; the App Shell menu control switches the entire app to Dark and saves the manual choice under `mabda-theme`. A central ThemeProvider and early HTML bootstrap restore it without overriding it with OS preferences. If browser storage is blocked, switching still works in memory for that page. The existing `vanta-locale` storage key is deliberately preserved. The first Auth visit shows Intro before Login/Sign Up/Forgot Password; Next stores `mabda-has-seen-intro` in browser storage, and callback/reset routes bypass onboarding. To replay it during development, clear that key from localStorage (or sessionStorage fallback) and reload `/login`; there is no user-facing reset button. Existing drafts containing `Welcome to VANTA.` remain valid in the first exercise alongside the new `Welcome to Mabda.` copy; drafts are never rewritten automatically.
+
+See [Mabda brand integration notes](docs/mabda-brand-spec.md) for source provenance and review limits, [future roadmap proposals](docs/mabda-roadmap.md) for seven possible follow-up areas beyond the active HTML/CSS/JavaScript foundations, and [account/progress setup](docs/supabase-account-progress.md) for current technical integration guidance. The root `brand-spec.md` remains the historical VANTA studio reference.

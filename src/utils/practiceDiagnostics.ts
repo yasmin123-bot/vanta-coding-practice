@@ -2,11 +2,13 @@ import { cssLanguage } from '@codemirror/lang-css';
 import { htmlLanguage } from '@codemirror/lang-html';
 import { javascriptLanguage } from '@codemirror/lang-javascript';
 import type { Diagnostic } from '@codemirror/lint';
+import type { PracticeRequirementResult, PracticeValidationRule } from '../content/practiceTypes';
 import { practiceStudioMessages } from '../i18n/practiceStudio';
 import type { Locale } from '../i18n/messages';
+import { cssValueSupport, getCssDeclarationFacts, getCssUnmatchedBraceOffsets, isKnownCssProperty, suggestCssColorValue, suggestCssProperty } from './cssAnalysis';
 
 export type PracticeCodeLanguage = 'html' | 'css' | 'javascript';
-export type DiagnosticKind = 'structure' | 'syntax' | 'value' | 'property' | 'runtime';
+export type DiagnosticKind = 'structure' | 'syntax' | 'value' | 'property' | 'format' | 'requirement' | 'runtime';
 
 export type RuntimeCodeIssue = {
   message: string;
@@ -74,18 +76,19 @@ function makeDiagnostic(
   message: string,
   suggestion: string,
   detail?: string,
+  severityOverride?: Diagnostic['severity'],
 ): PracticeCodeDiagnostic {
   const safeFrom = Math.max(0, Math.min(from, source.length));
   const safeTo = Math.max(safeFrom, Math.min(Math.max(to, safeFrom), source.length));
   const { line, column } = locationAt(source, safeFrom);
-  const severity = kind === 'value' || kind === 'property' ? 'warning' : 'error';
+  const severity = severityOverride ?? (kind === 'value' || kind === 'property' || kind === 'format' ? 'warning' : 'error');
   return {
     id: `${language}:${kind}:${safeFrom}:${safeTo}:${message}`,
     from: safeFrom,
     to: safeTo,
     severity,
-    source: 'VANTA Practice',
-    markClass: kind === 'value' || kind === 'property' ? 'cm-vanta-code-warning' : 'cm-vanta-code-error',
+    source: 'Mabda Practice',
+    markClass: severity === 'error' ? 'cm-vanta-code-error' : severity === 'info' ? 'cm-vanta-code-hint' : 'cm-vanta-code-warning',
     message,
     language,
     kind,
@@ -236,43 +239,100 @@ function scanHtmlStructure(source: string, locale: Locale): PracticeCodeDiagnost
   return diagnostics;
 }
 
-function parseCssDeclarations(source: string, locale: Locale): PracticeCodeDiagnostic[] {
+function cssParserDiagnostics(source: string, locale: Locale): PracticeCodeDiagnostic[] {
   const diagnostics: PracticeCodeDiagnostic[] = [];
-  const tree = cssLanguage.parser.parse(source);
-  const syntaxRanges: Array<{ from: number; to: number }> = [];
-  tree.iterate({ enter(node) { if (node.type.isError) syntaxRanges.push({ from: node.from, to: node.to }); } });
-  const cursor = tree.cursor();
   const copy = practiceStudioMessages[locale].diagnostics;
-  const supports = typeof CSS !== 'undefined' && typeof CSS.supports === 'function' ? CSS.supports.bind(CSS) : null;
-
-  const visit = () => {
-    if (cursor.name === 'Declaration') {
-      const node = cursor.node;
-      const propertyNode = node.getChild('PropertyName');
-      if (propertyNode && supports) {
-        const property = source.slice(propertyNode.from, propertyNode.to).trim();
-        const declaration = source.slice(cursor.from, cursor.to);
-        const colon = declaration.indexOf(':');
-        const rawValue = colon < 0 ? '' : declaration.slice(colon + 1).replace(/;\s*$/, '').replace(/\/\*[\s\S]*?\*\//g, '').trim();
-        const value = rawValue.replace(/\s*!important\s*$/i, '').trim();
-        const valueOffset = rawValue ? cursor.from + colon + 1 + declaration.slice(colon + 1).indexOf(rawValue) : cursor.to;
-        const hasParserError = syntaxRanges.some((range) => range.from <= cursor.to && range.to >= cursor.from);
-        if (!hasParserError && !property.startsWith('--') && !value) {
-          diagnostics.push(makeDiagnostic(source, 'css', 'syntax', propertyNode.from, Math.max(propertyNode.to, cursor.to), copy.cssMissingValue(property), copy.cssValueSuggestion));
-        } else if (!hasParserError && !property.startsWith('--') && !supports(property, 'initial')) {
-          diagnostics.push(makeDiagnostic(source, 'css', 'property', propertyNode.from, propertyNode.to, copy.cssUnknownProperty(property), copy.cssPropertySuggestion, property));
-        } else if (!hasParserError && !property.startsWith('--') && value && !supports(property, value)) {
-          diagnostics.push(makeDiagnostic(source, 'css', 'value', valueOffset, valueOffset + value.length, copy.cssInvalidValue(property, value), copy.cssValueSuggestion, `${property}: ${value}`));
-        }
+  const tree = cssLanguage.parser.parse(source);
+  const unmatched = getCssUnmatchedBraceOffsets(source);
+  for (const offset of unmatched) {
+    diagnostics.push(makeDiagnostic(source, 'css', 'syntax', offset, Math.min(source.length, offset + 1), copy.cssUnmatchedBrace, copy.cssBraceSuggestion));
+  }
+  tree.iterate({
+    enter(node) {
+      if (!node.type.isError || unmatched.some((offset) => Math.abs(offset - node.from) <= 1)) return;
+      const lineStart = source.lastIndexOf('\n', Math.max(0, node.from - 1)) + 1;
+      const lineEndIndex = source.indexOf('\n', node.from);
+      const lineEnd = lineEndIndex < 0 ? source.length : lineEndIndex;
+      const line = source.slice(lineStart, lineEnd);
+      const boundary = Math.max(source.lastIndexOf('{', node.from), source.lastIndexOf(';', node.from), source.lastIndexOf('}', node.from)) + 1;
+      const preceding = source.slice(boundary, node.from);
+      const selectorBoundary = line.indexOf('{');
+      const selectorHeader = (selectorBoundary < 0 ? line : line.slice(0, selectorBoundary)).trimEnd();
+      let diagnosticFrom = node.from;
+      let message = copy.cssSyntax;
+      let suggestion = copy.cssSyntaxSuggestion;
+      let kind: DiagnosticKind = 'syntax';
+      if (/[,+~>]$/.test(selectorHeader.trim()) || (selectorBoundary < 0 && node.from >= lineEnd && /^\s*[.#][\w-]+\s*$/.test(line))) {
+        diagnosticFrom = lineStart + Math.max(0, selectorHeader.length - 1);
+        message = copy.cssMalformedSelector;
+        suggestion = copy.cssSelectorSuggestion;
+      } else if (!line.includes(':') && /^\s*[.#]?[\w-]+\s+[^{};]+;?\s*$/.test(line)) {
+        message = copy.cssMissingColon;
+        suggestion = copy.cssMissingColonSuggestion;
+      } else if (/:\s*[^;{}]+\s*$/.test(preceding) && /[\w-]+/.test(source.slice(node.from, lineEnd))) {
+        message = copy.cssMissingSemicolon;
+        suggestion = copy.cssSemicolonSuggestion;
+        kind = 'format';
       }
-    }
-    if (cursor.firstChild()) {
-      do { visit(); } while (cursor.nextSibling());
-      cursor.parent();
-    }
-  };
-  visit();
+      diagnostics.push(makeDiagnostic(source, 'css', kind, diagnosticFrom, Math.max(node.to, Math.min(source.length, diagnosticFrom + 1)), message, suggestion));
+    },
+  });
   return diagnostics;
+}
+
+function parseCssDeclarations(source: string, locale: Locale, rules: readonly PracticeValidationRule[] = []): PracticeCodeDiagnostic[] {
+  const diagnostics: PracticeCodeDiagnostic[] = [];
+  const copy = practiceStudioMessages[locale].diagnostics;
+  for (const declaration of getCssDeclarationFacts(source)) {
+    if (!declaration.value && !declaration.property.startsWith('--')) {
+      diagnostics.push(makeDiagnostic(source, 'css', 'syntax', declaration.propertyFrom, declaration.to, copy.cssMissingValue(declaration.property), copy.cssValueSuggestion(null)));
+      continue;
+    }
+    if (!declaration.property.startsWith('--') && !isKnownCssProperty(declaration.property)) {
+      const suggestion = suggestCssProperty(declaration.property);
+      diagnostics.push(makeDiagnostic(source, 'css', 'property', declaration.propertyFrom, declaration.propertyTo, copy.cssUnknownProperty(declaration.property), copy.cssPropertySuggestion(suggestion), declaration.property, 'error'));
+      continue;
+    }
+    const supported = cssValueSupport(declaration.property, declaration.value);
+    if (supported === false && declaration.value) {
+      const suggestion = suggestCssColorValue(declaration.value);
+      diagnostics.push(makeDiagnostic(source, 'css', 'value', declaration.valueFrom, declaration.valueTo, copy.cssInvalidValue(declaration.property, declaration.value), copy.cssValueSuggestion(suggestion), `${declaration.property}: ${declaration.value}`));
+    }
+  }
+
+  for (const rule of rules) {
+    if ((rule.type !== 'css-declaration' && rule.type !== 'css-declaration-in-media') || !rule.requireSemicolon) continue;
+    const declaration = getCssDeclarationFacts(source).find((item) => item.selector === rule.target.trim()
+      && item.property === rule.property.toLowerCase()
+      && item.value === rule.value.trim().replace(/\s+/g, ' ').toLowerCase()
+      && (rule.type !== 'css-declaration-in-media' || (item.media ?? '').replace(/[()\s]/g, '').toLowerCase() === rule.media.replace(/[()\s]/g, '').toLowerCase()));
+    if (declaration && !declaration.hasSemicolon) {
+      diagnostics.push(makeDiagnostic(source, 'css', 'format', declaration.to, declaration.to, copy.cssMissingSemicolon, copy.cssSemicolonSuggestion, undefined, 'info'));
+    }
+  }
+  return diagnostics;
+}
+
+function requirementDiagnostics(results: readonly PracticeRequirementResult[]): PracticeCodeDiagnostic[] {
+  return results.flatMap((result) => {
+    if (result.passed || !result.location) return [];
+    const { from, to, line, column, editor } = result.location;
+    const severity = result.severity === 'hint' ? 'info' : result.severity;
+    return [{
+      id: `requirement:${result.id}:${from}:${to}`,
+      from,
+      to,
+      severity,
+      source: 'Mabda Practice',
+      markClass: severity === 'error' ? 'cm-vanta-code-error' : severity === 'info' ? 'cm-vanta-code-hint' : 'cm-vanta-code-warning',
+      message: result.explanation,
+      language: editor,
+      kind: 'requirement' as const,
+      line,
+      column,
+      suggestion: result.concept,
+    }];
+  });
 }
 
 function javascriptMessage(source: string, from: number, locale: Locale) {
@@ -288,6 +348,7 @@ export function getPracticeDiagnostics(
   language: PracticeCodeLanguage,
   locale: Locale,
   runtimeIssue: RuntimeCodeIssue | null = null,
+  validationRules: readonly PracticeValidationRule[] = [],
 ): PracticeCodeDiagnostic[] {
   const copy = practiceStudioMessages[locale].diagnostics;
   const diagnostics: PracticeCodeDiagnostic[] = [];
@@ -297,8 +358,8 @@ export function getPracticeDiagnostics(
     diagnostics.push(...scanHtmlStructure(source, locale));
     addParserErrors(source, 'html', diagnostics, copy.htmlMalformedTag, copy.htmlTagSuggestion);
   } else if (language === 'css') {
-    addParserErrors(source, 'css', diagnostics, copy.cssSyntax, copy.cssSyntaxSuggestion);
-    diagnostics.push(...parseCssDeclarations(source, locale));
+    diagnostics.push(...cssParserDiagnostics(source, locale));
+    diagnostics.push(...parseCssDeclarations(source, locale, validationRules));
   } else {
     const parser = javascriptLanguage.parser;
     const tree = parser.parse(source);
@@ -337,6 +398,10 @@ export function getAllPracticeDiagnostics(
     ...getPracticeDiagnostics(css, 'css', locale),
     ...getPracticeDiagnostics(javascript, 'javascript', locale),
   ];
+}
+
+export function getPracticeRequirementDiagnostics(results: readonly PracticeRequirementResult[]): PracticeCodeDiagnostic[] {
+  return requirementDiagnostics(results);
 }
 
 export function toCodeMirrorDiagnostics(diagnostics: PracticeCodeDiagnostic[]): Diagnostic[] {

@@ -7,6 +7,8 @@ import { useAuth } from '../auth/AuthProvider';
 import { useStudentProgress } from '../state/StudentProgressProvider';
 import { createQuizChoiceOrder, getOrderedQuizChoices } from '../utils/quizChoices';
 import PracticeStudio from './PracticeStudio';
+import LearningHeader from './LearningHeader';
+import ProgrammingLanguageLabel from './ProgrammingLanguageLabel';
 
 type StartLessonProps = {
   locale: Locale;
@@ -47,8 +49,9 @@ function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
   const auth = useAuth();
   const studentProgress = useStudentProgress();
   const isArabic = locale === 'ar';
-  const [flow, setFlow] = useState<LessonFlow>('learn');
-  const [practiceOpened, setPracticeOpened] = useState(false);
+  const directPractice = new URLSearchParams(window.location.search).get('view') === 'practice';
+  const [flow, setFlow] = useState<LessonFlow>(() => directPractice ? 'practice' : 'learn');
+  const [practiceOpened, setPracticeOpened] = useState(directPractice);
   const [learningStepIndex, setLearningStepIndex] = useState(0);
   const [quizIndex, setQuizIndex] = useState(0);
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
@@ -65,7 +68,7 @@ function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
 
   const headingExample = initialHtmlExercise.lesson.example;
   const anatomyExample = '<h1>Hello</h1>';
-  const exampleLines = [headingExample, '<p>Welcome to VANTA.</p>'];
+  const exampleLines = [headingExample, '<p>Welcome to Mabda.</p>'];
   const activeStep = copy.learningSteps[learningStepIndex];
   const currentQuestion = copy.questions[quizIndex];
   const orderedChoices = getOrderedQuizChoices(
@@ -163,7 +166,7 @@ function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
       case 'html':
         return (
           <div className="lesson-step-visual lesson-html-visual" aria-label={copy.htmlStructureCaption}>
-            <span className="lesson-visual-primary" dir="ltr">HTML</span>
+            <ProgrammingLanguageLabel language="html" className="lesson-visual-primary">HTML</ProgrammingLanguageLabel>
             <span className="lesson-visual-connector" aria-hidden="true">→</span>
             <span className="lesson-visual-secondary">{copy.htmlStructureCaption}</span>
           </div>
@@ -207,7 +210,7 @@ function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
         return (
           <div className="lesson-step-visual lesson-example-visual">
             <div className="lesson-code-window">
-              <div className="lesson-code-language" dir="ltr">HTML</div>
+              <ProgrammingLanguageLabel language="html" className="lesson-code-language">HTML</ProgrammingLanguageLabel>
               <div className="lesson-code-lines" dir="ltr">
                 {exampleLines.map((line, index) => (
                   <div className="lesson-code-line" key={line}>
@@ -247,24 +250,7 @@ function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
 
   return (
     <div className={`app-shell lesson-shell ${isArabic ? 'is-arabic' : 'is-english'}`}>
-      <header className="site-header lesson-header section-frame">
-        <a className="brand-link" href="/" aria-label="VANTA — Create Beyond">
-          <img src="/brand/vanta-logo.png" alt="VANTA — Create Beyond" />
-        </a>
-
-        <div className="lesson-header-meta">
-          <span className="lesson-stage-index" dir="ltr">{copy.stageLabel}</span>
-          <button
-            className="language-toggle"
-            type="button"
-            onClick={onSwitchLocale}
-            aria-label={pageCopy.nav.switchLanguage}
-          >
-            <span className="language-toggle-mark" aria-hidden="true">文</span>
-            <span>{isArabic ? 'EN' : 'عربي'}</span>
-          </button>
-        </div>
-      </header>
+      <LearningHeader locale={locale} onSwitchLocale={onSwitchLocale} allPathsLabel={learningUi.allPaths} stageLabel={copy.eyebrow} />
 
       <main className="lesson-main section-frame" aria-labelledby="lesson-title">
         <a className="lesson-back-link" href="/paths/html-fundamentals">
@@ -449,7 +435,7 @@ function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
             <article className="lesson-result-surface">
               <p className="lesson-kicker">{copy.practiceLabel}</p>
               <h2 id="lesson-result-title">{copy.resultTitle}</h2>
-              <div className="lesson-result-score" aria-label={`${copy.scoreLabel}: ${firstTryScore} / ${copy.questions.length}`}>
+              <div className="lesson-result-score" dir="ltr" aria-label={`${copy.scoreLabel}: ${firstTryScore} / ${copy.questions.length}`}>
                 <span>{firstTryScore}</span>
                 <span className="lesson-result-divider" aria-hidden="true">/</span>
                 <span>{copy.questions.length}</span>

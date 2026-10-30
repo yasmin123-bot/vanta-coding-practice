@@ -1,13 +1,15 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { practiceExercises } from '../content/practiceExercises';
-import type { HtmlLessonId } from '../content/learningSystem';
+import type { FoundationLessonId, HtmlLessonId } from '../content/learningSystem';
 import { practiceStudioMessages } from '../i18n/practiceStudio';
 import type { Locale } from '../i18n/messages';
 import { useAuth } from '../auth/AuthProvider';
 import { loadPracticeDraft, savePracticeDraft, type PracticeDraft, type PracticeDraftContent } from '../services/practiceDrafts';
 import type { RuntimeCodeIssue } from '../utils/practiceDiagnostics';
 import { buildPracticePreviewDocument } from '../utils/practicePreviewDocument';
-import { validatePractice, type PracticeCheckResult, type PracticeCheckId } from '../utils/practiceValidation';
+import { validatePractice, type PracticeCheckResult } from '../utils/practiceValidation';
+import { summarizePracticeRequirements } from '../utils/practiceResults';
+import ProgrammingLanguageLabel from './ProgrammingLanguageLabel';
 
 const PracticeCodeEditor = lazy(() => import('./PracticeCodeEditor'));
 type EditorTab = 'html' | 'css' | 'javascript';
@@ -16,8 +18,9 @@ type LoadState = 'loading' | 'ready' | 'error';
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
 export type PracticeStudioProps = {
-  lessonId: HtmlLessonId;
+  lessonId: FoundationLessonId;
   lessonTitle: string;
+  expectedOutcome?: string;
   locale: Locale;
   isVisible: boolean;
   onBackToLesson: () => void;
@@ -32,10 +35,30 @@ function contentFromDraft(draft: PracticeDraft): PracticeDraftContent {
   return { html_code: draft.html_code, css_code: draft.css_code, js_code: draft.js_code };
 }
 
-function PracticeStudio({ lessonId, lessonTitle, locale, isVisible, onBackToLesson, onContinueToQuiz }: PracticeStudioProps) {
+function PracticeStudio({ lessonId, lessonTitle, expectedOutcome, locale, isVisible, onBackToLesson, onContinueToQuiz }: PracticeStudioProps) {
   const copy = practiceStudioMessages[locale];
-  const exerciseCopy = copy.exercises[lessonId];
+  const exerciseCopy = copy.exercises[lessonId as HtmlLessonId];
   const exercise = practiceExercises[lessonId];
+  const taskCopy = exerciseCopy?.task ?? exercise.instructions?.[locale] ?? copy.intro;
+  const expectedCopy = exerciseCopy?.expected ?? expectedOutcome
+    ?? (locale === 'ar' ? 'اكتب الكود المطلوب ثم افحص كل شرط على حدة.' : 'Write the requested code, then check each requirement separately.');
+  const taskRequirements = useMemo(() => {
+    if (exerciseCopy) {
+      return Object.entries(exerciseCopy.checks).flatMap(([id, item]) => item ? [{
+        id,
+        label: item.label,
+        instruction: item.missing,
+      }] : []);
+    }
+    return (exercise.validationRules ?? []).map((rule) => {
+      const label = (locale === 'ar' ? rule.label_ar : rule.label_en)?.trim();
+      return {
+        id: rule.id,
+        label: label || (locale === 'ar' ? rule.note_ar : rule.note_en),
+        instruction: label ? (locale === 'ar' ? rule.note_ar : rule.note_en) : '',
+      };
+    });
+  }, [exercise.validationRules, exerciseCopy, locale]);
   const auth = useAuth();
   const isArabic = locale === 'ar';
   const starter = useMemo<PracticeDraftContent>(() => ({
@@ -51,7 +74,7 @@ function PracticeStudio({ lessonId, lessonTitle, locale, isVisible, onBackToLess
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [saveInProgress, setSaveInProgress] = useState(false);
-  const [activeTab, setActiveTab] = useState<EditorTab>('html');
+  const [activeTab, setActiveTab] = useState<EditorTab>(exercise.language);
   const [editorRevision, setEditorRevision] = useState(0);
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>('code');
   const [checkResults, setCheckResults] = useState<PracticeCheckResult[] | null>(null);
@@ -76,6 +99,10 @@ function PracticeStudio({ lessonId, lessonTitle, locale, isVisible, onBackToLess
   currentOwnerRef.current = currentOwner;
   currentDraftRef.current = draft;
   currentPreviewTokenRef.current = previewToken;
+
+  useEffect(() => {
+    setActiveTab(exercise.language);
+  }, [exercise.language, lessonId]);
 
   const loadCurrentDraft = useCallback(async () => {
     const request = ++requestId.current;
@@ -162,8 +189,8 @@ function PracticeStudio({ lessonId, lessonTitle, locale, isVisible, onBackToLess
       ? JSON.stringify(draft) !== JSON.stringify(starter)
       : draft.html_code !== savedDraft.html_code || draft.css_code !== savedDraft.css_code || draft.js_code !== savedDraft.js_code
   );
-  const allChecksPassed = Boolean(checkResults?.length && checkResults.every((result) => result.passed));
-  const checkCopyFor = (id: PracticeCheckId) => exerciseCopy.checks[id];
+  const checkSummary = useMemo(() => checkResults ? summarizePracticeRequirements(checkResults) : null, [checkResults]);
+  const allChecksPassed = Boolean(checkSummary?.isComplete);
   const activeCodeKey: keyof PracticeDraftContent = activeTab === 'html'
     ? 'html_code'
     : activeTab === 'css' ? 'css_code' : 'js_code';
@@ -222,7 +249,7 @@ function PracticeStudio({ lessonId, lessonTitle, locale, isVisible, onBackToLess
 
   const checkTask = () => {
     if (!workspaceReady) return;
-    setCheckResults(validatePractice(lessonId, draft.html_code));
+    setCheckResults(validatePractice(lessonId, draft, locale));
     setNotice('');
   };
 
@@ -306,11 +333,11 @@ function PracticeStudio({ lessonId, lessonTitle, locale, isVisible, onBackToLess
       <div className="practice-task-brief">
         <article>
           <span>{copy.taskLabel}</span>
-          <p dir="auto">{exerciseCopy.task}</p>
+          <p dir="auto">{taskCopy}</p>
         </article>
         <article>
           <span>{copy.expectedLabel}</span>
-          <p dir="auto">{exerciseCopy.expected}</p>
+          <p dir="auto">{expectedCopy}</p>
         </article>
       </div>
 
@@ -324,7 +351,7 @@ function PracticeStudio({ lessonId, lessonTitle, locale, isVisible, onBackToLess
 
       <div className="practice-workspace" data-mobile-panel={mobilePanel}>
         <div className="practice-workspace-topbar">
-          <div className="practice-workspace-file-label" dir="ltr"><span aria-hidden="true">▤</span> index.html</div>
+          <div className="practice-workspace-file-label" dir="ltr"><span aria-hidden="true">▤</span> {activeTab === 'css' ? 'styles.css' : activeTab === 'javascript' ? 'script.js' : 'index.html'}</div>
           <div className="practice-save-status" role="status" aria-live="polite">
             {loadState === 'loading' ? copy.loading : saveInProgress || saveState === 'saving' ? copy.saving : null}
             {saveState === 'saved' ? copy.saved : null}
@@ -347,19 +374,63 @@ function PracticeStudio({ lessonId, lessonTitle, locale, isVisible, onBackToLess
                 ['html', copy.htmlTab],
                 ['css', copy.cssTab],
                 ['javascript', copy.jsTab],
-              ] as const).map(([tab, label]) => (
-                <button
-                  type="button"
-                  role="tab"
-                  id={`practice-tab-${tab}`}
-                  aria-selected={activeTab === tab}
-                  aria-controls="practice-editor-content"
-                  key={tab}
-                  onClick={() => selectTab(tab)}
-                  dir="ltr"
-                >{label}</button>
-              ))}
+              ] as const).map(([tab, label]) => {
+                const tabLabel = tab === exercise.language
+                  ? tab === 'javascript' ? 'JavaScript' : tab.toUpperCase()
+                  : label;
+                return (
+                  <button
+                    type="button"
+                    role="tab"
+                    id={`practice-tab-${tab}`}
+                    aria-selected={activeTab === tab}
+                    aria-controls="practice-editor-content"
+                    key={tab}
+                    onClick={() => selectTab(tab)}
+                    dir="ltr"
+                  >
+                    <ProgrammingLanguageLabel language={tab} label={tabLabel}>{tabLabel}</ProgrammingLanguageLabel>
+                  </button>
+                );
+              })}
             </div>
+
+            <section className="practice-checklist" aria-labelledby="practice-checklist-title">
+              <div className="practice-checklist-heading">
+                <h3 id="practice-checklist-title">{copy.checksTitle}</h3>
+                <button className="button button-quiet" type="button" onClick={checkTask} disabled={!workspaceReady}>{copy.checkTask}</button>
+              </div>
+              <ol className="practice-checklist-items">
+                {taskRequirements.map((requirement, index) => {
+                  const result = checkResults?.find((item) => item.id === requirement.id);
+                  return (
+                    <li
+                      className={result ? `is-${result.status} is-${result.severity}` : 'is-unchecked'}
+                      data-requirement-id={requirement.id}
+                      key={requirement.id}
+                    >
+                      <span className="practice-checklist-number" aria-hidden="true">{index + 1}</span>
+                      <div className="practice-checklist-result">
+                        <strong>{result?.label ?? requirement.label}</strong>
+                        <p>{result?.explanation ?? requirement.instruction}</p>
+                        {result?.concept && <span className="practice-checklist-concept">{result.concept}</span>}
+                        {result?.location && <code className="practice-checklist-location" dir="ltr">{copy.diagnostics.location(result.location.line, result.location.column)}</code>}
+                      </div>
+                      {result && <span className={`practice-checklist-severity is-${result.severity}`}>{copy.severityLabels[result.severity]}</span>}
+                    </li>
+                  );
+                })}
+              </ol>
+              {checkResults && (
+                <p className={`practice-checklist-summary ${allChecksPassed ? 'is-passed' : 'is-pending'}`} role="status" aria-live="polite">
+                  {allChecksPassed
+                    ? copy.allChecksPassed
+                    : checkSummary
+                      ? copy.partialProgress(checkSummary.completedCount, checkSummary.totalCount, checkSummary.totalCount - checkSummary.completedCount, checkResults.find((result) => !result.passed)?.label ?? copy.someChecksPending)
+                      : copy.someChecksPending}
+                </p>
+              )}
+            </section>
 
             <div className="practice-editor-frame" id="practice-editor-content" role="tabpanel" aria-labelledby={`practice-tab-${activeTab}`} dir="ltr">
               {!workspaceReady ? (
@@ -378,6 +449,8 @@ function PracticeStudio({ lessonId, lessonTitle, locale, isVisible, onBackToLess
                     label={`${copy.editorLabel}: ${activeTab}`}
                     value={draft[activeCodeKey]}
                     runtimeIssue={activeTab === 'javascript' ? runtimeIssue : null}
+                    validationResults={checkResults ?? []}
+                    validationRules={exercise.validationRules ?? []}
                     onChange={(value) => updateCode(activeCodeKey, value)}
                   />
                 </Suspense>
@@ -422,31 +495,6 @@ function PracticeStudio({ lessonId, lessonTitle, locale, isVisible, onBackToLess
             {previewState === 'stale' && <p className="practice-preview-status" role="status">{copy.previewStale}</p>}
             {previewState === 'withIssues' && <p className="practice-preview-status is-warning" role="status">{copy.previewWithIssues(runIssueCount)}</p>}
 
-            <section className="practice-checklist" aria-labelledby="practice-checklist-title">
-              <div className="practice-checklist-heading">
-                <h3 id="practice-checklist-title">{copy.checksTitle}</h3>
-                <button className="button button-quiet" type="button" onClick={checkTask} disabled={!workspaceReady}>{copy.checkTask}</button>
-              </div>
-              {checkResults && (
-                <>
-                  <ul className="practice-checklist-items">
-                    {checkResults.map((result) => {
-                      const checkCopy = checkCopyFor(result.id);
-                      if (!checkCopy) return null;
-                      return (
-                        <li className={result.passed ? 'is-passed' : 'is-pending'} key={result.id}>
-                          <span aria-hidden="true">{result.passed ? '✓' : '○'}</span>
-                          <div><strong>{checkCopy.label}</strong><p>{result.passed ? checkCopy.passed : checkCopy.missing}</p></div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                  <p className={`practice-checklist-summary ${allChecksPassed ? 'is-passed' : 'is-pending'}`} role="status" aria-live="polite">
-                    {allChecksPassed ? copy.allChecksPassed : copy.someChecksPending}
-                  </p>
-                </>
-              )}
-            </section>
           </section>
         </div>
 

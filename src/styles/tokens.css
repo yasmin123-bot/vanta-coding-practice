@@ -1,27 +1,57 @@
 :root {
-  color-scheme: dark;
-  font-family: 'IBM Plex Sans Arabic', 'Space Grotesk Variable', sans-serif;
+  color-scheme: light;
+  font-family: 'Noto Sans Arabic Variable', 'Manrope Variable', sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  --color-canvas: #090b10;
-  --color-surface: #11141a;
-  --color-graphite: #171a20;
-  --color-graphite-raised: #1d2027;
-  --color-copper: #c8794f;
-  --color-copper-light: #e1a37e;
-  --color-copper-dark: #8b4e34;
-  --color-sand: #e9d5c8;
-  --color-ink: #f5f1ed;
-  --color-muted: #a8a9ad;
-  --color-muted-dark: #777b83;
-  --color-hairline: rgba(233, 213, 200, 0.14);
-  --color-hairline-strong: rgba(200, 121, 79, 0.42);
+  /* Mabda product palette. VANTA remains the studio endorsement. */
+  --color-cream: #f5f1e8;
+  --color-navy: #18264b;
+  --color-amber: #e4a64a;
+  --color-on-accent: var(--color-navy);
+  --color-canvas: var(--color-cream);
+  --color-surface: #fffcf5;
+  --color-graphite: #ece7dd;
+  --color-graphite-raised: #e4ded2;
+  --color-ink: var(--color-navy);
+  --color-sand: var(--color-navy);
+  --color-muted: #566074;
+  --color-muted-dark: #657084;
+  --color-placeholder: #606a7c;
+  --color-hairline: #d7d4cc;
+  --color-hairline-strong: #8a93a5;
+  --color-focus: #315f96;
+  --color-on-primary: #fffcf5;
+  --color-primary-hover: #263c6b;
+  /* Legacy role aliases keep layout consumers stable; not copper brand colors. */
+  --color-copper: #9a6018;
+  --color-copper-light: #77450e;
+  --color-copper-dark: #77450e;
+  --color-success: #21634e;
+  --color-success-bg: #eaf4ee;
+  --color-warning: #80520c;
+  --color-warning-bg: #fcf0d9;
+  --color-danger: #ac3442;
+  --color-danger-bg: #faecec;
+  --color-info: #315f96;
+  --color-info-bg: #eaf0f9;
+  --shadow-surface: 0 8px 28px rgb(24 38 75 / 5%);
 
-  --font-display: 'Space Grotesk Variable', 'IBM Plex Sans Arabic', sans-serif;
-  --font-body: 'IBM Plex Sans Arabic', 'Space Grotesk Variable', sans-serif;
+  --code-canvas: #101b35;
+  --code-surface: #18264b;
+  --code-ink: #f5f1e8;
+  --code-muted: #b9c3d4;
+  --code-border: #7685a3;
+  --code-accent: #e4a64a;
+  --code-tag: #a8c8f1;
+  --code-string: #b9dac5;
+  --code-error: #ffb8bc;
+  --code-warning: #f1c679;
+
+  --font-display: 'Manrope Variable', 'Noto Sans Arabic Variable', sans-serif;
+  --font-body: 'Noto Sans Arabic Variable', 'Manrope Variable', sans-serif;
   --font-code: 'JetBrains Mono', ui-monospace, monospace;
 
   --space-1: 4px;
@@ -33,11 +63,54 @@
   --space-7: 48px;
   --space-8: 64px;
   --space-9: 96px;
-
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
   --content-width: 1240px;
   --motion-fast: 160ms ease-out;
   --motion-standard: 210ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+:root {
+  --color-primary: var(--color-navy);
+  --color-progress: var(--color-navy);
+  --color-control-hover-ink: var(--color-navy);
+  --color-code-label: var(--color-navy);
+  --color-preview-canvas: #ffffff;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-canvas: #121a2b;
+  --color-surface: #1b263b;
+  --color-graphite: #243149;
+  --color-graphite-raised: #2d3b55;
+  --color-ink: #f5f1e8;
+  --color-sand: #f5f1e8;
+  --color-muted: #b7c2d4;
+  --color-muted-dark: #a5b3ca;
+  --color-placeholder: #a5b3ca;
+  --color-hairline: #3b4b65;
+  --color-hairline-strong: #788ba8;
+  --color-focus: #a8c8f1;
+  --color-primary: #e4a64a;
+  --color-on-primary: #18264b;
+  --color-primary-hover: #f1ba68;
+  --color-progress: #e4a64a;
+  --color-code-label: #f5f1e8;
+  --color-copper: #efbd77;
+  --color-copper-light: #f4c98e;
+  --color-copper-dark: #e4a64a;
+  --color-success: #9ed7b9;
+  --color-success-bg: #183b32;
+  --color-warning: #f2c47d;
+  --color-warning-bg: #3d3020;
+  --color-danger: #ffb3bf;
+  --color-danger-bg: #452632;
+  --color-info: #b1d0fc;
+  --color-info-bg: #233a57;
+  --shadow-surface: 0 8px 28px rgb(0 0 0 / 16%);
+  --code-canvas: #0d1525;
+  --code-surface: #142039;
+  --code-border: #7185a3;
 }

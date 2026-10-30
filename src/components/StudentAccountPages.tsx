@@ -1,15 +1,20 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent, type MouseEvent } from 'react';
 import type { AuthError } from '@supabase/supabase-js';
-import { HTML_LESSON_IDS, HTML_PATH_ID, getHtmlLessonHref, type HtmlLessonId } from '../content/learningSystem';
+import { FOUNDATION_PATH_IDS, getLessonHref, type FoundationLessonId } from '../content/learningSystem';
+import { getLearningLessonCopy, getLearningPathLessonSummaries } from '../i18n/foundationLessonCopy';
 import type { Locale } from '../i18n/messages';
 import { messages } from '../i18n/messages';
 import { getStudentPortalCopy } from '../i18n/studentPortal';
 import { supabaseClient, supabaseSetupState } from '../lib/supabaseClient';
 import { getStudentProgressName, useStudentProgress } from '../state/StudentProgressProvider';
 import { useAuth } from '../auth/AuthProvider';
-import { summarizeHtmlLearningProgress } from '../utils/learningProgress';
+import { summarizeFoundationLearningProgress } from '../utils/learningProgress';
 import { safeReturnPath } from '../utils/safeReturnPath';
 import LearningHeader from './LearningHeader';
+import LearningHomePage from './LearningHomePage';
+import AppIcon from './AppIcon';
+import BrandLogo from './BrandLogo';
+import ThemeToggle from './ThemeToggle';
 import type { StudentAuthMode } from '../content/learningSystem';
 
 function authErrorMessage(error: AuthError, copy: ReturnType<typeof getStudentPortalCopy>) {
@@ -45,21 +50,27 @@ function PortalHeader({ locale, onSwitchLocale, stageLabel }: { locale: Locale; 
 function AuthGatewayHeader({ locale, onSwitchLocale }: { locale: Locale; onSwitchLocale: () => void }) {
   const isArabic = locale === 'ar';
   return (
-    <header className="site-header student-auth-header section-frame">
-      <a className="student-auth-header-brand" href="/login" aria-label="VANTA — Create Beyond">
-        <img src="/brand/vanta-emblem.png" alt="" aria-hidden="true" width="40" height="34" />
-        <img src="/brand/vanta-wordmark.png" alt="VANTA — Create Beyond" width="156" height="40" />
-      </a>
-      <span className="student-auth-header-label" aria-hidden="true">{isArabic ? 'بوابة المتعلّم' : 'LEARNER GATEWAY'}</span>
+    <header className="mabda-auth-toolbar section-frame" dir="ltr" aria-label={getStudentPortalCopy(locale).auth.eyebrow}>
+      <ThemeToggle locale={locale} />
       <button
         className="language-toggle"
         type="button"
         onClick={onSwitchLocale}
         aria-label={messages[locale].nav.switchLanguage}
       >
-        <span className="language-toggle-mark" aria-hidden="true">文</span>
+        <span className="language-toggle-mark" aria-hidden="true"><AppIcon name="language" size={16} /></span>
         <span>{isArabic ? 'EN' : 'عربي'}</span>
       </button>
+    </header>
+  );
+}
+
+function AuthBrandHeader() {
+  return (
+    <header className="mabda-auth-brand" aria-label="Mabda — مبدأ, by VANTA">
+      <BrandLogo variant="mark" decorative />
+      <p className="mabda-auth-brand-name" dir="ltr">Mabda <span aria-hidden="true">|</span> <b dir="rtl">مبدأ</b></p>
+      <p className="mabda-auth-endorsement" dir="ltr">by VANTA</p>
     </header>
   );
 }
@@ -67,10 +78,12 @@ function AuthGatewayHeader({ locale, onSwitchLocale }: { locale: Locale; onSwitc
 export function StudentAuthPage({
   locale,
   onSwitchLocale,
+  onNavigate,
   mode,
 }: {
   locale: Locale;
   onSwitchLocale: () => void;
+  onNavigate: (href: string) => void;
   mode: StudentAuthMode;
 }) {
   const { user, recoverySession, loading: authLoading, serviceError } = useAuth();
@@ -80,6 +93,11 @@ export function StudentAuthPage({
   const returnPath = safeReturnPath(query.get('next'));
   const loginHref = `/login?next=${encodeURIComponent(returnPath)}`;
   const signupHref = `/signup?next=${encodeURIComponent(returnPath)}`;
+  const internalAuthLink = (href: string) => (event: MouseEvent<HTMLAnchorElement>) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    onNavigate(href);
+  };
   const callbackHasError = useMemo(() => {
     const fragment = new URLSearchParams(window.location.hash.replace(/^#/, ''));
     return ['error', 'error_code'].some((key) => query.has(key) || fragment.has(key));
@@ -89,6 +107,7 @@ export function StudentAuthPage({
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [notice, setNotice] = useState('');
@@ -99,6 +118,11 @@ export function StudentAuthPage({
       : mode === 'forgot-password' ? copy.auth.forgotTitle
         : mode === 'reset-password' ? copy.auth.resetTitle
           : copy.auth.callbackTitle;
+  const body = mode === 'login' ? copy.auth.loginBody
+    : mode === 'signup' ? copy.auth.signupBody
+      : mode === 'forgot-password' ? copy.auth.forgotBody
+        : mode === 'reset-password' ? copy.auth.resetBody
+          : copy.auth.callbackBody;
   useEffect(() => {
     if (!authLoading && user && (mode === 'login' || mode === 'signup')) {
       window.location.replace(returnPath);
@@ -196,71 +220,34 @@ export function StudentAuthPage({
   const needsName = mode === 'signup';
   const needsConfirmation = mode === 'signup' || mode === 'reset-password';
   const setupNotice = setupMessage(supabaseSetupState, copy);
-  const visual = copy.authVisual;
-  const submitLabel = submitting ? copy.auth.submitBusy : mode === 'login' ? copy.common.signIn
-    : mode === 'signup' ? copy.common.createAccount
+  const submitLabel = submitting ? copy.auth.submitBusy : mode === 'login' ? copy.auth.signInAction
+    : mode === 'signup' ? copy.auth.createAccountAction
       : mode === 'forgot-password' ? copy.common.sendReset
         : copy.common.updatePassword;
 
   return (
-    <div className={`app-shell student-page student-auth-page ${isArabic ? 'is-arabic' : 'is-english'}`}>
+    <div className={`app-shell student-page student-auth-page mabda-auth-page ${isArabic ? 'is-arabic' : 'is-english'}`} data-testid="auth-page">
       <AuthGatewayHeader locale={locale} onSwitchLocale={onSwitchLocale} />
-      <main className="student-page-main student-auth-main section-frame">
-        <div className="student-auth-layout" dir="ltr">
-          <section className="student-auth-context" dir={isArabic ? 'rtl' : 'ltr'} aria-labelledby="student-auth-visual-title">
-            <p className="eyebrow"><span className="eyebrow-line" />{copy.auth.eyebrow}</p>
-            <p className="student-auth-brand-line">{visual.brandLine}</p>
-            <h1 id="student-auth-visual-title">{visual.title}</h1>
-            <p className="student-auth-description">{visual.body}</p>
-
-            <div className="student-code-module">
-              <div className="student-code-module-heading">
-                <span>{visual.codeLabel}</span>
-                <span className="student-code-module-index" dir="ltr">HTML / 01</span>
-              </div>
-              <div className="student-code-window" dir="ltr" aria-hidden="true">
-                <div className="student-code-chrome"><i /><i /><i /><span>index.html</span></div>
-                <pre><code>
-                  <span className="student-code-line"><span className="student-code-line-number">01</span><span><b>&lt;main&gt;</b></span></span>
-                  <span className="student-code-line"><span className="student-code-line-number">02</span><span><b>&lt;h1&gt;</b><em>Build with purpose</em><b>&lt;/h1&gt;</b></span></span>
-                  <span className="student-code-line"><span className="student-code-line-number">03</span><span><b>&lt;p&gt;</b><em>One step at a time.</em><b>&lt;/p&gt;</b></span></span>
-                  <span className="student-code-line"><span className="student-code-line-number">04</span><span><b>&lt;/main&gt;</b></span></span>
-                </code></pre>
-                <span className="student-code-caret" />
-              </div>
-            </div>
-
-            <div className="student-auth-sequence">
-              <p>{visual.sequenceLabel}</p>
-              <ol>
-                {visual.steps.map((step, index) => (
-                  <li key={step} style={{ animationDelay: `${index * 75}ms` }}>
-                    <span className="student-sequence-index" dir="ltr">0{index + 1}</span>
-                    <span>{step}</span>
-                    {index < visual.steps.length - 1 && <span className="student-sequence-arrow" aria-hidden="true" dir="ltr">{isArabic ? '←' : '→'}</span>}
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </section>
-
-          <section className="student-auth-panel" dir={isArabic ? 'rtl' : 'ltr'} aria-labelledby="student-auth-title">
-            <div className="student-auth-panel-head">
-              <span className="student-auth-mark" aria-hidden="true">V / 01</span>
-              <h2 id="student-auth-title">{title}</h2>
+      <main className="mabda-auth-main section-frame">
+        <div className="mabda-auth-shell" dir="ltr">
+          <AuthBrandHeader />
+          <section className="mabda-auth-panel" dir={isArabic ? 'rtl' : 'ltr'} aria-labelledby="student-auth-title">
+            <div className="mabda-auth-panel-head">
+              <h1 id="student-auth-title">{title}</h1>
+              <p>{body}</p>
             </div>
 
             {setupNotice && <p className="student-setup-notice" role="status">{setupNotice}</p>}
             {serviceError && <p className="student-form-error" role="alert">{copy.common.serviceError}</p>}
-            {errorMessage && <p className="student-form-error" role="alert">{errorMessage}</p>}
-            {notice && <p className="student-form-success" role="status">{notice}</p>}
+            {errorMessage && <p className="student-form-error" role="alert" aria-live="assertive">{errorMessage}</p>}
+            {notice && <p className="student-form-success" role="status" aria-live="polite">{notice}</p>}
 
             {mode === 'callback' && (
               <div className="student-callback-state" role="status" aria-live="polite">
                 {!authLoading && !callbackExpired && !user && <span className="student-loading-mark" aria-hidden="true" />}
                 <p>{user ? copy.auth.callbackReady : callbackExpired ? copy.auth.callbackFailed : copy.auth.callbackBody}</p>
                 {(callbackExpired || serviceError) && (
-                  <a className="button button-primary" href="/login">{copy.common.backToLogin}</a>
+                  <a className="button button-primary" href="/login" onClick={internalAuthLink('/login')}>{copy.common.backToLogin}</a>
                 )}
               </div>
             )}
@@ -275,13 +262,13 @@ export function StudentAuthPage({
             {mode === 'reset-password' && !authLoading && (!user || !recoverySession) && (
               <div className="student-callback-state">
                 <p>{copy.auth.passwordResetMissingSession}</p>
-                <a className="button button-primary" href="/forgot-password">{copy.auth.resetLink}</a>
+                <a className="button button-primary" href="/forgot-password" onClick={internalAuthLink('/forgot-password')}>{copy.auth.resetLink}</a>
               </div>
             )}
 
             {isFormMode && !(mode === 'reset-password' && (authLoading || !user || !recoverySession)) && (
               <form
-                className="student-auth-form"
+                className="student-auth-form mabda-auth-form"
                 aria-busy={submitting}
                 onInvalidCapture={(event) => {
                   const field = event.target as HTMLInputElement;
@@ -293,28 +280,30 @@ export function StudentAuthPage({
                 onSubmit={handleSubmit}
               >
                 {needsName && (
-                  <label className="student-field">
-                    <span>{copy.common.displayName}</span>
+                  <div className="mabda-auth-field">
+                    <label htmlFor="auth-full-name">{copy.auth.fullName}</label>
                     <input
                       autoComplete="name"
                       dir="auto"
+                      id="auth-full-name"
                       maxLength={80}
                       minLength={2}
                       name="display-name"
-                      placeholder={copy.common.displayNamePlaceholder}
+                      placeholder={copy.auth.fullNamePlaceholder}
                       required
                       value={displayName}
                       onChange={(event) => { setDisplayName(event.target.value); setErrorMessage(''); }}
                     />
-                  </label>
+                  </div>
                 )}
 
                 {needsEmail && (
-                  <label className="student-field">
-                    <span>{copy.common.email}</span>
+                  <div className="mabda-auth-field">
+                    <label htmlFor="auth-email">{copy.common.email}</label>
                     <input
                       autoComplete="email"
                       dir="ltr"
+                      id="auth-email"
                       name="email"
                       placeholder={copy.common.emailPlaceholder}
                       required
@@ -322,16 +311,17 @@ export function StudentAuthPage({
                       value={email}
                       onChange={(event) => { setEmail(event.target.value); setErrorMessage(''); }}
                     />
-                  </label>
+                  </div>
                 )}
 
                 {needsPassword && (
-                  <label className="student-field">
-                    <span>{copy.common.password}</span>
-                    <span className="student-password-control">
+                  <div className="mabda-auth-field">
+                    <label htmlFor="auth-password">{copy.common.password}</label>
+                    <div className="mabda-auth-password" dir="ltr">
                       <input
                         autoComplete={mode === 'reset-password' ? 'new-password' : mode === 'signup' ? 'new-password' : 'current-password'}
                         dir="ltr"
+                        id="auth-password"
                         minLength={mode === 'login' ? undefined : 8}
                         name="password"
                         required
@@ -339,28 +329,34 @@ export function StudentAuthPage({
                         value={password}
                         onChange={(event) => { setPassword(event.target.value); setErrorMessage(''); }}
                       />
-                      <button className="student-password-toggle" type="button" onClick={() => setShowPassword((current) => !current)} aria-label={showPassword ? copy.common.hidePassword : copy.common.showPassword} aria-pressed={showPassword}>
-                        <span className="student-password-icon" aria-hidden="true">{showPassword ? '◉' : '◎'}</span>
+                      <button className="student-password-toggle mabda-password-toggle" type="button" onClick={() => setShowPassword((current) => !current)} aria-label={showPassword ? copy.common.hidePassword : copy.common.showPassword} aria-pressed={showPassword}>
+                        <span aria-hidden="true">{showPassword ? '◉' : '◎'}</span>
                       </button>
-                    </span>
+                    </div>
                     {(mode === 'signup' || mode === 'reset-password') && <small>{copy.common.minimumPassword}</small>}
-                  </label>
+                  </div>
                 )}
 
                 {needsConfirmation && (
-                  <label className="student-field">
-                    <span>{copy.common.confirmPassword}</span>
-                    <input
-                      autoComplete="new-password"
-                      dir="ltr"
-                      minLength={8}
-                      name="confirm-password"
-                      required
-                      type={showPassword ? 'text' : 'password'}
-                      value={confirmPassword}
-                      onChange={(event) => { setConfirmPassword(event.target.value); setErrorMessage(''); }}
-                    />
-                  </label>
+                  <div className="mabda-auth-field">
+                    <label htmlFor="auth-confirm-password">{copy.common.confirmPassword}</label>
+                    <div className="mabda-auth-password" dir="ltr">
+                      <input
+                        autoComplete="new-password"
+                        dir="ltr"
+                        id="auth-confirm-password"
+                        minLength={8}
+                        name="confirm-password"
+                        required
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={(event) => { setConfirmPassword(event.target.value); setErrorMessage(''); }}
+                      />
+                      <button className="student-password-toggle mabda-password-toggle" type="button" onClick={() => setShowConfirmPassword((current) => !current)} aria-label={showConfirmPassword ? copy.common.hidePassword : copy.common.showPassword} aria-pressed={showConfirmPassword}>
+                        <span aria-hidden="true">{showConfirmPassword ? '◉' : '◎'}</span>
+                      </button>
+                    </div>
+                  </div>
                 )}
 
                 <button className="button button-primary student-auth-submit" type="submit" disabled={submitting || authLoading}>
@@ -372,16 +368,16 @@ export function StudentAuthPage({
               </form>
             )}
 
-            <nav className="student-auth-links" aria-label={isArabic ? 'روابط الحساب' : 'Account links'}>
+            <nav className="student-auth-links mabda-auth-links" aria-label={isArabic ? 'روابط الحساب' : 'Account links'}>
               {mode === 'login' && (
                 <>
-                  <a href={`/forgot-password?next=${encodeURIComponent(returnPath)}`}>{copy.auth.forgotLink}</a>
-                  <p>{copy.common.noAccount} <a href={signupHref}>{copy.auth.signupLink}</a></p>
+                  <a href={`/forgot-password?next=${encodeURIComponent(returnPath)}`} onClick={internalAuthLink(`/forgot-password?next=${encodeURIComponent(returnPath)}`)}>{copy.auth.forgotLink}</a>
+                  <p>{copy.common.noAccount} <a href={signupHref} onClick={internalAuthLink(signupHref)}>{copy.auth.signupLink}</a></p>
                 </>
               )}
-              {mode === 'signup' && <p>{copy.common.haveAccount} <a href={loginHref}>{copy.auth.loginLink}</a></p>}
-              {mode === 'forgot-password' && <a href={loginHref}>{copy.common.backToLogin}</a>}
-              {mode === 'reset-password' && <a href={loginHref}>{copy.common.backToLogin}</a>}
+              {mode === 'signup' && <p>{copy.common.haveAccount} <a href={loginHref} onClick={internalAuthLink(loginHref)}>{copy.auth.loginLink}</a></p>}
+              {mode === 'forgot-password' && <a href={loginHref} onClick={internalAuthLink(loginHref)}>{copy.common.backToLogin}</a>}
+              {mode === 'reset-password' && <a href={loginHref} onClick={internalAuthLink(loginHref)}>{copy.common.backToLogin}</a>}
             </nav>
           </section>
         </div>
@@ -394,14 +390,15 @@ export function AuthGatewayLoadingPage({ locale, onSwitchLocale }: { locale: Loc
   const copy = getStudentPortalCopy(locale);
   const isArabic = locale === 'ar';
   return (
-    <div className={`app-shell student-page student-auth-page student-auth-gateway-page ${isArabic ? 'is-arabic' : 'is-english'}`}>
+    <div className={`app-shell student-page student-auth-page mabda-auth-page student-auth-gateway-page ${isArabic ? 'is-arabic' : 'is-english'}`}>
       <AuthGatewayHeader locale={locale} onSwitchLocale={onSwitchLocale} />
-      <main className="student-auth-gateway-wait section-frame">
-        <div className="student-auth-gateway-status">
-          <span className="student-auth-mark" aria-hidden="true">V / 01</span>
-          <span className="student-loading-mark" aria-hidden="true" />
-          <h1>{copy.authVisual.brandLine}</h1>
-          <p role="status" aria-live="polite">{copy.auth.gatewayLoading}</p>
+      <main className="mabda-auth-main section-frame">
+        <div className="mabda-auth-shell mabda-auth-loading-shell">
+          <AuthBrandHeader />
+          <div className="student-auth-gateway-status" role="status" aria-live="polite">
+            <span className="student-loading-mark" aria-hidden="true" />
+            <h1 className="mabda-auth-loading-title">{copy.auth.gatewayLoading}</h1>
+          </div>
         </div>
       </main>
     </div>
@@ -422,7 +419,7 @@ function AuthRequiredPage({ locale, onSwitchLocale, setupState }: { locale: Loca
       <PortalHeader locale={locale} onSwitchLocale={onSwitchLocale} stageLabel={copy.dashboard.eyebrow} />
       <main className="student-page-main section-frame">
         <section className="student-gate-panel">
-          <p className="eyebrow"><span className="eyebrow-line" />VANTA / {pageTitle}</p>
+          <p className="eyebrow"><span className="eyebrow-line" />Mabda / {pageTitle}</p>
           <h1>{pageTitle}</h1>
           <p>{notice || copy.common.signInToSave}</p>
           <div className="student-page-actions">
@@ -461,7 +458,7 @@ function StudentDataUnavailablePage({ locale, onSwitchLocale, onRetry, loading }
       <PortalHeader locale={locale} onSwitchLocale={onSwitchLocale} stageLabel={copy.dashboard.eyebrow} />
       <main className="student-page-main section-frame">
         <section className="student-gate-panel" aria-labelledby="student-data-error-title">
-          <p className="eyebrow"><span className="eyebrow-line" />VANTA / {copy.dashboard.eyebrow}</p>
+          <p className="eyebrow"><span className="eyebrow-line" />Mabda / {copy.dashboard.eyebrow}</p>
           <h1 id="student-data-error-title">{copy.common.loadErrorTitle}</h1>
           <p>{copy.common.loadErrorBody}</p>
           <div className="student-page-actions">
@@ -476,131 +473,14 @@ function StudentDataUnavailablePage({ locale, onSwitchLocale, onRetry, loading }
   );
 }
 
-function lessonCopy(locale: Locale, lessonId: HtmlLessonId) {
+function lessonCopy(locale: Locale, lessonId: FoundationLessonId) {
   return lessonId === 'html-introduction'
     ? messages[locale].lesson
-    : messages[locale].learningSystem.lessons[lessonId];
+    : getLearningLessonCopy(locale, lessonId);
 }
 
 function StudentDashboard({ locale, onSwitchLocale }: { locale: Locale; onSwitchLocale: () => void }) {
-  const { user } = useAuth();
-  const progress = useStudentProgress();
-  const copy = getStudentPortalCopy(locale);
-  const learningCopy = messages[locale].learningSystem;
-  const isArabic = locale === 'ar';
-  const pathStarted = progress.paths.some((path) => path.path_id === HTML_PATH_ID);
-  const summary = summarizeHtmlLearningProgress(progress.lessons, pathStarted);
-  const recentQuizzes = [...progress.lessons]
-    .filter((lesson) => lesson.quiz_score !== null && lesson.quiz_total !== null)
-    .sort((left, right) => Date.parse(right.last_opened_at) - Date.parse(left.last_opened_at))
-    .slice(0, 3);
-  const displayName = getStudentProgressName(user, progress.profile.display_name);
-  const htmlPathTitle = learningCopy.paths[HTML_PATH_ID].title;
-  const formattedNumber = new Intl.NumberFormat(locale === 'ar' ? 'ar' : 'en-US');
-  const fill = (template: string, values: Record<string, string | number>) => Object.entries(values).reduce(
-    (text, [key, value]) => text.replaceAll(`{${key}}`, String(value)), template,
-  );
-  const pathState = summary.pathCompleted ? copy.dashboard.pathCompleted
-    : pathStarted ? copy.dashboard.pathInProgress : copy.dashboard.pathNotStarted;
-  const percentFor = (score: number, total: number) => Math.round((score / total) * 100);
-
-  return (
-    <div className={`app-shell student-page student-dashboard-page ${isArabic ? 'is-arabic' : 'is-english'}`}>
-      <PortalHeader locale={locale} onSwitchLocale={onSwitchLocale} stageLabel={copy.dashboard.eyebrow} />
-      <main className="student-page-main section-frame">
-        <header className="student-page-intro">
-          <p className="eyebrow"><span className="eyebrow-line" />{copy.dashboard.eyebrow}</p>
-          <h1>{fill(copy.dashboard.title, { name: displayName })}</h1>
-          <p>{copy.dashboard.lead}</p>
-        </header>
-
-        {progress.error && (
-          <p className="student-form-error" role="alert">
-            {copy.common.dataError}{' '}
-            <button type="button" onClick={() => { void progress.refresh(); }}>{copy.common.retry}</button>
-          </p>
-        )}
-        <section className="student-stat-row" aria-label={copy.dashboard.eyebrow}>
-          <article className="student-stat"><span>{copy.dashboard.pathsStarted}</span><strong>{formattedNumber.format(progress.paths.length)}</strong></article>
-          <article className="student-stat"><span>{copy.dashboard.pathsCompleted}</span><strong>{formattedNumber.format(summary.pathCompleted ? 1 : 0)}</strong></article>
-          <article className="student-stat"><span>{copy.dashboard.lessonsCompleted}</span><strong>{formattedNumber.format(summary.completedLessonCount)}<small> / {formattedNumber.format(HTML_LESSON_IDS.length)}</small></strong></article>
-        </section>
-
-        <section className="student-continue-panel" aria-labelledby="student-continue-title">
-          <div>
-            <p className="student-section-kicker">{copy.dashboard.currentPath} · {htmlPathTitle}</p>
-            <span className="student-path-state">{pathState}</span>
-            <h2 id="student-continue-title">{copy.dashboard.continueTitle}</h2>
-            <p>{summary.pathCompleted ? copy.dashboard.allComplete : copy.dashboard.continueBody}</p>
-            <div className="student-continue-details">
-              <p><span>{copy.dashboard.currentLesson}</span><strong>{summary.lastOpenedLessonId ? lessonCopy(locale, summary.lastOpenedLessonId).title : copy.dashboard.noCurrentLesson}</strong></p>
-              <p><span>{copy.dashboard.nextRecommended}</span><strong>{summary.recommendedLessonId ? lessonCopy(locale, summary.recommendedLessonId).title : copy.dashboard.allComplete}</strong></p>
-            </div>
-          </div>
-          <a className="button button-primary" href={getHtmlLessonHref(summary.resumeLessonId)}>
-            {summary.pathCompleted ? copy.dashboard.reviewAction : copy.dashboard.continueAction}
-            <span aria-hidden="true">{isArabic ? '←' : '→'}</span>
-          </a>
-        </section>
-
-        <section className="student-path-panel" aria-labelledby="student-path-title">
-          <div className="student-path-panel-heading">
-            <div>
-              <p className="student-section-kicker">01 / HTML</p>
-              <h2 id="student-path-title">{htmlPathTitle}</h2>
-            </div>
-            <span dir="auto">{fill(copy.dashboard.pathLessonCount, { count: formattedNumber.format(HTML_LESSON_IDS.length) })}</span>
-            <strong dir="ltr">{fill(copy.dashboard.pathProgress, { completed: formattedNumber.format(summary.completedLessonCount), total: formattedNumber.format(HTML_LESSON_IDS.length) })}</strong>
-          </div>
-          <div className="student-progress-track" role="progressbar" aria-label={copy.dashboard.pathProgress} aria-valuemin={0} aria-valuemax={HTML_LESSON_IDS.length} aria-valuenow={summary.completedLessonCount}>
-            <span style={{ width: `${(summary.completedLessonCount / HTML_LESSON_IDS.length) * 100}%` }} />
-          </div>
-          <ol className="student-lesson-list">
-            {HTML_LESSON_IDS.map((lessonId, index) => {
-              const row = progress.lessons.find((lesson) => lesson.lesson_id === lessonId);
-              const isComplete = summary.completedLessonIds.has(lessonId);
-              const isCurrent = summary.lastOpenedLessonId === lessonId && !isComplete;
-              const title = lessonCopy(locale, lessonId).title;
-              const status = isComplete ? copy.dashboard.completed : row ? copy.dashboard.started : copy.dashboard.notStarted;
-              return (
-                <li className={`${isComplete ? 'is-complete' : ''} ${isCurrent ? 'is-current' : ''}`} key={lessonId}>
-                  <span className="student-lesson-index" dir="ltr">{isComplete ? '✓' : String(index + 1).padStart(2, '0')}</span>
-                  <a href={getHtmlLessonHref(lessonId)}>{title}</a>
-                  <span className="student-lesson-status">{status}</span>
-                </li>
-              );
-            })}
-          </ol>
-        </section>
-
-        <section className="student-profile-card student-dashboard-quiz" aria-labelledby="dashboard-recent-quizzes-title">
-          <div className="student-profile-card-heading">
-            <h2 id="dashboard-recent-quizzes-title">{copy.dashboard.recentQuizResults}</h2>
-            <span>{formattedNumber.format(recentQuizzes.length)}</span>
-          </div>
-          {recentQuizzes.length ? (
-            <ul className="student-profile-quiz-list">
-              {recentQuizzes.map((result) => {
-                const score = result.quiz_score ?? 0;
-                const total = result.quiz_total ?? 0;
-                return (
-                  <li key={result.lesson_id}>
-                    <span>{lessonCopy(locale, result.lesson_id).title}</span>
-                    <strong dir="ltr">{formattedNumber.format(score)} / {formattedNumber.format(total)} · {fill(copy.dashboard.scorePercent, { percent: formattedNumber.format(percentFor(score, total)) })}</strong>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : <p className="student-profile-empty">{copy.dashboard.noRecentQuizResults}</p>}
-        </section>
-
-        <div className="student-dashboard-footer">
-          <p>{copy.dashboard.accountDataNote}</p>
-          <a href="/profile">{copy.dashboard.profileLink}<span aria-hidden="true"> {isArabic ? '←' : '→'}</span></a>
-        </div>
-      </main>
-    </div>
-  );
+  return <LearningHomePage locale={locale} onSwitchLocale={onSwitchLocale} />;
 }
 
 function StudentProfile({ locale, onSwitchLocale }: { locale: Locale; onSwitchLocale: () => void }) {
@@ -616,10 +496,21 @@ function StudentProfile({ locale, onSwitchLocale }: { locale: Locale; onSwitchLo
     ? new Intl.DateTimeFormat(locale === 'ar' ? 'ar' : 'en-US', { dateStyle: 'long' }).format(new Date(user.created_at))
     : '—';
   const verified = Boolean(user?.email_confirmed_at);
-  const pathStarted = progress.paths.some((path) => path.path_id === HTML_PATH_ID);
-  const summary = summarizeHtmlLearningProgress(progress.lessons, pathStarted);
-  const overallProgress = Math.round((summary.completedLessonCount / HTML_LESSON_IDS.length) * 100);
   const formattedNumber = new Intl.NumberFormat(locale === 'ar' ? 'ar' : 'en-US');
+  const foundationPathProgress = FOUNDATION_PATH_IDS.map((pathId) => {
+    const lessonSummaries = getLearningPathLessonSummaries(locale, pathId);
+    const pathStarted = progress.paths.some((path) => path.path_id === pathId)
+      || progress.lessons.some((lesson) => lesson.path_id === pathId);
+    const summary = summarizeFoundationLearningProgress(pathId, progress.lessons, pathStarted);
+    return {
+      pathId,
+      lessonSummaries,
+      summary,
+      percentage: lessonSummaries.length
+        ? Math.round((summary.completedLessonCount / lessonSummaries.length) * 100)
+        : 0,
+    };
+  });
   const quizResults = [...progress.lessons]
     .filter((lesson) => lesson.quiz_score !== null && lesson.quiz_total !== null)
     .sort((a, b) => Date.parse(b.last_opened_at) - Date.parse(a.last_opened_at));
@@ -709,21 +600,45 @@ function StudentProfile({ locale, onSwitchLocale }: { locale: Locale; onSwitchLo
           <a className="button button-quiet" href="/dashboard">{copy.profile.backDashboard}<span aria-hidden="true">{isArabic ? '←' : '→'}</span></a>
         </section>
         <div className="student-profile-learning-grid">
-          <section className="student-profile-card" aria-labelledby="profile-progress-title">
-            <div className="student-profile-card-heading">
-              <h2 id="profile-progress-title">{copy.profile.pathProgress}</h2>
-              <span dir="ltr">{formattedNumber.format(overallProgress)}%</span>
-            </div>
-            <p className="student-profile-path-name">{messages[locale].learningSystem.paths[HTML_PATH_ID].title}</p>
-            <div className="student-progress-track" role="progressbar" aria-label={copy.profile.overallProgress} aria-valuemin={0} aria-valuemax={100} aria-valuenow={overallProgress}>
-              <span style={{ width: `${overallProgress}%` }} />
-            </div>
-            <dl className="student-profile-counts">
-              <div><dt>{copy.profile.pathsStarted}</dt><dd>{formattedNumber.format(progress.paths.length)}</dd></div>
-              <div><dt>{copy.profile.pathsCompleted}</dt><dd>{formattedNumber.format(summary.pathCompleted ? 1 : 0)}</dd></div>
-              <div><dt>{copy.profile.lessonsCompleted}</dt><dd dir="ltr">{formattedNumber.format(summary.completedLessonCount)} / {formattedNumber.format(HTML_LESSON_IDS.length)}</dd></div>
-            </dl>
-          </section>
+          {progress.loading && !progress.hasLoaded ? (
+            <section className="student-profile-card" aria-live="polite" role="status">
+              <p className="student-loading-state"><span className="student-loading-mark" aria-hidden="true" />{copy.common.loading}</p>
+            </section>
+          ) : foundationPathProgress.map(({ pathId, lessonSummaries, summary, percentage }) => {
+            const pathName = messages[locale].learningSystem.paths[pathId].title;
+            const hasActivity = summary.pathStarted || summary.lastOpenedLessonId !== null;
+            return (
+              <section className="student-profile-card" key={pathId} aria-labelledby={`profile-progress-${pathId}`}>
+                <div className="student-profile-card-heading">
+                  <h2 id={`profile-progress-${pathId}`}>{pathName}</h2>
+                  <span dir="ltr">{formattedNumber.format(percentage)}%</span>
+                </div>
+                <p className="student-profile-path-name">{copy.profile.pathProgress}</p>
+                <div className="student-progress-track" role="progressbar" aria-label={`${pathName} — ${copy.profile.overallProgress}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percentage}>
+                  <span style={{ width: `${percentage}%` }} />
+                </div>
+                <dl className="student-profile-counts">
+                  <div><dt>{copy.profile.lessonsCompleted}</dt><dd dir="ltr">{formattedNumber.format(summary.completedLessonCount)} / {formattedNumber.format(lessonSummaries.length)}</dd></div>
+                  <div><dt>{copy.profile.pathsCompleted}</dt><dd>{summary.pathCompleted ? (locale === 'ar' ? 'مكتمل' : 'Complete') : (locale === 'ar' ? 'قيد التعلّم' : 'In progress')}</dd></div>
+                </dl>
+                {!hasActivity && <p className="student-profile-empty">{locale === 'ar' ? 'لا يوجد تقدم في هذا المسار بعد.' : 'No progress in this path yet.'}</p>}
+                <ul className="student-profile-quiz-list">
+                  {lessonSummaries.map((lesson) => {
+                    const completed = progress.lessons.some((row) => row.lesson_id === lesson.id && row.completed_at !== null);
+                    return (
+                      <li key={lesson.id}>
+                        <span>
+                          <a href={getLessonHref(lesson.id)}>{lesson.title}</a>
+                          <small>{lesson.summary}</small>
+                        </span>
+                        <strong>{completed ? (locale === 'ar' ? 'مكتمل' : 'Completed') : (locale === 'ar' ? 'غير مكتمل' : 'Not completed')}</strong>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            );
+          })}
 
           <section className="student-profile-card" aria-labelledby="profile-quiz-title">
             <div className="student-profile-card-heading">

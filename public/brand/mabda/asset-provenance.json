@@ -1,0 +1,49 @@
+{
+  "method": "Pixel crops only; no tracing, recoloring, transparency removal or redraw. Source files preserved.",
+  "assets": [
+    {
+      "file": "lockup-en.png",
+      "source": "sources/approved-reference-03.png",
+      "crop": [
+        220,
+        610,
+        450,
+        670
+      ],
+      "sha256": "0cb580fbd66f104947bfa2b76978a4b003e5d62c64b0ecdfd595f204e660d651"
+    },
+    {
+      "file": "lockup-ar.png",
+      "source": "sources/approved-reference-03.png",
+      "crop": [
+        820,
+        610,
+        1010,
+        670
+      ],
+      "sha256": "1207354a5d52d2eb0cee51c87004ca4a0bcc63993d3592d889fadec31fa5eab7"
+    },
+    {
+      "file": "lockup-bilingual.png",
+      "source": "sources/approved-reference-03.png",
+      "crop": [
+        1280,
+        610,
+        1540,
+        670
+      ],
+      "sha256": "d640183505f2ba304dfb40bb5539d20954017d1b609f4047b3d873bd410a82ab"
+    },
+    {
+      "file": "mark-crop.png",
+      "source": "sources/approved-reference-02.png",
+      "crop": [
+        73,
+        73,
+        2282,
+        1440
+      ],
+      "sha256": "be32ff3b7c268b7a89a363264141a419beb521306f92c05b00aea9130b3fabe1"
+    }
+  ]
+}

@@ -7,10 +7,27 @@ import { lintGutter, linter } from '@codemirror/lint';
 import { EditorView } from '@codemirror/view';
 import type { Locale } from '../i18n/messages';
 import { practiceStudioMessages } from '../i18n/practiceStudio';
-import { getPracticeDiagnostics, toCodeMirrorDiagnostics } from '../utils/practiceDiagnostics';
+import type { PracticeRequirementResult, PracticeValidationRule } from '../content/practiceTypes';
+import { getPracticeDiagnostics, getPracticeRequirementDiagnostics, toCodeMirrorDiagnostics } from '../utils/practiceDiagnostics';
 import type { PracticeCodeDiagnostic, PracticeCodeLanguage, RuntimeCodeIssue } from '../utils/practiceDiagnostics';
 
 export type PracticeLanguage = PracticeCodeLanguage;
+
+function editorDiagnostics(
+  source: string,
+  language: PracticeLanguage,
+  locale: Locale,
+  runtimeIssue: RuntimeCodeIssue | null,
+  validationRules: readonly PracticeValidationRule[],
+  validationResults: readonly PracticeRequirementResult[],
+) {
+  const codeFindings = getPracticeDiagnostics(source, language, locale, runtimeIssue, validationRules);
+  const requirementFindings = getPracticeRequirementDiagnostics(validationResults.filter((result) => result.location?.editor === language));
+  const distinctRequirements = requirementFindings.filter((requirement) => !codeFindings.some((finding) => (
+    finding.from <= requirement.to && finding.to >= requirement.from
+  )));
+  return [...codeFindings, ...distinctRequirements];
+}
 
 type PracticeCodeEditorProps = {
   language: PracticeLanguage;
@@ -18,11 +35,13 @@ type PracticeCodeEditorProps = {
   label: string;
   value: string;
   runtimeIssue?: RuntimeCodeIssue | null;
+  validationResults?: readonly PracticeRequirementResult[];
+  validationRules?: readonly PracticeValidationRule[];
   disabled?: boolean;
   onChange: (value: string) => void;
 };
 
-function PracticeCodeEditor({ language, locale, label, value, runtimeIssue = null, disabled = false, onChange }: PracticeCodeEditorProps) {
+function PracticeCodeEditor({ language, locale, label, value, runtimeIssue = null, validationResults = [], validationRules = [], disabled = false, onChange }: PracticeCodeEditorProps) {
   const copy = practiceStudioMessages[locale].diagnostics;
   const viewRef = useRef<EditorView | null>(null);
   const [diagnostics, setDiagnostics] = useState<PracticeCodeDiagnostic[] | null>(null);
@@ -38,20 +57,22 @@ function PracticeCodeEditor({ language, locale, label, value, runtimeIssue = nul
       EditorView.contentAttributes.of({ 'aria-label': label, dir: 'ltr', spellcheck: 'false' }),
       EditorView.editable.of(!disabled),
       lintGutter(),
-      linter((view) => toCodeMirrorDiagnostics(getPracticeDiagnostics(view.state.doc.toString(), language, locale, runtimeIssue)), {
+      linter((view) => toCodeMirrorDiagnostics(editorDiagnostics(
+        view.state.doc.toString(), language, locale, runtimeIssue, validationRules, validationResults,
+      )), {
         delay: 300,
         autoPanel: false,
       }),
     ];
-  }, [language, locale, label, disabled, runtimeIssue]);
+  }, [language, locale, label, disabled, runtimeIssue, validationRules, validationResults]);
 
   useEffect(() => {
     setDiagnostics(null);
     const timer = window.setTimeout(() => {
-      setDiagnostics(getPracticeDiagnostics(value, language, locale, runtimeIssue));
+      setDiagnostics(editorDiagnostics(value, language, locale, runtimeIssue, validationRules, validationResults));
     }, 300);
     return () => window.clearTimeout(timer);
-  }, [value, language, locale, runtimeIssue]);
+  }, [value, language, locale, runtimeIssue, validationRules, validationResults]);
 
   const focusDiagnostic = (diagnostic: PracticeCodeDiagnostic) => {
     const view = viewRef.current;
@@ -72,7 +93,14 @@ function PracticeCodeEditor({ language, locale, label, value, runtimeIssue = nul
         ? copy.property
       : diagnostic.kind === 'value'
         ? copy.value
-        : diagnostic.kind === 'runtime' ? copy.runtime : copy.syntax;
+        : diagnostic.kind === 'format'
+          ? copy.format
+          : diagnostic.kind === 'requirement'
+            ? copy.requirement
+            : diagnostic.kind === 'runtime' ? copy.runtime : copy.syntax;
+    const severityLabel = diagnostic.severity === 'warning'
+      ? copy.warningLabel
+      : diagnostic.severity === 'info' ? copy.hintLabel : copy.errorLabel;
     const location = diagnostic.line !== null && diagnostic.column !== null
       ? copy.location(diagnostic.line, diagnostic.column)
       : copy.locationUnknown;
@@ -85,9 +113,9 @@ function PracticeCodeEditor({ language, locale, label, value, runtimeIssue = nul
           disabled={diagnostic.line === null || diagnostic.column === null}
           aria-label={`${kindLabel}: ${diagnostic.message}. ${location}`}
         >
-          <span className="practice-diagnostic-severity" aria-hidden="true">{diagnostic.severity === 'warning' ? '!' : '×'}</span>
+          <span className="practice-diagnostic-severity" aria-hidden="true">{diagnostic.severity === 'warning' ? '!' : diagnostic.severity === 'info' ? 'i' : '×'}</span>
           <span className="practice-diagnostic-content">
-            <span className="practice-diagnostic-meta"><strong>{kindLabel}</strong><code dir="ltr">{location}</code></span>
+            <span className="practice-diagnostic-meta"><strong>{kindLabel} · {severityLabel}</strong><code dir="ltr">{location}</code></span>
             <span className="practice-diagnostic-message">{diagnostic.message}</span>
             {diagnostic.suggestion && <span className="practice-diagnostic-suggestion">{diagnostic.suggestion}</span>}
             {diagnostic.detail && <code className="practice-diagnostic-detail" dir="ltr">{diagnostic.detail}</code>}

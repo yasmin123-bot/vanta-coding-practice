@@ -1,9 +1,7 @@
 /* VANTA student accounts and dashboard */
 .student-page {
   min-height: 100vh;
-  background:
-    radial-gradient(ellipse at 72% 5%, rgba(200, 121, 79, 0.055), transparent 34rem),
-    var(--color-canvas);
+  background: var(--color-canvas);
 }
 
 .student-page-main.section-frame {
@@ -43,7 +41,7 @@
 
 .student-nav-signup:hover {
   border-color: var(--color-copper-light);
-  background: rgba(200, 121, 79, 0.12);
+  background: var(--color-amber);
 }
 
 .student-nav-logout {
@@ -63,7 +61,7 @@
   width: 56px;
   height: 7px;
   border-radius: 99px;
-  background: linear-gradient(90deg, var(--color-hairline), rgba(225, 163, 126, 0.4), var(--color-hairline));
+  background: var(--color-hairline);
   background-size: 180% 100%;
   animation: student-loading-sheen 1.4s ease-in-out infinite;
 }
@@ -147,8 +145,8 @@
   position: relative;
   padding: clamp(24px, 3.8vw, 42px);
   border: 1px solid var(--color-hairline-strong);
-  background: linear-gradient(145deg, rgba(23, 26, 32, 0.91), rgba(14, 16, 21, 0.9));
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
+  background: var(--color-surface);
+  box-shadow: 0 24px 70px var(--color-hairline);
   animation: learning-arrive 330ms 45ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
@@ -200,10 +198,10 @@
   min-width: 0;
   min-height: 48px;
   padding: 10px 13px;
-  border: 1px solid rgba(233, 213, 200, 0.19);
+  border: 1px solid var(--color-hairline);
   border-radius: var(--radius-sm);
   outline: none;
-  background: rgba(9, 11, 16, 0.72);
+  background: var(--color-graphite);
   color: var(--color-ink);
   font: inherit;
   font-size: 0.9rem;
@@ -213,11 +211,11 @@
 .student-field > input:focus,
 .student-password-control input:focus {
   border-color: var(--color-copper-light);
-  box-shadow: 0 0 0 3px rgba(200, 121, 79, 0.14);
+  box-shadow: 0 0 0 3px var(--color-amber);
 }
 
 .student-field input::placeholder {
-  color: var(--color-muted-dark);
+  color: var(--color-placeholder);
   opacity: 1;
 }
 
@@ -243,7 +241,7 @@
 .student-password-control button {
   width: 48px;
   flex: 0 0 auto;
-  border: 1px solid rgba(233, 213, 200, 0.19);
+  border: 1px solid var(--color-hairline);
   border-inline-start: 0;
   border-radius: var(--radius-sm) 0 0 var(--radius-sm);
   background: var(--color-graphite);
@@ -252,7 +250,7 @@
 }
 
 .is-english .student-password-control button {
-  border-inline-start: 1px solid rgba(233, 213, 200, 0.19);
+  border-inline-start: 1px solid var(--color-hairline);
   border-inline-end: 0;
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
@@ -286,7 +284,7 @@
 .student-dashboard-footer a {
   color: var(--color-copper-light);
   text-decoration: underline;
-  text-decoration-color: rgba(225, 163, 126, 0.4);
+  text-decoration-color: var(--color-copper-light);
   text-underline-offset: 3px;
 }
 
@@ -301,21 +299,23 @@
 .student-progress-notice {
   margin: 0 0 16px;
   padding: 12px 14px;
-  border-inline-start: 2px solid var(--color-copper-light);
-  background: rgba(200, 121, 79, 0.08);
-  color: var(--color-sand);
+  border-inline-start: 2px solid var(--color-warning);
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
   font-size: 0.82rem;
   line-height: 1.75;
 }
 
 .student-form-error {
-  border-color: #db856f;
-  background: rgba(185, 76, 62, 0.1);
+  border-color: var(--color-danger);
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
 }
 
 .student-form-success {
-  border-color: #86bda1;
-  background: rgba(81, 143, 111, 0.1);
+  border-color: var(--color-success);
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .student-form-error a,
@@ -342,8 +342,8 @@
   display: inline-block;
   width: 26px;
   height: 26px;
-  border: 2px solid rgba(225, 163, 126, 0.22);
-  border-top-color: var(--color-copper-light);
+  border: 2px solid var(--color-copper-light);
+  border-top-color: var(--code-accent);
   border-radius: 50%;
   animation: student-spin 850ms linear infinite;
 }
@@ -358,7 +358,7 @@
   margin: 7vh auto;
   padding: clamp(28px, 6vw, 64px);
   border: 1px solid var(--color-hairline-strong);
-  background: linear-gradient(140deg, rgba(23, 26, 32, 0.83), rgba(9, 11, 16, 0.78));
+  background: var(--color-surface);
 }
 
 .student-gate-panel > p:not(.eyebrow) {
@@ -440,7 +440,7 @@
   margin-bottom: 22px;
   padding: clamp(22px, 3vw, 34px);
   border: 1px solid var(--color-hairline-strong);
-  background: linear-gradient(110deg, rgba(200, 121, 79, 0.1), rgba(17, 20, 26, 0.94) 55%);
+  background: var(--color-surface);
 }
 
 .student-section-kicker {
@@ -500,7 +500,7 @@
 .student-path-panel {
   padding: clamp(20px, 3vw, 34px);
   border: 1px solid var(--color-hairline);
-  background: rgba(17, 20, 26, 0.7);
+  background: var(--color-surface);
 }
 
 .student-path-panel-heading {
@@ -521,14 +521,14 @@
   margin: 20px 0 26px;
   overflow: hidden;
   border-radius: 9px;
-  background: rgba(233, 213, 200, 0.12);
+  background: var(--color-hairline);
 }
 
 .student-progress-track > span {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--color-copper-dark), var(--color-copper-light));
+  background: var(--color-copper);
   transition: width 300ms ease-out;
 }
 
@@ -562,7 +562,7 @@
   grid-template-columns: 38px minmax(0, 1fr) auto;
   align-items: center;
   gap: 14px;
-  border-bottom: 1px solid rgba(233, 213, 200, 0.07);
+  border-bottom: 1px solid var(--color-hairline);
 }
 
 .student-lesson-list li:last-child {
@@ -584,8 +584,8 @@
 }
 
 .student-lesson-list li.is-complete .student-lesson-index {
-  border-color: rgba(134, 189, 161, 0.7);
-  color: #a2d0b5;
+  border-color: var(--color-success);
+  color: var(--color-success);
 }
 
 .student-lesson-list li > a {
@@ -632,7 +632,7 @@
   max-width: 920px;
   padding: clamp(22px, 4vw, 42px);
   border: 1px solid var(--color-hairline-strong);
-  background: linear-gradient(145deg, rgba(23, 26, 32, 0.9), rgba(14, 16, 21, 0.8));
+  background: var(--color-surface);
 }
 
 .student-profile-mark {
@@ -642,7 +642,7 @@
   place-items: center;
   border: 1px solid var(--color-hairline-strong);
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(200, 121, 79, 0.15), transparent 70%);
+  background: var(--color-graphite);
   color: var(--color-copper-light);
   font-family: var(--font-display);
   font-size: 1.65rem;
@@ -684,7 +684,7 @@
   min-width: 0;
   padding: clamp(18px, 2.8vw, 28px);
   border: 1px solid var(--color-hairline);
-  background: rgba(17, 20, 26, 0.72);
+  background: var(--color-surface);
 }
 
 .student-profile-card-heading {
@@ -752,7 +752,7 @@
   justify-content: space-between;
   gap: 14px;
   padding-block: 10px;
-  border-bottom: 1px solid rgba(233, 213, 200, 0.08);
+  border-bottom: 1px solid var(--color-hairline);
   color: var(--color-muted);
   font-size: 0.78rem;
   line-height: 1.6;
@@ -788,7 +788,7 @@
 }
 
 .student-verification.is-verified {
-  color: #a2d0b5;
+  color: var(--color-success);
 }
 
 .student-progress-notice {
@@ -1067,7 +1067,7 @@
   position: absolute;
   z-index: -1;
   inset: -12% -9%;
-  background: radial-gradient(ellipse at 38% 45%, rgba(200, 121, 79, 0.075), transparent 62%);
+  background: transparent;
   content: '';
   pointer-events: none;
 }
@@ -1121,10 +1121,10 @@
 
 .student-code-window {
   overflow: hidden;
-  border: 1px solid rgba(233, 213, 200, 0.13);
+  border: 1px solid var(--code-border);
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, rgba(17, 20, 26, 0.92), rgba(9, 11, 16, 0.95));
-  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.16), inset 0 1px rgba(255, 255, 255, 0.018);
+  background: var(--code-canvas);
+  box-shadow: none;
   text-align: left;
 }
 
@@ -1134,8 +1134,8 @@
   align-items: center;
   gap: 6px;
   padding-inline: 13px;
-  border-bottom: 1px solid rgba(233, 213, 200, 0.08);
-  color: var(--color-muted-dark);
+  border-bottom: 1px solid var(--code-border);
+  color: var(--code-muted);
   font-family: var(--font-code);
   font-size: 0.62rem;
 }
@@ -1143,7 +1143,7 @@
 .student-code-chrome i {
   width: 6px;
   height: 6px;
-  border: 1px solid rgba(225, 163, 126, 0.45);
+  border: 1px solid var(--code-border);
   border-radius: 50%;
 }
 
@@ -1154,7 +1154,7 @@
 .student-code-window pre {
   margin: 0;
   padding: 16px 18px 18px;
-  color: var(--color-sand);
+  color: var(--code-ink);
   font-family: var(--font-code);
   font-size: clamp(0.68rem, 1vw, 0.78rem);
   line-height: 1.9;
@@ -1180,17 +1180,17 @@
 .student-code-line:nth-child(4) { animation-delay: 410ms; }
 
 .student-code-line-number {
-  color: var(--color-muted-dark);
+  color: var(--code-muted);
   user-select: none;
 }
 
 .student-code-line b {
-  color: var(--color-copper-light);
+  color: var(--code-accent);
   font-weight: 400;
 }
 
 .student-code-line em {
-  color: var(--color-sand);
+  color: var(--code-ink);
   font-style: normal;
 }
 
@@ -1199,8 +1199,8 @@
   width: 1px;
   height: 1px;
   margin: 0 0 8px 59px;
-  background: var(--color-copper-light);
-  box-shadow: 0 0 12px rgba(225, 163, 126, 0.36);
+  background: var(--code-accent);
+  box-shadow: none;
   animation: student-caret-breathe 4.8s ease-in-out 700ms infinite;
 }
 
@@ -1253,12 +1253,10 @@
 
 .student-auth-panel {
   overflow: hidden;
-  border-color: rgba(200, 121, 79, 0.3);
+  border-color: var(--color-amber);
   border-radius: var(--radius-md);
-  background:
-    radial-gradient(ellipse at 100% 0%, rgba(200, 121, 79, 0.045), transparent 48%),
-    linear-gradient(145deg, rgba(23, 26, 32, 0.96), rgba(14, 16, 21, 0.96));
-  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.26), 0 0 40px rgba(200, 121, 79, 0.025);
+  background: var(--color-surface);
+  box-shadow: none;
   animation: student-auth-panel-enter 460ms 80ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
@@ -1266,7 +1264,7 @@
   inset-inline-start: 28px;
   width: 76px;
   height: 2px;
-  box-shadow: 0 0 14px rgba(225, 163, 126, 0.24);
+  box-shadow: none;
 }
 
 .student-auth-brand {
@@ -1329,11 +1327,11 @@
 }
 
 .student-auth-form input:hover {
-  border-color: rgba(225, 163, 126, 0.36);
+  border-color: var(--color-copper-light);
 }
 
 .student-auth-form input:focus {
-  background-color: rgba(9, 11, 16, 0.94);
+  background-color: var(--color-graphite);
 }
 
 .student-password-toggle {
@@ -1344,7 +1342,7 @@
 }
 
 .student-password-toggle:hover {
-  background: rgba(200, 121, 79, 0.12);
+  background: var(--color-amber);
   color: var(--color-sand);
 }
 
@@ -1368,7 +1366,7 @@
 }
 
 .student-auth-submit:hover:not(:disabled) {
-  box-shadow: 0 7px 22px rgba(200, 121, 79, 0.13);
+  box-shadow: none;
   transform: translateY(-1px);
 }
 
@@ -1396,7 +1394,7 @@
 .student-submit-spinner {
   width: 16px;
   height: 16px;
-  border: 1.5px solid rgba(9, 11, 16, 0.34);
+  border: 1.5px solid var(--color-graphite);
   border-top-color: var(--color-canvas);
   border-radius: 50%;
   animation: student-spin 750ms linear infinite;
@@ -1424,12 +1422,12 @@
 }
 
 .student-auth-panel .student-form-error::before {
-  color: #e39a86;
+  color: var(--color-danger);
   content: '!';
 }
 
 .student-auth-panel .student-form-success::before {
-  color: #a6cfb7;
+  color: var(--color-success);
   content: '✓';
 }
 
@@ -1638,22 +1636,17 @@
   position: relative;
   isolation: isolate;
   min-height: 100svh;
-  background:
-    radial-gradient(ellipse at 74% 48%, rgba(200, 121, 79, 0.065), transparent 38rem),
-    var(--color-canvas);
+  background: var(--color-canvas);
 }
 
 .student-auth-page::before {
   position: fixed;
   z-index: -1;
   inset: 0;
-  background-image:
-    linear-gradient(rgba(225, 213, 200, 0.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(225, 213, 200, 0.018) 1px, transparent 1px),
-    radial-gradient(ellipse at 72% 52%, rgba(200, 121, 79, 0.075), transparent 34rem);
+  background: var(--color-canvas);
   background-size: 44px 44px, 44px 44px, auto;
   content: '';
-  mask-image: linear-gradient(90deg, transparent, #000 25%, #000 86%, transparent);
+  mask-image: none;
   pointer-events: none;
 }
 
@@ -1661,7 +1654,7 @@
   width: min(calc(100% - 64px), var(--content-width));
   min-height: 78px;
   gap: 22px;
-  border-bottom-color: rgba(225, 213, 200, 0.12);
+  border-bottom-color: var(--color-hairline);
 }
 
 .student-auth-header-brand {
@@ -1754,12 +1747,10 @@
   max-width: 470px;
   justify-self: end;
   padding: clamp(28px, 3.5vw, 42px);
-  border-color: rgba(200, 121, 79, 0.28);
+  border-color: var(--color-amber);
   border-radius: var(--radius-md);
-  background:
-    radial-gradient(ellipse at 100% 0%, rgba(200, 121, 79, 0.055), transparent 52%),
-    linear-gradient(145deg, rgba(20, 23, 29, 0.96), rgba(12, 14, 19, 0.96));
-  box-shadow: 0 28px 76px rgba(0, 0, 0, 0.3), 0 0 42px rgba(200, 121, 79, 0.035);
+  background: var(--color-surface);
+  box-shadow: none;
 }
 
 .student-auth-panel-head {
@@ -1962,7 +1953,7 @@
   width: fit-content;
   margin: 6px 0 4px;
   padding: 3px 9px;
-  border: 1px solid rgba(225, 163, 126, 0.25);
+  border: 1px solid var(--color-copper-light);
   border-radius: 999px;
   color: var(--color-copper-light);
   font-size: 0.68rem;
@@ -2056,14 +2047,14 @@
   border: 1px solid var(--color-hairline-strong);
   border-radius: var(--radius-sm);
   outline: none;
-  background: rgba(9, 11, 16, 0.72);
+  background: var(--color-graphite);
   color: var(--color-ink);
   font: inherit;
 }
 
 .student-profile-name-form input:focus {
   border-color: var(--color-copper-light);
-  box-shadow: 0 0 0 3px rgba(200, 121, 79, 0.14);
+  box-shadow: 0 0 0 3px var(--color-amber);
 }
 
 .student-profile-name-form small {
@@ -2094,17 +2085,18 @@
   gap: 10px 16px;
   margin-block: 14px;
   padding: 12px 14px;
-  border-inline-start: 2px solid #86bda1;
-  background: rgba(81, 143, 111, 0.08);
-  color: var(--color-sand);
+  border-inline-start: 2px solid var(--color-success);
+  background: var(--color-success-bg);
+  color: var(--color-success);
   font-size: 0.78rem;
   line-height: 1.7;
 }
 
 .lesson-progress-save-state.is-error,
 .learning-progress-save-state.is-error {
-  border-color: #db856f;
-  background: rgba(185, 76, 62, 0.1);
+  border-color: var(--color-danger);
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
 }
 
 .lesson-progress-save-state p,

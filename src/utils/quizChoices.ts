@@ -72,7 +72,7 @@ export function getOrderedQuizChoices<TChoice extends QuizChoiceIdentity>(
     .filter((choice): choice is TChoice => choice !== undefined);
 
   // A locale's labels may change, but the stable option IDs and count must match.
-  return orderedChoices.length === choices.length
+  return order.length === choices.length && new Set(order).size === choices.length && orderedChoices.length === choices.length
     ? orderedChoices
     : [...choices];
 }

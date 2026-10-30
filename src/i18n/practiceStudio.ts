@@ -1,4 +1,5 @@
 import type { HtmlLessonId } from '../content/learningSystem';
+import type { PracticeSeverity } from '../content/practiceTypes';
 import type { PracticeCheckId } from '../utils/practiceValidation';
 
 export type PracticeStudioLocale = {
@@ -52,6 +53,11 @@ export type PracticeStudioLocale = {
     value: string;
     property: string;
     runtime: string;
+    format: string;
+    requirement: string;
+    errorLabel: string;
+    warningLabel: string;
+    hintLabel: string;
     htmlMissingClose: (tag: string) => string;
     htmlMissingBeforeClose: (tag: string, closing: string) => string;
     htmlUnexpectedClose: (tag: string) => string;
@@ -66,10 +72,19 @@ export type PracticeStudioLocale = {
     cssSyntax: string;
     cssSyntaxSuggestion: string;
     cssUnknownProperty: (property: string) => string;
-    cssPropertySuggestion: string;
+    cssPropertySuggestion: (suggestion: string | null) => string;
     cssInvalidValue: (property: string, value: string) => string;
     cssMissingValue: (property: string) => string;
-    cssValueSuggestion: string;
+    cssValueSuggestion: (suggestion: string | null) => string;
+    cssMissingSemicolon: string;
+    cssSemicolonSuggestion: string;
+    cssMissingColon: string;
+    cssMissingColonSuggestion: string;
+    cssUnmatchedBrace: string;
+    cssBraceSuggestion: string;
+    cssMalformedSelector: string;
+    cssSelectorSuggestion: string;
+    cssMalformedDeclaration: string;
     jsSyntax: string;
     jsExpectedValue: string;
     jsExpectedExpression: string;
@@ -83,6 +98,20 @@ export type PracticeStudioLocale = {
   checkPending: string;
   allChecksPassed: string;
   someChecksPending: string;
+  partialProgress: (completed: number, total: number, remaining: number, nextLabel: string) => string;
+  validationFeedback: {
+    passed: (label: string) => string;
+    missing: (label: string) => string;
+    syntax: (label: string) => string;
+    wrongStructure: (label: string) => string;
+    wrongSelector: (label: string) => string;
+    wrongProperty: (label: string) => string;
+    unknownProperty: (property: string, suggestion: string | null) => string;
+    wrongValue: (label: string) => string;
+    missingSemicolon: (label: string) => string;
+    wrongBehavior: (label: string) => string;
+  };
+  severityLabels: Record<PracticeSeverity, string>;
   sandboxNote: string;
   returnToLesson: string;
   continueToQuiz: string;
@@ -91,7 +120,7 @@ export type PracticeStudioLocale = {
   exercises: Record<HtmlLessonId, {
     task: string;
     expected: string;
-    checks: Partial<Record<PracticeCheckId, { label: string; passed: string; missing: string }>>;
+    checks: Partial<Record<PracticeCheckId, { label: string; passed: string; missing: string; failed?: string; concept?: string }>>;
   }>;
 };
 
@@ -126,7 +155,7 @@ export const practiceStudioMessages: Record<'ar' | 'en', PracticeStudioLocale> =
     loading: 'جارٍ تحميل مسودتك…',
     loadFailed: 'تعذّر تحميل المسودة. أعد المحاولة قبل تعديلها حتى لا تستبدل نسخة محفوظة دون قصد.',
     retryLoad: 'إعادة تحميل المسودة',
-    noSavedDraft: 'لا توجد مسودة محفوظة بعد؛ يبدأ محرر HTML بكود بداية غير محلول لهذا التمرين.',
+    noSavedDraft: 'لا توجد مسودة محفوظة بعد؛ يبدأ المحرر بكود بداية غير محلول لهذا التمرين.',
     previewEmpty: 'شغّل المعاينة لترى نتيجة HTML وCSS وJavaScript.',
     previewUpdated: 'تم تحديث المعاينة. افحص قائمة المهمة على حدة.',
     previewStale: 'تغيّر الكود بعد آخر تشغيل؛ شغّل المعاينة لتحديثها.',
@@ -147,6 +176,11 @@ export const practiceStudioMessages: Record<'ar' | 'en', PracticeStudioLocale> =
       value: 'قيمة CSS',
       property: 'خاصية CSS',
       runtime: 'وقت التشغيل',
+      format: 'تنسيق CSS',
+      requirement: 'متطلب التمرين',
+      errorLabel: 'خطأ',
+      warningLabel: 'تنبيه',
+      hintLabel: 'اقتراح',
       htmlMissingClose: (tag) => `الوسم <${tag}> لم يُغلق.`,
       htmlMissingBeforeClose: (tag, closing) => `أغلق <${tag}> قبل الوسم </${closing}>.`,
       htmlUnexpectedClose: (tag) => `لا يوجد وسم <${tag}> مفتوح ليُغلق هنا.`,
@@ -161,10 +195,19 @@ export const practiceStudioMessages: Record<'ar' | 'en', PracticeStudioLocale> =
       cssSyntax: 'تعذّر تحليل هذا الجزء من CSS.',
       cssSyntaxSuggestion: 'راجع النقطتين : والأقواس { } وترتيب الخاصية والقيمة.',
       cssUnknownProperty: (property) => `الخاصية “${property}” غير معروفة في CSS.`,
-      cssPropertySuggestion: 'تحقق من تهجئة اسم الخاصية، أو أضف -- في بدايتها إذا كانت خاصية مخصصة.',
+      cssPropertySuggestion: (suggestion) => suggestion ? `هل تقصد “${suggestion}”؟` : 'تحقق من تهجئة اسم الخاصية، أو أضف -- في بدايتها إذا كانت خاصية مخصصة.',
       cssInvalidValue: (property, value) => `القيمة “${value}” غير معروفة أو غير صالحة للخاصية “${property}”.`,
       cssMissingValue: (property) => `الخاصية “${property}” تحتاج إلى قيمة بعد النقطتين.`,
-      cssValueSuggestion: 'تحقق من تهجئة الخاصية ومن أن القيمة مناسبة لها، ثم أعد تشغيل المعاينة.',
+      cssValueSuggestion: (suggestion) => suggestion ? `هل تقصد القيمة “${suggestion}”؟` : 'تحقق من تهجئة الخاصية ومن أن القيمة مناسبة لها، ثم أعد تشغيل المعاينة.',
+      cssMissingSemicolon: 'تنقص الفاصلة المنقوطة في نهاية التصريح المطلوب.',
+      cssSemicolonSuggestion: 'أضف ; بعد القيمة قبل إغلاق القاعدة. لم نعدّل الكود تلقائيًا.',
+      cssMissingColon: 'يبدو أن النقطتين : مفقودتان بين خاصية CSS وقيمتها.',
+      cssMissingColonSuggestion: 'اكتب اسم الخاصية ثم : ثم قيمتها.',
+      cssUnmatchedBrace: 'يوجد قوس معقوف { أو } غير مطابق في قاعدة CSS.',
+      cssBraceSuggestion: 'وازن أقواس القاعدة، وتأكد أن كل { لها } مقابلة.',
+      cssMalformedSelector: 'تعذّر قراءة محدد CSS قبل القوس الافتتاحي.',
+      cssSelectorSuggestion: 'راجع اسم العنصر أو النقطة قبل اسم الفئة، ثم تحقق من الأقواس والفواصل.',
+      cssMalformedDeclaration: 'تعذّر قراءة تصريح CSS داخل هذه القاعدة.',
       jsSyntax: 'تعذّر تحليل هذا الجزء من JavaScript.',
       jsExpectedValue: 'توجد علامة = من دون قيمة بعدها.',
       jsExpectedExpression: 'يبدو أن التعبير أو القيمة داخل الأقواس غير مكتمل.',
@@ -177,54 +220,70 @@ export const practiceStudioMessages: Record<'ar' | 'en', PracticeStudioLocale> =
     checkPassed: 'مكتمل',
     checkPending: 'يحتاج مراجعة',
     allChecksPassed: 'اكتملت متطلبات هذا التمرين. لم يتغير إكمال الدرس أو نتيجة الاختبار.',
-    someChecksPending: 'راجع العناصر غير المكتملة وعدّل HTML ثم افحص المهمة مجددًا.',
-    sandboxNote: 'المعاينة تعمل داخل iframe معزول عن تطبيق VANTA. الاتصالات والموارد الخارجية محظورة قدر الإمكان؛ هذا عزل متصفح تعليمي وليس ضمانًا أمنيًا مطلقًا.',
+    someChecksPending: 'راجع المتطلبات غير المكتملة في اللغة الحالية ثم افحص المهمة مجددًا.',
+    partialProgress: (completed, total, remaining, nextLabel) => `ممتاز، تحقق ${completed} من ${total} متطلبات. ما زال ${remaining}؛ راجع: «${nextLabel}».`,
+    validationFeedback: {
+      passed: (label) => `استوفيت هذا المتطلب: «${label}».`,
+      missing: (label) => `لم يظهر هذا المتطلب بعد؛ راجع المطلوب: «${label}».`,
+      syntax: (label) => `تعذّرت قراءة الجزء المرتبط بـ«${label}». أصلح الصياغة في الموضع المحدد ثم أعد الفحص.`,
+      wrongStructure: (label) => `المحتوى موجود، لكنه داخل عنصر أو بنية مختلفة. راجع موضع «${label}».`,
+      wrongSelector: (label) => `التنسيق موجود لكنه يستهدف محددًا مختلفًا. راجع العنصر المقصود في «${label}».`,
+      wrongProperty: (label) => `وجدنا تصريحًا قريبًا، لكن اسم الخاصية لا يطابق المطلوب في «${label}».`,
+      unknownProperty: (property, suggestion) => `خاصية CSS “${property}” غير معروفة.${suggestion ? ` هل تقصد “${suggestion}”؟` : ' راجع تهجئة اسم الخاصية.'}`,
+      wrongValue: (label) => `الخاصية أو البنية موجودة، لكن قيمتها لا تحقق المطلوب في «${label}». راجع وصف المهمة.`,
+      missingSemicolon: (label) => `أضف الفاصلة المنقوطة (;) إلى نهاية التصريح الخاص بـ«${label}»؛ هذا التمرين يشترطها رغم أن CSS يسمح بحذفها من آخر تصريح في القاعدة.`,
+      wrongBehavior: (label) => `البنية موجودة، لكن قيمتها أو سلوكها لا يحقق «${label}». راجع المفهوم ثم حاول مجددًا.`,
+    },
+    severityLabels: { error: 'خطأ', warning: 'تنبيه', hint: 'اقتراح' },
+    sandboxNote: 'المعاينة تعمل داخل iframe معزول عن تطبيق Mabda. الاتصالات والموارد الخارجية محظورة قدر الإمكان؛ هذا عزل متصفح تعليمي وليس ضمانًا أمنيًا مطلقًا.',
     returnToLesson: 'العودة إلى الشرح',
     continueToQuiz: 'متابعة إلى الاختبار',
     editorHelp: 'استخدم Tab للتنقل بين HTML وCSS وJavaScript. المحررات دائمًا من اليسار إلى اليمين.',
     previewFrameTitle: 'معاينة شيفرة هذا التمرين داخل إطار معزول',
     exercises: {
       'html-introduction': {
-        task: 'أنشئ عنوانًا رئيسيًا بالنص “Hello, Developer!” وفقرة بالنص “Welcome to VANTA.”. ابدأ من الوسمين <h1> و<p>.',
-        expected: 'قراءة وسمَي العنوان والفقرة كعنصرين HTML، ومعرفة أن التشغيل منفصل عن فحص المهمة.',
+        task: 'اكتب عنوانًا رئيسيًا وفقرة ترحيب في عنصرَي HTML مناسبين، بهذا الترتيب.',
+        expected: 'اقرأ العنوان والفقرة كعنصرين HTML، وشغّل المعاينة بمعزل عن فحص المهمة.',
         checks: {
-          heading: { label: 'عنوان h1 يحتوي “Hello” و“Developer”', passed: 'عُثر على العنوان الرئيسي المطلوب.', missing: 'أضف عنصر h1 واجعل نصه يتضمن Hello وDeveloper.' },
-          paragraph: { label: 'فقرة p ترحّب بمتعلم VANTA', passed: 'عُثر على فقرة الترحيب.', missing: 'أضف عنصر p يحتوي Welcome وVANTA.' },
+          heading: { label: 'عنوان رئيسي h1', passed: 'يوجد عنصر h1 يتضمن Hello وDeveloper.', missing: 'أضف عنصر <h1> يحتوي كلمتي Hello وDeveloper.' },
+          paragraph: { label: 'فقرة p', passed: 'يوجد عنصر p يتضمن Welcome وMabda.', missing: 'أضف عنصر <p> يحتوي كلمتي Welcome وMabda.' },
+          'paragraph-order': { label: 'ترتيب العنوان والفقرة', passed: 'تأتي الفقرة بعد عنوان h1.', missing: 'ضع عنصر <p> بعد عنصر <h1> في المصدر.' },
         },
       },
       'html-headings-paragraphs': {
-        task: 'نظّم موضوعًا من اختيارك بعنوان رئيسي، عنوان فرعي، وفقرة تشرح الفكرة.',
-        expected: 'اختيار h1 للمحور الرئيسي وh2 لقسم تحته، مع وضع الشرح داخل p.',
+        task: 'أضف عنوان h1 غير فارغ، ثم عنوان h2 غير فارغ بعده، ثم فقرة p غير فارغة بعد العناوين.',
+        expected: 'يُفحص وجود النص داخل العناصر وترتيب h1 ثم h2 ثم p، لا جودة المعنى.',
         checks: {
-          heading: { label: 'عنوان h1 رئيسي غير فارغ', passed: 'يوجد عنوان رئيسي واضح.', missing: 'أضف h1 بنص يعبّر عن الصفحة.' },
-          subheading: { label: 'عنوان h2 لقسم فرعي', passed: 'يوجد عنوان فرعي.', missing: 'أضف h2 غير فارغ أسفل العنوان الرئيسي.' },
-          paragraph: { label: 'فقرة p تحتوي شرحًا', passed: 'يوجد نص داخل فقرة.', missing: 'أضف p واكتب فيها جملة قصيرة.' },
+          heading: { label: 'عنوان h1 رئيسي غير فارغ', passed: 'يوجد عنصر h1 يحتوي نصًا.', missing: 'أضف عنصر <h1> يحتوي نصًا؛ كتابة النص خارج الوسم لا تكفي.' },
+          subheading: { label: 'عنوان h2 لقسم فرعي', passed: 'يوجد عنوان فرعي.', missing: 'أضف عنصر <h2> غير فارغ بعد <h1> وبالترتيب المطلوب.' },
+          paragraph: { label: 'فقرة p تحتوي شرحًا', passed: 'يوجد نص داخل فقرة.', missing: 'أضف عنصر <p> بجملة قصيرة بعد العناوين؛ النص العادي وحده لا يحقق المتطلب.' },
         },
       },
       'html-links-navigation': {
-        task: 'أنشئ رابطًا إلى وجهة مناسبة، واكتب نصًا يوضح للزائر ما الذي سيفتحه.',
-        expected: 'استخدام عنصر a مع href غير فارغ ونص رابط مفهوم بدل “اضغط هنا”.',
+        task: 'أنشئ عنصر رابط a، وأضف له وجهة ونصًا غير عام.',
+        expected: 'تُعرض ثلاثة شروط: وجود رابط، ووجهة href قابلة للاستخدام، ونص من 3 أحرف على الأقل غير عام. يجب أن يجتمع href والنص على الرابط نفسه.',
         checks: {
-          'link-href': { label: 'رابط a له href صالح وغير فارغ', passed: 'للعنصر وجهة محددة.', missing: 'أضف href إلى عنصر a، وتجنب # وjavascript:.' },
-          'link-text': { label: 'نص الرابط واضح ومقروء', passed: 'نص الرابط يصف وجهته.', missing: 'اكتب داخل a عبارة توضح الوجهة، وتجنب “اضغط هنا” والعبارات العامة.' },
+          'link-element': { label: 'وجود عنصر a', passed: 'يوجد عنصر رابط a.', missing: 'أضف عنصر <a>.' },
+          'link-href': { label: 'وجهة href قابلة للاستخدام', passed: 'يوجد href غير فارغ وليس # أو javascript: داخل رابط.', missing: 'أضف إلى عنصر <a> قيمة href غير فارغة وليست # أو javascript:.' },
+          'link-text': { label: 'نص رابط قابل للقراءة', passed: 'الرابط ذو الوجهة القابلة للاستخدام يحتوي نصًا من 3 أحرف على الأقل وليس عبارة عامة معروفة.', missing: 'أضف إلى الرابط ذي href صالح نصًا من 3 أحرف على الأقل، وتجنب عبارات مثل «اضغط هنا» أو «رابط».' },
         },
       },
       'html-images-attributes': {
-        task: 'أضف صورة بمصدر src ونص بديل alt يصف ما تعرضه الصورة.',
-        expected: 'فهم أن src يحدد ملف الصورة وأن alt يصفها لمن لا يراها.',
+        task: 'أضف عنصر صورة بمصدر صالح ونص بديل وصفي وفق معيار الطول والكلمات العامة.',
+        expected: 'يُفحص src أولًا، ثم يجب أن يملك عنصر الصورة نفسه alt من 4 أحرف على الأقل، غير عام وغير مكرر.',
         checks: {
-          'image-src': { label: 'عنصر img له src', passed: 'للعنصر مصدر صورة.', missing: 'أضف src غير فارغ إلى عنصر img.' },
-          'image-alt': { label: 'عنصر img له alt وصفي', passed: 'يوجد نص بديل يمكن فهمه.', missing: 'اكتب في alt وصفًا قصيرًا، لا كلمة عامة أو نصًا تجريبيًا مثل “image” أو “xxxx”.' },
+          'image-src': { label: 'قيمة src قابلة للاستخدام', passed: 'يوجد img مع src غير فارغ وليس # أو javascript:.', missing: 'أضف إلى عنصر <img> قيمة src غير فارغة وليست # أو javascript:.' },
+          'image-alt': { label: 'قيمة alt قابلة للاستخدام', passed: 'صورة ذات src صالح تحتوي alt من 4 أحرف على الأقل، غير عام وغير مكرر.', missing: 'في عنصر <img> ذي src صالح، أضف وصف alt بطول 4 أحرف على الأقل، وتجنب image أو placeholder أو تكرار حرف واحد.' },
         },
       },
       'html-first-page': {
         task: 'أكمل هيكل الوثيقة: DOCTYPE، ثم head يتضمن title، ثم body لمحتوى الصفحة.',
         expected: 'تمييز معلومات الصفحة داخل head عن المحتوى الظاهر داخل body.',
         checks: {
-          doctype: { label: 'DOCTYPE في بداية الوثيقة', passed: 'يبدأ الملف بإعلان HTML5.', missing: 'ابدأ الملف بـ <!doctype html>.' },
-          head: { label: 'عنصر head مغلق', passed: 'يوجد قسم head كامل.', missing: 'أضف <head> واغلقه بـ </head>.' },
-          title: { label: 'عنوان title غير فارغ داخل head', passed: 'للوثيقة عنوان في head.', missing: 'أضف title يحتوي نصًا داخل head.' },
-          body: { label: 'عنصر body مغلق', passed: 'يوجد قسم body للمحتوى.', missing: 'أضف <body> واغلقه بـ </body>.' },
+          doctype: { label: 'DOCTYPE صريح في بداية الوثيقة', passed: 'يبدأ الملف بإعلان HTML5 صريح.', missing: 'ابدأ المصدر بـ <!doctype html>؛ عناصر HTML التي يضيفها المتصفح تلقائيًا لا تُحسب.' },
+          head: { label: 'عنصر head صريح ومغلق', passed: 'يوجد قسم head كامل في المصدر.', missing: 'أضف <head> واغلقه بـ </head> بعد DOCTYPE.' },
+          title: { label: 'عنوان title غير فارغ داخل head', passed: 'للوثيقة عنوان صريح في head.', missing: 'أضف <title> يحتوي نصًا داخل <head>؛ لا يكفي وضعه خارج البنية.' },
+          body: { label: 'عنصر body صريح ومغلق بعد head', passed: 'يوجد قسم body للمحتوى بعد head.', missing: 'أضف <body> واغلقه بـ </body> بعد <head>.' },
         },
       },
     },
@@ -259,7 +318,7 @@ export const practiceStudioMessages: Record<'ar' | 'en', PracticeStudioLocale> =
     loading: 'Loading your draft…',
     loadFailed: 'Could not load your draft. Retry before editing so an existing saved version is not overwritten by accident.',
     retryLoad: 'Retry loading draft',
-    noSavedDraft: 'No saved draft yet; the HTML editor starts with this exercise’s unsolved starter.',
+    noSavedDraft: 'No saved draft yet; the editor starts with this exercise’s unsolved starter.',
     previewEmpty: 'Run the preview to see your HTML, CSS, and JavaScript result.',
     previewUpdated: 'Preview updated. Check the task requirements separately.',
     previewStale: 'The code changed after the last run; run the preview again to refresh it.',
@@ -280,6 +339,11 @@ export const practiceStudioMessages: Record<'ar' | 'en', PracticeStudioLocale> =
       value: 'CSS value',
       property: 'CSS property',
       runtime: 'Runtime',
+      format: 'CSS formatting',
+      requirement: 'Exercise requirement',
+      errorLabel: 'Error',
+      warningLabel: 'Warning',
+      hintLabel: 'Hint',
       htmlMissingClose: (tag) => `The <${tag}> tag is not closed.`,
       htmlMissingBeforeClose: (tag, closing) => `Close <${tag}> before </${closing}>.`,
       htmlUnexpectedClose: (tag) => `There is no open <${tag}> tag to close here.`,
@@ -294,10 +358,19 @@ export const practiceStudioMessages: Record<'ar' | 'en', PracticeStudioLocale> =
       cssSyntax: 'This part of the CSS could not be parsed.',
       cssSyntaxSuggestion: 'Check the colon, braces { }, and the order of the property and value.',
       cssUnknownProperty: (property) => `“${property}” is not a recognized CSS property.`,
-      cssPropertySuggestion: 'Check the property spelling, or start it with -- if it is a custom property.',
+      cssPropertySuggestion: (suggestion) => suggestion ? `Did you mean “${suggestion}”?` : 'Check the property spelling, or start it with -- if it is a custom property.',
       cssInvalidValue: (property, value) => `“${value}” is not recognized or is invalid for “${property}”.`,
       cssMissingValue: (property) => `The “${property}” property needs a value after the colon.`,
-      cssValueSuggestion: 'Check the property spelling and whether the value is valid for it, then run the preview again.',
+      cssValueSuggestion: (suggestion) => suggestion ? `Did you mean “${suggestion}”?` : 'Check the property spelling and whether the value is valid for it, then run the preview again.',
+      cssMissingSemicolon: 'This required CSS declaration is missing its ending semicolon.',
+      cssSemicolonSuggestion: 'Add ; after the value and before the closing brace. Your code was not changed automatically.',
+      cssMissingColon: 'A colon : appears to be missing between this CSS property and its value.',
+      cssMissingColonSuggestion: 'Write the property name, then :, then its value.',
+      cssUnmatchedBrace: 'A CSS rule has an unmatched opening { or closing } brace.',
+      cssBraceSuggestion: 'Balance the rule braces so each { has a matching }.',
+      cssMalformedSelector: 'The CSS selector before this opening brace could not be read.',
+      cssSelectorSuggestion: 'Check the element name or the dot before a class name, then review brackets and commas.',
+      cssMalformedDeclaration: 'A CSS declaration inside this rule could not be read.',
       jsSyntax: 'This part of the JavaScript could not be parsed.',
       jsExpectedValue: 'An = sign is not followed by a value.',
       jsExpectedExpression: 'The expression or value inside these parentheses looks incomplete.',
@@ -310,54 +383,70 @@ export const practiceStudioMessages: Record<'ar' | 'en', PracticeStudioLocale> =
     checkPassed: 'Complete',
     checkPending: 'Needs work',
     allChecksPassed: 'This exercise’s requirements are met. Lesson completion and quiz results are unchanged.',
-    someChecksPending: 'Review the incomplete items, update your HTML, and check the task again.',
-    sandboxNote: 'The preview runs in an iframe sandbox isolated from VANTA. Network access and external resources are restricted where possible; this is educational browser isolation, not an absolute security guarantee.',
+    someChecksPending: 'Review the incomplete requirements in the active language, then check the task again.',
+    partialProgress: (completed, total, remaining, nextLabel) => `Nice work—${completed} of ${total} requirements are met. ${remaining} left to work on: “${nextLabel}”.`,
+    validationFeedback: {
+      passed: (label) => `This requirement is met: “${label}”.`,
+      missing: (label) => `This requirement is not present yet. Review the task: “${label}”.`,
+      syntax: (label) => `The code for “${label}” could not be read. Fix the syntax at the marked location, then check again.`,
+      wrongStructure: (label) => `The content is present, but inside a different element or structure. Review where “${label}” belongs.`,
+      wrongSelector: (label) => `The styling exists, but targets a different selector. Review the target in “${label}”.`,
+      wrongProperty: (label) => `A related declaration was found, but its property name does not match “${label}”.`,
+      unknownProperty: (property, suggestion) => `“${property}” is not a known CSS property.${suggestion ? ` Did you mean “${suggestion}”?` : ' Check the property spelling.'}`,
+      wrongValue: (label) => `The property or structure exists, but its value does not meet “${label}”. Re-read the task description.`,
+      missingSemicolon: (label) => `Add a semicolon (;) to the end of “${label}”. This exercise requires it, although CSS permits omitting it from the final declaration in a rule.`,
+      wrongBehavior: (label) => `The structure is present, but its value or behavior does not meet “${label}”. Review the concept and try again.`,
+    },
+    severityLabels: { error: 'Error', warning: 'Warning', hint: 'Hint' },
+    sandboxNote: 'The preview runs in an iframe sandbox isolated from Mabda. Network access and external resources are restricted where possible; this is educational browser isolation, not an absolute security guarantee.',
     returnToLesson: 'Back to lesson',
     continueToQuiz: 'Continue to quiz',
     editorHelp: 'Use Tab to move between HTML, CSS, and JavaScript. Editors always read left to right.',
     previewFrameTitle: 'Preview of this exercise inside an isolated frame',
     exercises: {
       'html-introduction': {
-        task: 'Create a main heading that says “Hello, Developer!” and a paragraph that says “Welcome to VANTA.” Start with <h1> and <p>.',
+        task: 'Write a main heading and a welcome paragraph using suitable HTML elements, in that order.',
         expected: 'Read a heading and paragraph as two HTML elements, and keep running separate from checking the task.',
         checks: {
-          heading: { label: 'An h1 containing “Hello” and “Developer”', passed: 'The required main heading was found.', missing: 'Add an h1 whose text includes Hello and Developer.' },
-          paragraph: { label: 'A p welcoming the learner to VANTA', passed: 'The welcome paragraph was found.', missing: 'Add a p containing Welcome and VANTA.' },
+          heading: { label: 'A main h1 heading', passed: 'An h1 containing Hello and Developer is present.', missing: 'Add an <h1> containing both Hello and Developer.' },
+          paragraph: { label: 'A p paragraph', passed: 'A p containing Welcome and Mabda is present.', missing: 'Add a <p> containing both Welcome and Mabda.' },
+          'paragraph-order': { label: 'Heading then paragraph order', passed: 'The paragraph follows the h1.', missing: 'Place the <p> element after the <h1> in the source.' },
         },
       },
       'html-headings-paragraphs': {
-        task: 'Organize a topic of your choice with a main heading, a subheading, and a paragraph explaining the idea.',
-        expected: 'Use h1 for the main topic, h2 for a section beneath it, and p for the explanation.',
+        task: 'Add a non-empty h1, then a non-empty h2 after it, then a non-empty p after the headings.',
+        expected: 'The check measures text inside the elements and the h1 → h2 → p order, not the meaning of the text.',
         checks: {
-          heading: { label: 'A non-empty main h1', passed: 'A clear main heading is present.', missing: 'Add an h1 with text that describes the page.' },
-          subheading: { label: 'A subheading in h2', passed: 'A subheading is present.', missing: 'Add a non-empty h2 beneath the main heading.' },
-          paragraph: { label: 'A p paragraph with an explanation', passed: 'Text is present inside a paragraph.', missing: 'Add a p with a short sentence.' },
+          heading: { label: 'A non-empty main h1', passed: 'An h1 element contains text.', missing: 'Add an <h1> containing text; text outside the tag is not enough.' },
+          subheading: { label: 'A subheading in h2', passed: 'A subheading is present.', missing: 'Add a non-empty <h2> after the <h1> in the required order.' },
+          paragraph: { label: 'A p paragraph with an explanation', passed: 'Text is present inside a paragraph.', missing: 'Add a <p> with a short sentence after the headings; plain text alone is not enough.' },
         },
       },
       'html-links-navigation': {
-        task: 'Create a link to a useful destination and write link text that tells visitors what it opens.',
-        expected: 'Use an a element with a non-empty href and descriptive text rather than “click here”.',
+        task: 'Create an a link element, add a usable destination, and include non-generic link text.',
+        expected: 'Three checks are shown: an anchor, a usable href, and non-generic text of at least 3 characters. The href and text must belong to the same anchor.',
         checks: {
-          'link-href': { label: 'An a element with a valid, non-empty href', passed: 'The link has a destination.', missing: 'Add an href to an a element; avoid # and javascript:.' },
-          'link-text': { label: 'Clear, readable link text', passed: 'The link text describes its destination.', missing: 'Write text that describes the destination; avoid generic labels such as “click here”.' },
+          'link-element': { label: 'An a element exists', passed: 'An anchor element is present.', missing: 'Add an <a> element.' },
+          'link-href': { label: 'A usable href destination', passed: 'An anchor has a non-empty href other than # or javascript:.', missing: 'Give an <a> a non-empty href that is not # or javascript:.' },
+          'link-text': { label: 'Readable link text', passed: 'Anchor text has at least 3 characters and is not a recognized generic phrase.', missing: 'Add at least 3 characters of text inside an <a>; avoid phrases such as “click here” or “link”.' },
         },
       },
       'html-images-attributes': {
-        task: 'Add an image with a src and alternative text in alt that describes what the image shows.',
-        expected: 'Understand that src identifies the image resource while alt describes it to people who cannot see it.',
+        task: 'Add an image with a usable source and alternative text that meets the measurable length and generic-value checks.',
+        expected: 'The source is checked first; the same image must then have alt text of at least 4 characters that is not generic or repeated.',
         checks: {
-          'image-src': { label: 'An img element with src', passed: 'The image has a source.', missing: 'Add a non-empty src to an img element.' },
-          'image-alt': { label: 'A descriptive alt value', passed: 'A useful alternative description is present.', missing: 'Write a short description in alt, not a generic word or placeholder such as “image” or “xxxx”.' },
+          'image-src': { label: 'A usable src value', passed: 'An img has a non-empty src other than # or javascript:.', missing: 'Give an <img> a non-empty src that is not # or javascript:.' },
+          'image-alt': { label: 'A usable alt value', passed: 'alt has at least 4 characters and is not generic or repeated.', missing: 'Give the <img> an alt description with at least 4 characters; avoid image, placeholder, or a repeated single character.' },
         },
       },
       'html-first-page': {
         task: 'Complete the document structure: a DOCTYPE, then a head containing a title, then a body for the page content.',
         expected: 'Distinguish page metadata inside head from visible content inside body.',
         checks: {
-          doctype: { label: 'DOCTYPE at the start of the document', passed: 'The file starts with the HTML5 doctype.', missing: 'Begin the file with <!doctype html>.' },
-          head: { label: 'A closed head element', passed: 'A complete head section is present.', missing: 'Add <head> and close it with </head>.' },
-          title: { label: 'A non-empty title inside head', passed: 'The document has a title in its head.', missing: 'Add a non-empty title element inside head.' },
-          body: { label: 'A closed body element', passed: 'A body section is present for page content.', missing: 'Add <body> and close it with </body>.' },
+          doctype: { label: 'An explicit DOCTYPE at the start of the document', passed: 'The file starts with an explicit HTML5 doctype.', missing: 'Begin the source with <!doctype html>; browser-inserted HTML elements do not count.' },
+          head: { label: 'An explicit closed head element', passed: 'A complete head section is present in the source.', missing: 'Add <head> and close it with </head> after the DOCTYPE.' },
+          title: { label: 'A non-empty title inside head', passed: 'The document has an explicit title in its head.', missing: 'Add <title> with text inside <head>; placing it outside the structure is not enough.' },
+          body: { label: 'An explicit body after head', passed: 'A body section is present after head for page content.', missing: 'Add <body> and close it with </body> after <head>.' },
         },
       },
     },

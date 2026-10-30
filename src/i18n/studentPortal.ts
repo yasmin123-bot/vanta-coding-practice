@@ -54,8 +54,57 @@ export type StudentPortalMessages = {
     login: string;
     signup: string;
   };
+  appShell: {
+    openMenu: string;
+    closeMenu: string;
+    menuTitle: string;
+    primaryNavigation: string;
+    learningPaths: string;
+    practice: string;
+    quizzes: string;
+    quizNote: string;
+    more: string;
+    preferences: string;
+    language: string;
+    appearance: string;
+    account: string;
+    challenges: string;
+    projects: string;
+    comingSoon: string;
+    bottomNavigation: string;
+  };
+  home: {
+    heroEyebrow: string;
+    heroBody: string;
+    heroAction: string;
+    firstLessonAction: string;
+    pathsTitle: string;
+    pathsBody: string;
+    htmlPathBody: string;
+    cssPathBody: string;
+    javascriptPathBody: string;
+    loopTitle: string;
+    loopSteps: string[];
+    practiceTitle: string;
+    practiceBody: string;
+    practiceAction: string;
+    quizTitle: string;
+    quizBody: string;
+    quizAction: string;
+    quickActionsTitle: string;
+    profileAction: string;
+    settingsAction: string;
+    settingsBody: string;
+    challengeAction: string;
+    projectAction: string;
+    guestNote: string;
+  };
   auth: {
     eyebrow: string;
+    fullName: string;
+    fullNamePlaceholder: string;
+    signInAction: string;
+    createAccountAction: string;
     loginTitle: string;
     loginBody: string;
     signupTitle: string;
@@ -89,6 +138,12 @@ export type StudentPortalMessages = {
     signupLink: string;
     loginLink: string;
     resetLink: string;
+  };
+  intro: {
+    preferencesLabel: string;
+    tagline: string;
+    secondaryTagline: string;
+    next: string;
   };
   authVisual: {
     brandLine: string;
@@ -214,15 +269,38 @@ const portal: Record<Locale, StudentPortalMessages> = {
       profile: 'الملف الشخصي',
       logout: 'تسجيل الخروج',
       signingOut: 'جارٍ تسجيل الخروج…',
-      login: 'دخول',
-      signup: 'إنشاء حساب',
+    login: 'دخول',
+    signup: 'إنشاء حساب',
+  },
+    appShell: {
+      openMenu: 'فتح القائمة',
+      closeMenu: 'إغلاق القائمة',
+      menuTitle: 'التنقّل والتفضيلات',
+      primaryNavigation: 'التنقّل الرئيسي',
+      learningPaths: 'مسارات التعلّم',
+      practice: 'التدريب',
+      quizzes: 'الاختبارات',
+      quizNote: 'الاختبارات جزء من الدروس المتاحة في مسارات التعلّم، ولا توجد صفحة اختبارات مستقلة.',
+      more: 'المزيد',
+      preferences: 'التفضيلات',
+      language: 'اللغة',
+      appearance: 'المظهر',
+      account: 'الحساب',
+      challenges: 'التحديات',
+      projects: 'المشاريع',
+      comingSoon: 'قريبًا',
+      bottomNavigation: 'التنقّل السريع',
     },
     auth: {
-      eyebrow: 'VANTA / حساب المتعلم',
+      eyebrow: 'Mabda / حساب المتعلم',
+      fullName: 'الاسم الكامل',
+      fullNamePlaceholder: 'اكتب اسمك الكامل',
+      signInAction: 'تسجيل الدخول',
+      createAccountAction: 'إنشاء حساب',
       loginTitle: 'مرحبًا بعودتك',
-      loginBody: 'سجّل الدخول لمتابعة مسار HTML والاحتفاظ بتقدمك على حسابك.',
-      signupTitle: 'ابدأ رحلتك مع VANTA',
-      signupBody: 'أنشئ حسابًا لتسجيل تقدمك والعودة إلى دروس HTML من حيث توقفت.',
+      loginBody: 'سجّل الدخول لمتابعة مسارات التعلّم والاحتفاظ بتقدمك على حسابك.',
+      signupTitle: 'ابدأ رحلتك مع Mabda',
+      signupBody: 'أنشئ حسابًا لحفظ تقدمك والعودة إلى الدروس من حيث توقفت.',
       forgotTitle: 'استعادة كلمة المرور',
       forgotBody: 'أدخل البريد المرتبط بحسابك وسنرسل رابطًا آمنًا لإعادة تعيين كلمة المرور.',
       resetTitle: 'اختر كلمة مرور جديدة',
@@ -231,7 +309,7 @@ const portal: Record<Locale, StudentPortalMessages> = {
       callbackBody: 'جارٍ التحقق من رابط Supabase واستعادة جلستك الآمنة…',
       callbackReady: 'تم التحقق. جارٍ فتح حسابك…',
       callbackFailed: 'لم نتمكن من التحقق من الرابط. قد يكون منتهيًا أو مستخدمًا من قبل.',
-      gatewayLoading: 'جارٍ تجهيز بوابة VANTA الآمنة…',
+      gatewayLoading: 'جارٍ تجهيز بوابة Mabda الآمنة…',
       submitBusy: 'جارٍ المعالجة…',
       setupOnly: 'إعداد خدمة الحسابات غير مكتمل بعد.',
       confirmationBody: 'إذا كان البريد صالحًا، ستصلك رسالة من Supabase لتأكيد الحساب. افتح الرابط للمتابعة.',
@@ -249,20 +327,26 @@ const portal: Record<Locale, StudentPortalMessages> = {
       errorRateLimit: 'تم إرسال طلبات كثيرة. انتظر قليلًا ثم حاول مجددًا.',
       errorGeneric: 'تعذر إكمال الطلب. تحقق من البيانات وإعدادات Supabase ثم أعد المحاولة.',
       forgotLink: 'نسيت كلمة المرور؟',
-      signupLink: 'إنشاء حساب جديد',
+      signupLink: 'أنشئ حسابًا',
       loginLink: 'تسجيل الدخول',
       resetLink: 'طلب رابط استعادة جديد',
     },
+    intro: {
+      preferencesLabel: 'تفضيلات العرض واللغة',
+      tagline: 'كل بداية لها مبدأ.',
+      secondaryTagline: 'حيث تنتهي البدايات العشوائية، يبدأ مبدأ.',
+      next: 'التالي',
+    },
     authVisual: {
-      brandLine: 'VANTA — تدريب عملي على البرمجة للمبتدئين',
+      brandLine: 'Mabda — تدريب عملي على البرمجة للمبتدئين',
       title: 'من أول سطر، تبدأ قدرتك على البناء.',
       body: 'افهم الفكرة، جرّبها بنفسك، ثم استخدمها لحل مشكلة حقيقية.',
       codeLabel: 'كل مهارة تبدأ بخطوة',
-      sequenceLabel: 'رحلة التعلّم في VANTA',
+      sequenceLabel: 'رحلة التعلّم في Mabda',
       steps: ['تعلّم', 'تدرّب', 'ابنِ', 'حلّ', 'تطوّر'],
     },
     dashboard: {
-      eyebrow: 'VANTA / مساحة التعلم',
+      eyebrow: 'Mabda / مساحة التعلم',
       title: 'أهلًا، {name}',
       lead: 'تابع مسارك الحالي، وارجع إلى آخر نقطة تعلمت منها.',
       pathsStarted: 'مسارات بدأتَها',
@@ -277,7 +361,7 @@ const portal: Record<Locale, StudentPortalMessages> = {
       nextRecommended: 'الدرس التالي المقترح',
       continueAction: 'متابعة التعلم',
       reviewAction: 'مراجعة الدروس',
-      allComplete: 'أكملت دروس مسار HTML المتاح. يمكنك مراجعة أي درس في أي وقت.',
+      allComplete: 'أكملت دروس هذا المسار. يمكنك مراجعة أي درس في أي وقت.',
       pathProgress: 'اكتمل {completed} من {total}',
       currentPath: 'مسارك الحالي',
       pathNotStarted: 'لم تبدأ المسار بعد',
@@ -290,18 +374,44 @@ const portal: Record<Locale, StudentPortalMessages> = {
       completed: 'مكتمل',
       started: 'بدأت هذا الدرس',
       notStarted: 'لم يبدأ بعد',
-      accountDataNote: 'هذه لوحة VANTA الأولية: تعرض مسار HTML الحالي وبيانات التقدم المحفوظة لحسابك فقط.',
+      accountDataNote: 'تعرض لوحة Mabda مسارات التعلّم النشطة وبيانات التقدم المحفوظة لحسابك فقط.',
       profileLink: 'عرض الملف الشخصي',
     },
+    home: {
+      heroEyebrow: 'مساحة تعلّمك',
+      heroBody: 'ابدأ بأساسيات HTML، ثم تعلّم تنسيق الصفحات بـCSS وإضافة التفاعل بـJavaScript عبر دروس قصيرة وممارسة خطوة بخطوة.',
+      heroAction: 'استكشف مسار HTML',
+      firstLessonAction: 'ابدأ الدرس الأول',
+      pathsTitle: 'مسارات التعلّم',
+      pathsBody: 'اختر مسار HTML أو CSS أو JavaScript المتاح، واجمع في كل واحد بين الدروس القصيرة والتطبيق العملي.',
+      htmlPathBody: 'تعلّم كيف تصف بنية الصفحة باستخدام عناصر HTML.',
+      cssPathBody: 'تعلّم تنسيق واجهات الويب عبر المحددات والألوان والطباعة والتخطيط والتصميم المتجاوب في 8 دروس.',
+      javascriptPathBody: 'أضف السلوك والتفاعل إلى صفحاتك عبر المتغيرات والشروط والدوال وDOM في 9 دروس.',
+      loopTitle: 'من الفهم إلى التطبيق',
+      loopSteps: ['تعلّم', 'افهم', 'تدرّب', 'طبّق'],
+      practiceTitle: 'جرّب بنفسك',
+      practiceBody: 'افتح Practice Studio داخل الدرس، واكتب الكود ثم راجع المعاينة والتشخيصات.',
+      practiceAction: 'افتح Practice Studio',
+      quizTitle: 'اختبارات قصيرة داخل الدروس',
+      quizBody: 'تأتي الاختبارات بعد التعلّم والممارسة ضمن الدروس المتاحة، وليست مركزًا مستقلًا.',
+      quizAction: 'افتح مسار HTML',
+      quickActionsTitle: 'اختصارات',
+      profileAction: 'الملف الشخصي',
+      settingsAction: 'اللغة والمظهر',
+      settingsBody: 'غيّر اللغة والوضع الفاتح أو الداكن من القائمة.',
+      challengeAction: 'التحديات',
+      projectAction: 'المشاريع',
+      guestNote: 'يمكنك استكشاف الدروس، لكن التقدم والمسودات لا تُحفظ سحابيًا قبل تسجيل الدخول.',
+    },
     profile: {
-      eyebrow: 'VANTA / بيانات الحساب',
+      eyebrow: 'Mabda / بيانات الحساب',
       title: 'ملفك الشخصي',
       lead: 'معلومات الحساب الأساسية المرتبطة بخدمة Supabase.',
       displayName: 'الاسم الظاهر',
       email: 'البريد الإلكتروني',
       joined: 'تاريخ إنشاء الحساب',
       currentLevel: 'المستوى الحالي',
-      beginnerLevel: 'مبتدئ · أساسيات HTML',
+      beginnerLevel: 'مبتدئ · أساسيات الويب',
       emailVerified: 'حالة البريد',
       verified: 'تم التأكيد',
       pending: 'بانتظار التأكيد',
@@ -309,11 +419,11 @@ const portal: Record<Locale, StudentPortalMessages> = {
       pathsCompleted: 'المسارات المكتملة',
       lessonsCompleted: 'الدروس المكتملة',
       overallProgress: 'التقدم الكلي',
-      pathProgress: 'تقدم مسار HTML',
+      pathProgress: 'تقدم المسار',
       quizResults: 'نتائج الاختبارات',
       noQuizResults: 'لا توجد نتائج اختبارات بعد. ستظهر هنا بعد إكمال اختبار درس.',
       futureAchievements: 'الإنجازات',
-      futureAchievementsNote: 'الإنجازات والشارات جزء من رؤية VANTA المستقبلية، ولم تُنفّذ بعد.',
+      futureAchievementsNote: 'الإنجازات والشارات جزء من رؤية Mabda المستقبلية، ولم تُنفّذ بعد.',
       backDashboard: 'العودة إلى لوحة الطالب',
     },
     progress: {
@@ -349,7 +459,7 @@ const portal: Record<Locale, StudentPortalMessages> = {
       createAccount: 'Create account',
       sendReset: 'Send reset link',
       updatePassword: 'Update password',
-      noAccount: 'New to VANTA?',
+      noAccount: 'Don\'t have an account?',
       haveAccount: 'Already have an account?',
       loading: 'Loading your account…',
       accountOnly: 'This progress is saved to your account through Supabase.',
@@ -378,12 +488,35 @@ const portal: Record<Locale, StudentPortalMessages> = {
       login: 'Sign in',
       signup: 'Create account',
     },
+    appShell: {
+      openMenu: 'Open menu',
+      closeMenu: 'Close menu',
+      menuTitle: 'Navigation and preferences',
+      primaryNavigation: 'Primary navigation',
+      learningPaths: 'Learning paths',
+      practice: 'Practice',
+      quizzes: 'Quizzes',
+      quizNote: 'Quizzes are built into lessons across the active learning paths; there is no standalone quiz page.',
+      more: 'More',
+      preferences: 'Preferences',
+      language: 'Language',
+      appearance: 'Appearance',
+      account: 'Account',
+      challenges: 'Challenges',
+      projects: 'Projects',
+      comingSoon: 'Coming soon',
+      bottomNavigation: 'Quick navigation',
+    },
     auth: {
-      eyebrow: 'VANTA / Learner account',
+      eyebrow: 'Mabda / Learner account',
+      fullName: 'Full name',
+      fullNamePlaceholder: 'Enter your full name',
+      signInAction: 'Sign in',
+      createAccountAction: 'Create account',
       loginTitle: 'Welcome back',
-      loginBody: 'Sign in to continue your HTML path and keep your learning progress on your account.',
-      signupTitle: 'Start your VANTA journey',
-      signupBody: 'Create an account to record your progress and return to your HTML lessons where you left off.',
+      loginBody: 'Sign in to continue your learning paths and keep your progress on your account.',
+      signupTitle: 'Start your Mabda journey',
+      signupBody: 'Create an account to save your progress and return to your lessons where you left off.',
       forgotTitle: 'Reset your password',
       forgotBody: 'Enter the email for your account and we will send a secure password-reset link.',
       resetTitle: 'Choose a new password',
@@ -392,7 +525,7 @@ const portal: Record<Locale, StudentPortalMessages> = {
       callbackBody: 'Verifying your Supabase link and restoring your secure session…',
       callbackReady: 'Verified. Opening your account…',
       callbackFailed: 'We could not verify this link. It may have expired or already been used.',
-      gatewayLoading: 'Preparing your secure VANTA gateway…',
+      gatewayLoading: 'Preparing your secure Mabda gateway…',
       submitBusy: 'Working…',
       setupOnly: 'Account service setup is not complete yet.',
       confirmationBody: 'If this email can be registered, Supabase will send a confirmation message. Open its link to continue.',
@@ -410,20 +543,26 @@ const portal: Record<Locale, StudentPortalMessages> = {
       errorRateLimit: 'Too many requests were sent. Wait a little and try again.',
       errorGeneric: 'We could not complete the request. Check the details and Supabase setup, then try again.',
       forgotLink: 'Forgot password?',
-      signupLink: 'Create an account',
+      signupLink: 'Create one',
       loginLink: 'Sign in',
       resetLink: 'Request a new reset link',
     },
+    intro: {
+      preferencesLabel: 'Display and language preferences',
+      tagline: 'Every beginning needs a foundation.',
+      secondaryTagline: 'Where random beginnings end, Mabda begins.',
+      next: 'Next',
+    },
     authVisual: {
-      brandLine: 'VANTA — Coding Practice for Beginners',
+      brandLine: 'Mabda — Coding Practice for Beginners',
       title: 'Your first line can lead somewhere real.',
       body: 'Understand the idea, try it yourself, then use it to solve a real problem.',
       codeLabel: 'Every skill starts somewhere',
-      sequenceLabel: 'The VANTA learning journey',
+      sequenceLabel: 'The Mabda learning journey',
       steps: ['Learn', 'Practice', 'Build', 'Solve', 'Improve'],
     },
     dashboard: {
-      eyebrow: 'VANTA / Learning space',
+      eyebrow: 'Mabda / Learning space',
       title: 'Welcome, {name}',
       lead: 'Pick up your current path and return to the last lesson you opened.',
       pathsStarted: 'Paths started',
@@ -438,7 +577,7 @@ const portal: Record<Locale, StudentPortalMessages> = {
       nextRecommended: 'Next recommended lesson',
       continueAction: 'Continue learning',
       reviewAction: 'Review lessons',
-      allComplete: 'You have completed the available HTML lessons. You can revisit any lesson at any time.',
+      allComplete: 'You have completed the lessons in this path. You can revisit any lesson at any time.',
       pathProgress: '{completed} of {total} complete',
       currentPath: 'Your current path',
       pathNotStarted: 'Not started yet',
@@ -451,18 +590,44 @@ const portal: Record<Locale, StudentPortalMessages> = {
       completed: 'Completed',
       started: 'Started',
       notStarted: 'Not started',
-      accountDataNote: 'This is the first VANTA dashboard: it shows the current HTML path and progress saved to your account only.',
+      accountDataNote: 'Your Mabda dashboard summarizes active learning paths and progress saved to your account only.',
       profileLink: 'View profile',
     },
+    home: {
+      heroEyebrow: 'Your learning space',
+      heroBody: 'Start with HTML, then style pages with CSS and add interaction with JavaScript through short lessons and practice.',
+      heroAction: 'Explore the HTML path',
+      firstLessonAction: 'Start the first lesson',
+      pathsTitle: 'Learning paths',
+      pathsBody: 'Choose an active HTML, CSS, or JavaScript path. Each combines short lessons with hands-on practice.',
+      htmlPathBody: 'Learn how to describe page structure with HTML elements.',
+      cssPathBody: 'Learn to style web interfaces through selectors, color, typography, layout, and responsive design in 8 lessons.',
+      javascriptPathBody: 'Add behavior and interaction with variables, conditions, functions, and the DOM across 9 lessons.',
+      loopTitle: 'From understanding to application',
+      loopSteps: ['Learn', 'Understand', 'Practice', 'Apply'],
+      practiceTitle: 'Try it yourself',
+      practiceBody: 'Open the Practice Studio inside the lesson, write code, then review the preview and diagnostics.',
+      practiceAction: 'Open Practice Studio',
+      quizTitle: 'Short quizzes inside lessons',
+      quizBody: 'Quizzes follow learning and practice within available lessons; they are not a separate center.',
+      quizAction: 'Open HTML path',
+      quickActionsTitle: 'Quick actions',
+      profileAction: 'Profile',
+      settingsAction: 'Language and appearance',
+      settingsBody: 'Change the language and light or dark theme from the menu.',
+      challengeAction: 'Challenges',
+      projectAction: 'Projects',
+      guestNote: 'You can explore lessons, but progress and drafts are not saved to the cloud until you sign in.',
+    },
     profile: {
-      eyebrow: 'VANTA / Account details',
+      eyebrow: 'Mabda / Account details',
       title: 'Your profile',
       lead: 'Basic account information connected to Supabase Auth.',
       displayName: 'Display name',
       email: 'Email address',
       joined: 'Account created',
       currentLevel: 'Current learning level',
-      beginnerLevel: 'Beginner · HTML Fundamentals',
+      beginnerLevel: 'Beginner · Web fundamentals',
       emailVerified: 'Email status',
       verified: 'Confirmed',
       pending: 'Confirmation pending',
@@ -470,11 +635,11 @@ const portal: Record<Locale, StudentPortalMessages> = {
       pathsCompleted: 'Paths completed',
       lessonsCompleted: 'Lessons completed',
       overallProgress: 'Overall progress',
-      pathProgress: 'HTML path progress',
+      pathProgress: 'Path progress',
       quizResults: 'Quiz results',
       noQuizResults: 'No quiz results yet. They will appear here after you complete a lesson quiz.',
       futureAchievements: 'Achievements',
-      futureAchievementsNote: 'Achievements and badges are part of the future VANTA vision and are not implemented yet.',
+      futureAchievementsNote: 'Achievements and badges are part of the future Mabda vision and are not implemented yet.',
       backDashboard: 'Back to dashboard',
     },
     progress: {

@@ -1,20 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  HTML_LESSON_IDS,
-  getHtmlLessonHref,
-  type AdditionalHtmlLessonId,
+  getLearningPathHref,
+  getLessonHref,
+  getPathForLesson,
+  getPathLessonIds,
+  type FoundationLessonId,
 } from '../content/learningSystem';
 import { messages, type Locale } from '../i18n/messages';
+import { getLearningLessonCopy } from '../i18n/foundationLessonCopy';
 import { getStudentPortalCopy } from '../i18n/studentPortal';
 import { useAuth } from '../auth/AuthProvider';
 import { useStudentProgress } from '../state/StudentProgressProvider';
 import { createQuizChoiceOrder, getOrderedQuizChoices } from '../utils/quizChoices';
 import LearningHeader from './LearningHeader';
 import PracticeStudio from './PracticeStudio';
+import ProgrammingLanguageLabel from './ProgrammingLanguageLabel';
 import { practiceStudioMessages } from '../i18n/practiceStudio';
 
 export type LearningLessonProps = {
-  lessonId: AdditionalHtmlLessonId;
+  lessonId: Exclude<FoundationLessonId, 'html-introduction'>;
   locale: Locale;
   onSwitchLocale: () => void;
   onComplete: (score: number, total: number) => Promise<boolean>;
@@ -27,15 +31,16 @@ function fillTemplate(template: string, current: number, total: number) {
 }
 
 function InlineCodeText({ text }: { text: string }) {
-  const tokenPattern = /(<!DOCTYPE html>|<\/?[a-z][a-z0-9]*(?:\s+[^<>]*?)?\s*\/?>|(?:href|src|alt|lang|charset)=["'][^"']*["'])/gi;
-  const codeTokenPattern = /^(?:<!DOCTYPE html>|<\/?[a-z][a-z0-9]*(?:\s+[^<>]*?)?\s*\/?>|(?:href|src|alt|lang|charset)=["'][^"']*["'])$/i;
+  const tokenPattern = /(`[^`]+`|<!DOCTYPE html>|<\/?[a-z][a-z0-9]*(?:\s+[^<>]*?)?\s*\/?>|(?:href|src|alt|lang|charset)=["'][^"']*["'])/gi;
+  const codeTokenPattern = /^`[^`]+`$/;
+  const htmlTokenPattern = /^(?:<!DOCTYPE html>|<\/?[a-z][a-z0-9]*(?:\s+[^<>]*?)?\s*\/?>|(?:href|src|alt|lang|charset)=["'][^"']*["'])$/i;
   const parts = text.split(tokenPattern);
 
   return (
     <>
       {parts.map((part, index) => (
-        codeTokenPattern.test(part) ? (
-          <code className="lesson-inline-code" dir="ltr" key={`${index}-${part}`}>{part}</code>
+        codeTokenPattern.test(part) || htmlTokenPattern.test(part) ? (
+          <code className="lesson-inline-code" dir="ltr" key={`${index}-${part}`}>{codeTokenPattern.test(part) ? part.slice(1, -1) : part}</code>
         ) : (
           <span key={`${index}-text`}>{part}</span>
         )
@@ -47,20 +52,23 @@ function InlineCodeText({ text }: { text: string }) {
 function LearningLesson({ lessonId, locale, onSwitchLocale, onComplete }: LearningLessonProps) {
   const landingCopy = messages[locale];
   const systemCopy = landingCopy.learningSystem;
-  const copy = systemCopy.lessons[lessonId];
+  const copy = getLearningLessonCopy(locale, lessonId);
   const ui = systemCopy.ui;
   const portalCopy = getStudentPortalCopy(locale);
   const auth = useAuth();
   const studentProgress = useStudentProgress();
   const isArabic = locale === 'ar';
-  const lessonIndex = HTML_LESSON_IDS.indexOf(lessonId);
-  const previousLessonId = lessonIndex > 0 ? HTML_LESSON_IDS[lessonIndex - 1] : null;
-  const nextLessonId = lessonIndex < HTML_LESSON_IDS.length - 1 ? HTML_LESSON_IDS[lessonIndex + 1] : null;
+  const pathId = getPathForLesson(lessonId);
+  const pathLessons = getPathLessonIds(pathId);
+  const lessonIndex = pathLessons.indexOf(lessonId);
+  const previousLessonId = lessonIndex > 0 ? pathLessons[lessonIndex - 1] : null;
+  const nextLessonId = lessonIndex < pathLessons.length - 1 ? pathLessons[lessonIndex + 1] : null;
   const headingRef = useRef<HTMLHeadingElement>(null);
   const questionHeadingRef = useRef<HTMLHeadingElement>(null);
   const hasRendered = useRef(false);
-  const [flow, setFlow] = useState<LessonFlow>('learn');
-  const [practiceOpened, setPracticeOpened] = useState(false);
+  const directPractice = new URLSearchParams(window.location.search).get('view') === 'practice';
+  const [flow, setFlow] = useState<LessonFlow>(() => directPractice ? 'practice' : 'learn');
+  const [practiceOpened, setPracticeOpened] = useState(directPractice);
   const [stepIndex, setStepIndex] = useState(0);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
@@ -89,8 +97,9 @@ function LearningLesson({ lessonId, locale, onSwitchLocale, onComplete }: Learni
     : firstTryScore >= Math.ceil(copy.questions.length * 0.6)
       ? ui.goodResult
       : ui.keepPracticingResult;
-  const previousLesson = previousLessonId ? getHtmlLessonHref(previousLessonId) : null;
-  const nextLesson = nextLessonId ? getHtmlLessonHref(nextLessonId) : null;
+  const previousLesson = previousLessonId ? getLessonHref(previousLessonId) : null;
+  const nextLesson = nextLessonId ? getLessonHref(nextLessonId) : null;
+  const pathHref = getLearningPathHref(pathId);
   const practiceUi = practiceStudioMessages[locale];
 
   useEffect(() => {
@@ -175,7 +184,7 @@ function LearningLesson({ lessonId, locale, onSwitchLocale, onComplete }: Learni
 
       <main className="learning-system-main section-frame">
         <nav className="learning-breadcrumb" aria-label={isArabic ? 'مسار التنقل' : 'Breadcrumb'}>
-          <a href="/paths/html-fundamentals">{ui.backToPath}</a>
+          <a href={pathHref}>{ui.backToPath}</a>
           <span aria-hidden="true">/</span>
           <span aria-current="page">{copy.title}</span>
         </nav>
@@ -227,7 +236,9 @@ function LearningLesson({ lessonId, locale, onSwitchLocale, onComplete }: Learni
               {currentStep.code && (
                 <section className="learning-code-example" aria-label={ui.codeExampleLabel}>
                   <div className="learning-code-example-head" dir="ltr">
-                    <span>HTML</span>
+                    <ProgrammingLanguageLabel language={pathId === 'css-fundamentals' ? 'css' : pathId === 'javascript-fundamentals' ? 'javascript' : 'html'}>
+                      {pathId === 'css-fundamentals' ? 'CSS' : pathId === 'javascript-fundamentals' ? 'JavaScript' : 'HTML'}
+                    </ProgrammingLanguageLabel>
                     <span>{ui.codeReadOnly}</span>
                   </div>
                   <ol className="learning-code-lines" dir="ltr">
@@ -275,6 +286,7 @@ function LearningLesson({ lessonId, locale, onSwitchLocale, onComplete }: Learni
             <PracticeStudio
               lessonId={lessonId}
               lessonTitle={copy.title}
+              expectedOutcome={copy.outcomeText}
               locale={locale}
               isVisible={flow === 'practice'}
               onBackToLesson={() => setFlow('learn')}
@@ -366,7 +378,7 @@ function LearningLesson({ lessonId, locale, onSwitchLocale, onComplete }: Learni
             <article className="learning-result-surface">
               <p className="learning-lesson-kicker">{ui.practiceLabel}</p>
               <h2 id="learning-result-title" ref={headingRef} tabIndex={-1}>{ui.resultTitle}</h2>
-              <div className="learning-result-score" aria-label={`${ui.scoreLabel}: ${firstTryScore} / ${copy.questions.length}`}>
+              <div className="learning-result-score" dir="ltr" aria-label={`${ui.scoreLabel}: ${firstTryScore} / ${copy.questions.length}`}>
                 <span>{firstTryScore}</span><span aria-hidden="true">/</span><span>{copy.questions.length}</span>
               </div>
               <p className="learning-result-score-label">{ui.scoreLabel}</p>
@@ -403,13 +415,13 @@ function LearningLesson({ lessonId, locale, onSwitchLocale, onComplete }: Learni
                     {ui.nextLesson}<span aria-hidden="true">{isArabic ? '←' : '→'}</span>
                   </a>
                 ) : (
-                  <a className="button button-primary learning-lesson-button" href="/paths/html-fundamentals">{ui.finalLesson}</a>
+                  <a className="button button-primary learning-lesson-button" href={pathHref}>{ui.finalLesson}</a>
                 )}
                 <button className="button button-quiet learning-lesson-button" type="button" onClick={restartQuiz}>{ui.retryQuiz}</button>
               </div>
               <nav className="learning-result-navigation" aria-label={isArabic ? 'التنقل بين الدروس' : 'Lesson navigation'}>
                 {previousLesson && <a href={previousLesson}>{ui.previousLesson}</a>}
-                <a href="/paths/html-fundamentals">{ui.returnToPath}</a>
+                <a href={pathHref}>{ui.returnToPath}</a>
                 {nextLesson && <a href={nextLesson}>{ui.nextLesson}</a>}
               </nav>
             </article>

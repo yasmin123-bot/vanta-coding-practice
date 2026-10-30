@@ -6,6 +6,7 @@ type AuthContextValue = {
   user: User | null;
   recoverySession: boolean;
   loading: boolean;
+  signingOut: boolean;
   serviceError: boolean;
   setupState: typeof supabaseSetupState;
   signOut: () => Promise<void>;
@@ -36,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [recoverySession, setRecoverySession] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [signingOut, setSigningOut] = useState(false);
   const [serviceError, setServiceError] = useState(false);
 
   useEffect(() => {
@@ -97,20 +99,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     if (!supabaseClient) throw new Error('Supabase is not configured.');
-    const { error } = await supabaseClient.auth.signOut();
-    if (error) throw error;
-    setRecoverySession(false);
-    persistRecoveryUser(null);
+    setSigningOut(true);
+    try {
+      const { error } = await supabaseClient.auth.signOut();
+      if (error) throw error;
+      setUser(null);
+      setRecoverySession(false);
+      persistRecoveryUser(null);
+    } catch (error) {
+      setSigningOut(false);
+      throw error;
+    }
   };
 
   const value = useMemo<AuthContextValue>(() => ({
     user,
     recoverySession,
     loading,
+    signingOut,
     serviceError,
     setupState: supabaseSetupState,
     signOut,
-  }), [user, recoverySession, loading, serviceError]);
+  }), [user, recoverySession, loading, signingOut, serviceError]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

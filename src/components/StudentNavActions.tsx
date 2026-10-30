@@ -2,14 +2,16 @@ import { useState } from 'react';
 import type { Locale } from '../i18n/messages';
 import { getStudentPortalCopy } from '../i18n/studentPortal';
 import { useAuth } from '../auth/AuthProvider';
+import { resetIntroSeen } from '../utils/introState';
 
 type StudentNavActionsProps = {
   locale: Locale;
   onNavigate?: () => void;
+  compact?: boolean;
 };
 
-function StudentNavActions({ locale, onNavigate }: StudentNavActionsProps) {
-  const { user, loading, signOut } = useAuth();
+function StudentNavActions({ locale, onNavigate, compact = false }: StudentNavActionsProps) {
+  const { user, loading, signingOut: authSigningOut, signOut } = useAuth();
   const copy = getStudentPortalCopy(locale);
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState(false);
@@ -19,8 +21,9 @@ function StudentNavActions({ locale, onNavigate }: StudentNavActionsProps) {
     setSignOutError(false);
     try {
       await signOut();
+      resetIntroSeen();
       onNavigate?.();
-      window.location.assign('/login');
+      window.location.replace('/');
     } catch {
       setSignOutError(true);
     } finally {
@@ -28,14 +31,18 @@ function StudentNavActions({ locale, onNavigate }: StudentNavActionsProps) {
     }
   };
 
-  if (loading) return <span className="student-nav-loading" aria-hidden="true" />;
+  if (loading || authSigningOut) {
+    return <span className="student-nav-loading" role={authSigningOut ? 'status' : undefined} aria-hidden={authSigningOut ? undefined : true}>
+      {authSigningOut ? copy.nav.signingOut : null}
+    </span>;
+  }
 
   return (
-    <div className="student-nav-actions">
+    <div className={`student-nav-actions ${compact ? 'student-nav-actions--compact' : ''}`}>
       {user ? (
         <>
-          <a className="student-nav-link" href="/dashboard" onClick={onNavigate}>{copy.nav.dashboard}</a>
-          <a className="student-nav-link" href="/profile" onClick={onNavigate}>{copy.nav.profile}</a>
+          {!compact && <a className="student-nav-link" href="/dashboard" onClick={onNavigate}>{copy.nav.dashboard}</a>}
+          {!compact && <a className="student-nav-link" href="/profile" onClick={onNavigate}>{copy.nav.profile}</a>}
           <button className="student-nav-logout" type="button" onClick={handleSignOut} disabled={signingOut}>
             {signingOut ? copy.nav.signingOut : copy.nav.logout}
           </button>

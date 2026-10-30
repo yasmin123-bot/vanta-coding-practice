@@ -1,4 +1,4 @@
-import type { HtmlLessonId, LearningPathId } from '../content/learningSystem';
+import type { FoundationLessonId, FoundationPathId } from '../content/learningSystem';
 
 export type Database = {
   public: {
@@ -27,19 +27,19 @@ export type Database = {
       path_progress: {
         Row: {
           user_id: string;
-          path_id: LearningPathId;
+          path_id: FoundationPathId;
           started_at: string;
           last_opened_at: string;
         };
         Insert: {
           user_id: string;
-          path_id: LearningPathId;
+          path_id: FoundationPathId;
           started_at?: string;
           last_opened_at?: string;
         };
         Update: {
           user_id?: string;
-          path_id?: LearningPathId;
+          path_id?: FoundationPathId;
           started_at?: string;
           last_opened_at?: string;
         };
@@ -48,8 +48,8 @@ export type Database = {
       lesson_progress: {
         Row: {
           user_id: string;
-          path_id: LearningPathId;
-          lesson_id: HtmlLessonId;
+          path_id: FoundationPathId;
+          lesson_id: FoundationLessonId;
           started_at: string;
           last_opened_at: string;
           completed_at: string | null;
@@ -58,8 +58,8 @@ export type Database = {
         };
         Insert: {
           user_id: string;
-          path_id: LearningPathId;
-          lesson_id: HtmlLessonId;
+          path_id: FoundationPathId;
+          lesson_id: FoundationLessonId;
           started_at?: string;
           last_opened_at?: string;
           completed_at?: string | null;
@@ -68,8 +68,8 @@ export type Database = {
         };
         Update: {
           user_id?: string;
-          lesson_id?: HtmlLessonId;
-          path_id?: LearningPathId;
+          lesson_id?: FoundationLessonId;
+          path_id?: FoundationPathId;
           started_at?: string;
           last_opened_at?: string;
           completed_at?: string | null;
@@ -89,7 +89,7 @@ export type Database = {
       practice_drafts: {
         Row: {
           user_id: string;
-          exercise_id: HtmlLessonId;
+          exercise_id: FoundationLessonId;
           html_code: string;
           css_code: string;
           js_code: string;
@@ -99,7 +99,7 @@ export type Database = {
         };
         Insert: {
           user_id: string;
-          exercise_id: HtmlLessonId;
+          exercise_id: FoundationLessonId;
           html_code?: string;
           css_code?: string;
           js_code?: string;
@@ -109,7 +109,7 @@ export type Database = {
         };
         Update: {
           user_id?: string;
-          exercise_id?: HtmlLessonId;
+          exercise_id?: FoundationLessonId;
           html_code?: string;
           css_code?: string;
           js_code?: string;
