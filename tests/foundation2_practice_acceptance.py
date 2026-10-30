@@ -113,10 +113,10 @@ try:
                 page.locator('.practice-workspace-actions-primary .button-primary').click()
                 page.locator('.practice-preview-state.is-updated, .practice-preview-state.is-withIssues').wait_for()
                 semicolon_preview_color = page.frame_locator('.practice-preview-canvas iframe').locator('.card').evaluate('(el) => getComputedStyle(el).backgroundColor')
-                check(prefix + ': browser renders CSS without final semicolon but exercise remains incomplete', semicolon_preview_color == 'rgb(31, 41, 55)' and page.locator('.practice-checklist-summary').inner_text() == summary_after_terminator and page.locator('.practice-checklist-summary.is-passed').count() == 0, {'color': semicolon_preview_color, 'summary': page.locator('.practice-checklist-summary').inner_text()})
+                check(prefix + ': browser renders CSS without final semicolon but exercise remains incomplete', semicolon_preview_color == 'rgb(31, 41, 55)' and page.locator('.practice-checklist-summary').inner_text() == summary_after_terminator and page.locator('.practice-success-card').count() == 0, {'color': semicolon_preview_color, 'summary': page.locator('.practice-checklist-summary').inner_text()})
 
                 complete_css = check_code(page, '.card {\n  color: white;\n  background-color: #1f2937;\n}')
-                check(prefix + ': complete CSS solution passes every requirement and shows success', complete_css.locator('li.is-passed').count() == complete_css.locator('li').count() and page.locator('.practice-checklist-summary.is-passed').count() == 1, complete_css.inner_text())
+                check(prefix + ': complete CSS solution passes every requirement and shows success', complete_css.locator('li.is-passed').count() == complete_css.locator('li').count() and page.locator('.practice-success-card').count() == 1, complete_css.inner_text())
 
                 check_code(page, '.card {\n  color: white;\n  background-color: rgb(255, 0, 0);\n}')
                 summary_before_run = page.locator('.practice-checklist-summary').inner_text()
@@ -143,12 +143,12 @@ try:
                 js_correct = 'const message = document.querySelector("#message");\nmessage.textContent = "A new message";'
                 js_results = check_code(page, js_correct)
                 check(prefix + ': valid JavaScript meets all structural requirements', js_results.locator('li.is-passed').count() == js_results.locator('li').count(), js_results.inner_text())
-                js_summary = page.locator('.practice-checklist-summary').inner_text()
+                js_success_count = page.locator('.practice-success-card').count()
                 page.locator('.practice-workspace-actions-primary .button-primary').click()
                 page.locator('.practice-preview-state.is-updated, .practice-preview-state.is-withIssues').wait_for()
                 js_frame = page.frame_locator('.practice-preview-canvas iframe')
                 check(prefix + ': valid JavaScript changes actual rendered content', js_frame.locator('#message').inner_text() == 'A new message', js_frame.locator('#message').inner_text())
-                check(prefix + ': running JavaScript does not change task validation', page.locator('.practice-checklist-summary').inner_text() == js_summary)
+                check(prefix + ': running JavaScript does not change task validation', js_success_count == 1 and page.locator('.practice-success-card').count() == js_success_count)
 
                 switch_to_code_on_mobile(page, width)
                 js_wrong = 'const message = document.querySelector("#notice");\nmessage.textContent = "A new message";'

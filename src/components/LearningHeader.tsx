@@ -3,12 +3,14 @@ import { LEARNING_PATHS, getLearningPathHref, type LearningPathId } from '../con
 import { messages, type Locale } from '../i18n/messages';
 import { getStudentPortalCopy } from '../i18n/studentPortal';
 import { useAuth } from '../auth/AuthProvider';
+import { getStudentProgressName, useStudentProgress } from '../state/StudentProgressProvider';
 import { useAppNavigation } from '../state/AppNavigationProvider';
 import AppIcon from './AppIcon';
 import BrandLogo from './BrandLogo';
 import ProgrammingLanguageLabel from './ProgrammingLanguageLabel';
 import StudentNavActions from './StudentNavActions';
 import ThemeToggle from './ThemeToggle';
+import StudentAvatar from './StudentAvatar';
 
 type LearningHeaderProps = {
   locale: Locale;
@@ -28,6 +30,7 @@ function LearningHeader({ locale, onSwitchLocale, allPathsLabel, stageLabel }: L
   const portalCopy = getStudentPortalCopy(locale);
   const learningCopy = messages[locale].learningSystem;
   const { user } = useAuth();
+  const studentProgress = useStudentProgress();
   const { menuOpen, openMenu, closeMenu, toggleMenu } = useAppNavigation();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
@@ -106,6 +109,17 @@ function LearningHeader({ locale, onSwitchLocale, allPathsLabel, stageLabel }: L
             </span>
           </a>
           {stageLabel && <div className="mabda-app-header-context" dir="auto">{stageLabel}</div>}
+          {user && <a className="mabda-app-avatar-link" href="/profile" aria-label={portalCopy.nav.profile}>
+            <StudentAvatar
+              userId={user.id}
+              avatarPath={studentProgress.profile.avatar_path}
+              updatedAt={studentProgress.profile.updated_at}
+              displayName={getStudentProgressName(user, studentProgress.profile.display_name)}
+              locale={locale}
+              size="header"
+              decorative
+            />
+          </a>}
           <button
             ref={menuButtonRef}
             className="mabda-app-menu-trigger"

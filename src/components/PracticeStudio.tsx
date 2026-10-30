@@ -367,6 +367,55 @@ function PracticeStudio({ lessonId, lessonTitle, expectedOutcome, locale, isVisi
           <button type="button" aria-pressed={mobilePanel === 'preview'} onClick={() => setMobilePanel('preview')}>{copy.previewLabel}</button>
         </div>
 
+        <section className="practice-checklist" aria-labelledby="practice-checklist-title">
+          <div className="practice-checklist-heading">
+            <div>
+              <h3 id="practice-checklist-title">{copy.checksTitle}</h3>
+              <p>{copy.requirementProgress(checkSummary?.completedCount ?? 0, taskRequirements.length)}</p>
+            </div>
+            <button className="button button-quiet" type="button" onClick={checkTask} disabled={!workspaceReady}>{copy.checkTask}</button>
+          </div>
+          <div
+            className="practice-requirements-progress"
+            role="progressbar"
+            aria-label={copy.checksTitle}
+            aria-valuemin={0}
+            aria-valuemax={taskRequirements.length}
+            aria-valuenow={checkSummary?.completedCount ?? 0}
+            aria-valuetext={copy.requirementProgress(checkSummary?.completedCount ?? 0, taskRequirements.length)}
+          >
+            <span style={{ width: `${taskRequirements.length ? ((checkSummary?.completedCount ?? 0) / taskRequirements.length) * 100 : 0}%` }} />
+          </div>
+          <ol className="practice-checklist-items">
+            {taskRequirements.map((requirement, index) => {
+              const result = checkResults?.find((item) => item.id === requirement.id);
+              return (
+                <li
+                  className={result ? `is-${result.status} is-${result.severity}` : 'is-unchecked'}
+                  data-requirement-id={requirement.id}
+                  key={requirement.id}
+                >
+                  <span className="practice-checklist-number" aria-hidden="true">{index + 1}</span>
+                  <div className="practice-checklist-result">
+                    <strong>{result?.label ?? requirement.label}</strong>
+                    <p>{result?.explanation ?? requirement.instruction}</p>
+                    {result?.concept && <span className="practice-checklist-concept">{result.concept}</span>}
+                    {result?.location && <code className="practice-checklist-location" dir="ltr">{copy.diagnostics.location(result.location.line, result.location.column)}</code>}
+                  </div>
+                  {result && <span className={`practice-checklist-severity is-${result.severity}`}>{copy.severityLabels[result.severity]}</span>}
+                </li>
+              );
+            })}
+          </ol>
+          {checkResults && !allChecksPassed && (
+            <p className="practice-checklist-summary is-pending" role="status" aria-live="polite">
+              {checkSummary
+                ? copy.partialProgress(checkSummary.completedCount, checkSummary.totalCount, checkSummary.totalCount - checkSummary.completedCount, checkResults.find((result) => !result.passed)?.label ?? copy.someChecksPending)
+                : copy.someChecksPending}
+            </p>
+          )}
+        </section>
+
         <div className="practice-workspace-grid">
           <section className="practice-editor-panel" aria-label={copy.editorLabel}>
             <div className="practice-editor-tabs" role="tablist" aria-label={isArabic ? 'لغة المحرر' : 'Editor language'}>
@@ -394,43 +443,6 @@ function PracticeStudio({ lessonId, lessonTitle, expectedOutcome, locale, isVisi
                 );
               })}
             </div>
-
-            <section className="practice-checklist" aria-labelledby="practice-checklist-title">
-              <div className="practice-checklist-heading">
-                <h3 id="practice-checklist-title">{copy.checksTitle}</h3>
-                <button className="button button-quiet" type="button" onClick={checkTask} disabled={!workspaceReady}>{copy.checkTask}</button>
-              </div>
-              <ol className="practice-checklist-items">
-                {taskRequirements.map((requirement, index) => {
-                  const result = checkResults?.find((item) => item.id === requirement.id);
-                  return (
-                    <li
-                      className={result ? `is-${result.status} is-${result.severity}` : 'is-unchecked'}
-                      data-requirement-id={requirement.id}
-                      key={requirement.id}
-                    >
-                      <span className="practice-checklist-number" aria-hidden="true">{index + 1}</span>
-                      <div className="practice-checklist-result">
-                        <strong>{result?.label ?? requirement.label}</strong>
-                        <p>{result?.explanation ?? requirement.instruction}</p>
-                        {result?.concept && <span className="practice-checklist-concept">{result.concept}</span>}
-                        {result?.location && <code className="practice-checklist-location" dir="ltr">{copy.diagnostics.location(result.location.line, result.location.column)}</code>}
-                      </div>
-                      {result && <span className={`practice-checklist-severity is-${result.severity}`}>{copy.severityLabels[result.severity]}</span>}
-                    </li>
-                  );
-                })}
-              </ol>
-              {checkResults && (
-                <p className={`practice-checklist-summary ${allChecksPassed ? 'is-passed' : 'is-pending'}`} role="status" aria-live="polite">
-                  {allChecksPassed
-                    ? copy.allChecksPassed
-                    : checkSummary
-                      ? copy.partialProgress(checkSummary.completedCount, checkSummary.totalCount, checkSummary.totalCount - checkSummary.completedCount, checkResults.find((result) => !result.passed)?.label ?? copy.someChecksPending)
-                      : copy.someChecksPending}
-                </p>
-              )}
-            </section>
 
             <div className="practice-editor-frame" id="practice-editor-content" role="tabpanel" aria-labelledby={`practice-tab-${activeTab}`} dir="ltr">
               {!workspaceReady ? (
@@ -461,7 +473,10 @@ function PracticeStudio({ lessonId, lessonTitle, expectedOutcome, locale, isVisi
 
           <section className="practice-preview-panel" aria-label={copy.previewLabel}>
             <header className="practice-preview-heading">
-              <h3>{copy.previewLabel}</h3>
+              <div className="practice-preview-browser-bar">
+                <span className="practice-preview-browser-dots" aria-hidden="true"><i /><i /><i /></span>
+                <h3>{copy.previewLabel}</h3>
+              </div>
               <span dir="auto" className={`practice-preview-state is-${previewState}`}>{copy.previewLabels[previewState]}</span>
             </header>
             <div className="practice-preview-canvas">
@@ -497,6 +512,17 @@ function PracticeStudio({ lessonId, lessonTitle, expectedOutcome, locale, isVisi
 
           </section>
         </div>
+
+        {checkResults && allChecksPassed && (
+          <section className="practice-success-card" role="status" aria-live="polite" aria-labelledby="practice-success-title">
+            <span className="practice-success-mark" aria-hidden="true">✓</span>
+            <div>
+              <h3 id="practice-success-title">{copy.successTitle}</h3>
+              <p>{copy.successBody}</p>
+            </div>
+            <button className="button button-primary" type="button" onClick={onContinueToQuiz}>{copy.continueToQuiz}</button>
+          </section>
+        )}
 
         <div className="practice-workspace-actions">
           <div className="practice-workspace-actions-primary">

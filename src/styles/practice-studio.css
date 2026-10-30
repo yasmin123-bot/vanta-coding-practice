@@ -1028,3 +1028,155 @@
 
 .practice-codemirror .cm-vanta-code-hint { text-decoration-color: var(--code-muted); }
 .practice-codemirror .cm-gutters .cm-lint-marker-info { background: var(--code-muted); }
+
+
+/* Practice Studio v0: separate requirements rail and verified-completion feedback */
+.practice-checklist {
+  gap: 13px;
+  margin: 0;
+  padding: clamp(13px, 2.2vw, 20px);
+  border: 0;
+  border-bottom: 1px solid var(--color-hairline);
+  background: var(--color-surface);
+}
+
+.practice-checklist-heading > div { min-width: 0; }
+.practice-checklist-heading h3 { color: var(--color-ink); }
+.practice-checklist-heading > div > p {
+  margin: 4px 0 0;
+  color: var(--color-muted);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.practice-requirements-progress {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-hairline);
+  direction: ltr;
+}
+
+.practice-requirements-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-success);
+  transition: width var(--motion-standard);
+}
+
+.is-arabic .practice-requirements-progress > span { margin-inline-start: auto; }
+
+.practice-checklist-items {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr));
+  gap: 8px;
+}
+
+.practice-checklist-items li {
+  min-height: 100%;
+  padding: 10px 11px;
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-sm);
+  background: var(--color-canvas);
+}
+
+.practice-checklist-summary {
+  padding: 9px 11px;
+  border-inline-start-color: var(--color-warning);
+}
+
+.practice-success-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: clamp(15px, 2.5vw, 22px);
+  border: 1px solid var(--color-success);
+  border-inline-start-width: 4px;
+  border-radius: var(--radius-md);
+  color: var(--color-success);
+  background: var(--color-success-bg);
+}
+
+.practice-success-mark {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid var(--color-success);
+  border-radius: 50%;
+  color: var(--color-success);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.practice-success-card h3 {
+  margin: 0;
+  color: var(--color-success);
+  font-size: 0.95rem;
+  font-weight: 720;
+}
+
+.practice-success-card p {
+  margin: 4px 0 0;
+  color: var(--color-ink);
+  font-size: 0.73rem;
+  line-height: 1.65;
+}
+
+.practice-success-card .button { min-height: 42px; }
+
+@media (max-width: 640px) {
+  .practice-checklist-items { grid-template-columns: minmax(0, 1fr); }
+  .practice-success-card { grid-template-columns: auto minmax(0, 1fr); }
+  .practice-success-card .button { grid-column: 1 / -1; justify-content: center; }
+}
+
+
+.practice-preview-panel {
+  padding: 12px;
+  border-inline-start: 1px solid var(--color-hairline);
+  background: var(--color-surface);
+}
+
+.practice-preview-heading {
+  min-height: 42px;
+  padding-inline: 10px;
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background: var(--color-graphite);
+}
+
+.practice-preview-browser-bar {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.practice-preview-browser-dots {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 4px;
+}
+
+.practice-preview-browser-dots i {
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: 50%;
+  background: var(--color-surface);
+}
+
+.practice-preview-browser-dots i:first-child { border-color: var(--color-copper); background: var(--color-copper); }
+.practice-preview-canvas {
+  margin-top: 0;
+  border: 1px solid var(--color-hairline);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  box-shadow: var(--shadow-surface);
+}
+
+@media (max-width: 780px) {
+  .practice-preview-panel { border-inline-start: 0; }
+}

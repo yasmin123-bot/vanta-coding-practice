@@ -29,6 +29,11 @@ function newestFirst<T extends { last_opened_at: string }>(rows: readonly T[]): 
   return [...rows].sort((left, right) => Date.parse(right.last_opened_at) - Date.parse(left.last_opened_at));
 }
 
+/** Counts distinct lessons marked complete in persisted progress rows. */
+export function countCompletedFoundationLessons(lessonRows: readonly LessonProgressSummaryInput[]): number {
+  return new Set(lessonRows.filter((row) => row.completed_at !== null).map((row) => row.lesson_id)).size;
+}
+
 /** Derives one Foundation path's learner-facing state only from persisted progress rows. */
 export function summarizeFoundationLearningProgress<TPathId extends FoundationPathId>(
   pathId: TPathId,

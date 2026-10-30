@@ -7,18 +7,21 @@ export type Database = {
         Row: {
           user_id: string;
           display_name: string;
+          avatar_path: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           user_id: string;
           display_name: string;
+          avatar_path?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           user_id?: string;
           display_name?: string;
+          avatar_path?: string | null;
           created_at?: string;
           updated_at?: string;
         };

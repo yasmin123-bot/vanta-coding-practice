@@ -189,6 +189,20 @@ export type StudentPortalMessages = {
     eyebrow: string;
     title: string;
     lead: string;
+    avatarLabel: string;
+    avatarDescription: string;
+    avatarChoose: string;
+    avatarReplace: string;
+    avatarSave: string;
+    avatarCancel: string;
+    avatarTypeHelp: string;
+    avatarUnsupportedType: string;
+    avatarTooLarge: string;
+    avatarInvalidImage: string;
+    avatarSaving: string;
+    avatarSaved: string;
+    avatarCleanupWarning: string;
+    avatarSaveFailed: string;
     displayName: string;
     email: string;
     joined: string;
@@ -206,6 +220,9 @@ export type StudentPortalMessages = {
     noQuizResults: string;
     futureAchievements: string;
     futureAchievementsNote: string;
+    milestoneFive: string;
+    milestoneProgress: (completed: string) => string;
+    milestoneReached: string;
     backDashboard: string;
   };
   progress: {
@@ -407,6 +424,20 @@ const portal: Record<Locale, StudentPortalMessages> = {
       eyebrow: 'Mabda / بيانات الحساب',
       title: 'ملفك الشخصي',
       lead: 'معلومات الحساب الأساسية المرتبطة بخدمة Supabase.',
+      avatarLabel: 'الصورة الشخصية',
+      avatarDescription: 'اختر صورة واضحة بصيغة JPG أو PNG أو WebP، بحد أقصى 5 ميجابايت.',
+      avatarChoose: 'اختيار صورة',
+      avatarReplace: 'تغيير الصورة',
+      avatarSave: 'حفظ الصورة',
+      avatarCancel: 'إلغاء الاختيار',
+      avatarTypeHelp: 'الصور المدعومة: JPG وPNG وWebP · حتى 5 ميجابايت.',
+      avatarUnsupportedType: 'نوع الملف غير مدعوم. اختر صورة JPG أو PNG أو WebP.',
+      avatarTooLarge: 'حجم الصورة يتجاوز الحد الأقصى، وهو 5 ميجابايت.',
+      avatarInvalidImage: 'تعذر التحقق من محتوى الصورة. اختر ملف صورة صالحًا.',
+      avatarSaving: 'جارٍ حفظ الصورة…',
+      avatarSaved: 'تم حفظ الصورة الشخصية.',
+      avatarCleanupWarning: 'تم حفظ الصورة، لكن تعذر حذف نسخة قديمة. يمكنك المتابعة؛ لن تتأثر صورة الحساب الحالية.',
+      avatarSaveFailed: 'تعذر حفظ الصورة الآن. تحقق من اتصالك وحاول مرة أخرى.',
       displayName: 'الاسم الظاهر',
       email: 'البريد الإلكتروني',
       joined: 'تاريخ إنشاء الحساب',
@@ -424,6 +455,9 @@ const portal: Record<Locale, StudentPortalMessages> = {
       noQuizResults: 'لا توجد نتائج اختبارات بعد. ستظهر هنا بعد إكمال اختبار درس.',
       futureAchievements: 'الإنجازات',
       futureAchievementsNote: 'الإنجازات والشارات جزء من رؤية Mabda المستقبلية، ولم تُنفّذ بعد.',
+      milestoneFive: 'محطة 5 دروس مكتملة',
+      milestoneProgress: (completed) => `أكملت ${completed} من 5 دروس، وفق سجل التقدم المحفوظ في حسابك.`,
+      milestoneReached: 'أكملت 5 دروس. هذا الإنجاز محسوب من دروسك المحفوظة بعد إكمال الاختبارات.',
       backDashboard: 'العودة إلى لوحة الطالب',
     },
     progress: {
@@ -623,6 +657,20 @@ const portal: Record<Locale, StudentPortalMessages> = {
       eyebrow: 'Mabda / Account details',
       title: 'Your profile',
       lead: 'Basic account information connected to Supabase Auth.',
+      avatarLabel: 'Profile photo',
+      avatarDescription: 'Choose a clear JPG, PNG, or WebP image up to 5 MiB.',
+      avatarChoose: 'Choose photo',
+      avatarReplace: 'Change photo',
+      avatarSave: 'Save photo',
+      avatarCancel: 'Cancel selection',
+      avatarTypeHelp: 'Supported: JPG, PNG, and WebP · up to 5 MiB.',
+      avatarUnsupportedType: 'This file type is not supported. Choose a JPG, PNG, or WebP image.',
+      avatarTooLarge: 'The image is larger than the 5 MiB limit.',
+      avatarInvalidImage: 'The image content could not be verified. Choose a valid image file.',
+      avatarSaving: 'Saving photo…',
+      avatarSaved: 'Profile photo saved.',
+      avatarCleanupWarning: 'Your photo was saved, but an older copy could not be removed. Your current account photo is unaffected.',
+      avatarSaveFailed: 'The photo could not be saved right now. Check your connection and try again.',
       displayName: 'Display name',
       email: 'Email address',
       joined: 'Account created',
@@ -640,6 +688,9 @@ const portal: Record<Locale, StudentPortalMessages> = {
       noQuizResults: 'No quiz results yet. They will appear here after you complete a lesson quiz.',
       futureAchievements: 'Achievements',
       futureAchievementsNote: 'Achievements and badges are part of the future Mabda vision and are not implemented yet.',
+      milestoneFive: '5 lessons completed',
+      milestoneProgress: (completed) => `${completed} of 5 lessons completed, based on your saved learning progress.`,
+      milestoneReached: 'You have completed 5 lessons. This milestone uses lesson records saved after quiz completion.',
       backDashboard: 'Back to dashboard',
     },
     progress: {

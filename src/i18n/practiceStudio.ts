@@ -97,6 +97,9 @@ export type PracticeStudioLocale = {
   checkPassed: string;
   checkPending: string;
   allChecksPassed: string;
+  requirementProgress: (completed: number, total: number) => string;
+  successTitle: string;
+  successBody: string;
   someChecksPending: string;
   partialProgress: (completed: number, total: number, remaining: number, nextLabel: string) => string;
   validationFeedback: {
@@ -220,6 +223,9 @@ export const practiceStudioMessages: Record<'ar' | 'en', PracticeStudioLocale> =
     checkPassed: 'مكتمل',
     checkPending: 'يحتاج مراجعة',
     allChecksPassed: 'اكتملت متطلبات هذا التمرين. لم يتغير إكمال الدرس أو نتيجة الاختبار.',
+    requirementProgress: (completed, total) => `تم التحقق من ${completed} من ${total} متطلبات`,
+    successTitle: 'أحسنت، اكتمل التمرين',
+    successBody: 'اجتزت كل متطلبات الكود. الخطوة التالية هي اختبار الدرس؛ لا يُسجَّل إكمال الدرس حتى تنهيه.',
     someChecksPending: 'راجع المتطلبات غير المكتملة في اللغة الحالية ثم افحص المهمة مجددًا.',
     partialProgress: (completed, total, remaining, nextLabel) => `ممتاز، تحقق ${completed} من ${total} متطلبات. ما زال ${remaining}؛ راجع: «${nextLabel}».`,
     validationFeedback: {
@@ -383,6 +389,9 @@ export const practiceStudioMessages: Record<'ar' | 'en', PracticeStudioLocale> =
     checkPassed: 'Complete',
     checkPending: 'Needs work',
     allChecksPassed: 'This exercise’s requirements are met. Lesson completion and quiz results are unchanged.',
+    requirementProgress: (completed, total) => `${completed} of ${total} requirements verified`,
+    successTitle: 'Well done — exercise complete',
+    successBody: 'All code requirements passed. Continue to the lesson quiz; completing the exercise alone does not mark the lesson complete.',
     someChecksPending: 'Review the incomplete requirements in the active language, then check the task again.',
     partialProgress: (completed, total, remaining, nextLabel) => `Nice work—${completed} of ${total} requirements are met. ${remaining} left to work on: “${nextLabel}”.`,
     validationFeedback: {

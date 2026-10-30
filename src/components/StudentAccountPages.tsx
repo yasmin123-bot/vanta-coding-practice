@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent, type MouseEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from 'react';
 import type { AuthError } from '@supabase/supabase-js';
 import { FOUNDATION_PATH_IDS, getLessonHref, type FoundationLessonId } from '../content/learningSystem';
 import { getLearningLessonCopy, getLearningPathLessonSummaries } from '../i18n/foundationLessonCopy';
@@ -8,13 +8,15 @@ import { getStudentPortalCopy } from '../i18n/studentPortal';
 import { supabaseClient, supabaseSetupState } from '../lib/supabaseClient';
 import { getStudentProgressName, useStudentProgress } from '../state/StudentProgressProvider';
 import { useAuth } from '../auth/AuthProvider';
-import { summarizeFoundationLearningProgress } from '../utils/learningProgress';
+import { countCompletedFoundationLessons, summarizeFoundationLearningProgress } from '../utils/learningProgress';
 import { safeReturnPath } from '../utils/safeReturnPath';
 import LearningHeader from './LearningHeader';
 import LearningHomePage from './LearningHomePage';
 import AppIcon from './AppIcon';
 import BrandLogo from './BrandLogo';
 import ThemeToggle from './ThemeToggle';
+import StudentAvatar from './StudentAvatar';
+import { getProfileAvatarFileError, type ProfileAvatarErrorCode } from '../services/profileAvatar';
 import type { StudentAuthMode } from '../content/learningSystem';
 
 function authErrorMessage(error: AuthError, copy: ReturnType<typeof getStudentPortalCopy>) {
@@ -492,11 +494,17 @@ function StudentProfile({ locale, onSwitchLocale }: { locale: Locale; onSwitchLo
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(displayName);
   const [nameState, setNameState] = useState<'idle' | 'saving' | 'saved' | 'error' | 'invalid'>('idle');
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarState, setAvatarState] = useState<'idle' | 'saving' | 'saved' | 'cleanup-warning' | ProfileAvatarErrorCode | 'error'>('idle');
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const joined = user?.created_at
     ? new Intl.DateTimeFormat(locale === 'ar' ? 'ar' : 'en-US', { dateStyle: 'long' }).format(new Date(user.created_at))
     : '—';
   const verified = Boolean(user?.email_confirmed_at);
   const formattedNumber = new Intl.NumberFormat(locale === 'ar' ? 'ar' : 'en-US');
+  const completedLessonCount = countCompletedFoundationLessons(progress.lessons);
+  const milestoneProgress = Math.min(completedLessonCount, 5);
   const foundationPathProgress = FOUNDATION_PATH_IDS.map((pathId) => {
     const lessonSummaries = getLearningPathLessonSummaries(locale, pathId);
     const pathStarted = progress.paths.some((path) => path.path_id === pathId)
@@ -517,6 +525,11 @@ function StudentProfile({ locale, onSwitchLocale }: { locale: Locale; onSwitchLo
 
   useEffect(() => setNameInput(displayName), [displayName]);
 
+  useEffect(() => {
+    if (!avatarPreview) return undefined;
+    return () => URL.revokeObjectURL(avatarPreview);
+  }, [avatarPreview]);
+
   const submitDisplayName = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const normalizedName = nameInput.trim();
@@ -529,6 +542,42 @@ function StudentProfile({ locale, onSwitchLocale }: { locale: Locale; onSwitchLo
     setNameState(saved ? 'saved' : 'error');
     if (saved) setEditingName(false);
   };
+
+  const selectAvatar = (file: File | undefined) => {
+    if (!file) return;
+    const fileError = getProfileAvatarFileError(file);
+    if (fileError) {
+      setAvatarState(fileError);
+      setAvatarFile(null);
+      setAvatarPreview(null);
+      return;
+    }
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+    setAvatarState('idle');
+  };
+
+  const saveAvatar = async () => {
+    if (!avatarFile || avatarState === 'saving') return;
+    setAvatarState('saving');
+    const result = await progress.updateAvatar(avatarFile);
+    setAvatarState(result);
+    if (result === 'saved' || result === 'cleanup-warning') {
+      setAvatarFile(null);
+      setAvatarPreview(null);
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
+    }
+  };
+
+  const avatarFeedback = avatarState === 'file-too-large' ? copy.profile.avatarTooLarge
+    : avatarState === 'unsupported-type' ? copy.profile.avatarUnsupportedType
+      : avatarState === 'invalid-image' ? copy.profile.avatarInvalidImage
+        : avatarState === 'saving' ? copy.profile.avatarSaving
+          : avatarState === 'saved' ? copy.profile.avatarSaved
+            : avatarState === 'cleanup-warning' ? copy.profile.avatarCleanupWarning
+              : avatarState === 'error' || avatarState === 'not-signed-in' || avatarState === 'upload-failed' || avatarState === 'profile-update-failed'
+                ? copy.profile.avatarSaveFailed
+                : '';
 
   return (
     <div className={`app-shell student-page ${isArabic ? 'is-arabic' : 'is-english'}`}>
@@ -546,7 +595,46 @@ function StudentProfile({ locale, onSwitchLocale }: { locale: Locale; onSwitchLo
           </p>
         )}
         <section className="student-profile-panel" aria-label={copy.profile.title}>
-          <div className="student-profile-mark" aria-hidden="true">{displayName.slice(0, 1).toLocaleUpperCase(locale)}</div>
+          <div className="student-profile-avatar-column">
+            <StudentAvatar
+              userId={user?.id ?? ''}
+              avatarPath={progress.profile.avatar_path}
+              updatedAt={progress.profile.updated_at}
+              displayName={displayName}
+              locale={locale}
+              previewUrl={avatarPreview}
+            />
+            <div className="student-profile-avatar-actions">
+              <strong>{copy.profile.avatarLabel}</strong>
+              <p>{copy.profile.avatarDescription}</p>
+              <input
+                ref={avatarInputRef}
+                className="student-profile-avatar-input"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                aria-label={copy.profile.avatarChoose}
+                onChange={(event) => selectAvatar(event.currentTarget.files?.[0])}
+              />
+              <button className="button button-quiet" type="button" onClick={() => avatarInputRef.current?.click()} disabled={avatarState === 'saving'}>
+                {progress.profile.avatar_path ? copy.profile.avatarReplace : copy.profile.avatarChoose}
+              </button>
+              {avatarFile && (
+                <div className="student-profile-avatar-selection">
+                  <button className="button button-primary" type="button" onClick={() => { void saveAvatar(); }} disabled={avatarState === 'saving'}>
+                    {avatarState === 'saving' ? copy.profile.avatarSaving : copy.profile.avatarSave}
+                  </button>
+                  <button className="student-profile-avatar-cancel" type="button" onClick={() => {
+                    setAvatarFile(null);
+                    setAvatarPreview(null);
+                    setAvatarState('idle');
+                    if (avatarInputRef.current) avatarInputRef.current.value = '';
+                  }} disabled={avatarState === 'saving'}>{copy.profile.avatarCancel}</button>
+                </div>
+              )}
+              <small>{copy.profile.avatarTypeHelp}</small>
+              {avatarFeedback && <p className={`student-profile-avatar-feedback ${avatarState === 'saved' ? 'is-success' : avatarState === 'cleanup-warning' ? 'is-warning' : avatarState === 'idle' ? '' : 'is-error'}`} role={avatarState === 'error' || avatarState === 'unsupported-type' || avatarState === 'file-too-large' || avatarState === 'invalid-image' || avatarState === 'upload-failed' || avatarState === 'profile-update-failed' || avatarState === 'not-signed-in' ? 'alert' : 'status'} aria-live="polite">{avatarFeedback}</p>}
+            </div>
+          </div>
           <dl>
             <div className="student-profile-name-field">
               <dt>{copy.profile.displayName}</dt>
@@ -658,8 +746,12 @@ function StudentProfile({ locale, onSwitchLocale }: { locale: Locale; onSwitchLo
           </section>
 
           <section className="student-profile-card student-profile-future" aria-labelledby="profile-achievements-title">
-            <h2 id="profile-achievements-title">{copy.profile.futureAchievements}</h2>
-            <p>{copy.profile.futureAchievementsNote}</p>
+            <h2 id="profile-achievements-title">{copy.profile.milestoneFive}</h2>
+            <div className="student-milestone-progress" role="progressbar" aria-label={copy.profile.milestoneFive} aria-valuemin={0} aria-valuemax={5} aria-valuenow={milestoneProgress} aria-valuetext={copy.profile.milestoneProgress(formattedNumber.format(milestoneProgress))}>
+              <span style={{ width: `${(milestoneProgress / 5) * 100}%` }} />
+            </div>
+            <p>{completedLessonCount >= 5 ? copy.profile.milestoneReached : copy.profile.milestoneProgress(formattedNumber.format(milestoneProgress))}</p>
+            <p className="student-profile-empty">{copy.profile.futureAchievementsNote}</p>
           </section>
         </div>
       </main>

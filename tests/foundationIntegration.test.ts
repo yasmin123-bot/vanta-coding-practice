@@ -9,7 +9,7 @@ import {
 } from '../src/content/learningSystem';
 import { practiceExercises } from '../src/content/practiceExercises';
 import { validatePractice } from '../src/utils/practiceValidation';
-import { summarizeFoundationLearningProgress } from '../src/utils/learningProgress';
+import { countCompletedFoundationLessons, summarizeFoundationLearningProgress } from '../src/utils/learningProgress';
 
 describe('Foundation integration', () => {
   it('maps every active lesson to a language-specific practice exercise', () => {
@@ -56,5 +56,16 @@ describe('Foundation integration', () => {
     expect(completedJs.completedLessonCount).toBe(9);
     expect(completedJs.pathCompleted).toBe(true);
     expect(completedJs.recommendedLessonId).toBeNull();
+  });
+
+  it('counts only distinct lessons with persisted completion timestamps for profile milestones', () => {
+    const rows = [
+      { lesson_id: 'html-introduction' as const, completed_at: '2026-10-29T10:00:00Z', last_opened_at: '2026-10-29T10:00:00Z' },
+      { lesson_id: 'html-introduction' as const, completed_at: '2026-10-29T10:30:00Z', last_opened_at: '2026-10-29T10:30:00Z' },
+      { lesson_id: 'css-what-is-css' as const, completed_at: null, last_opened_at: '2026-10-29T11:00:00Z' },
+      { lesson_id: 'js-what-is-javascript' as const, completed_at: '2026-10-29T12:00:00Z', last_opened_at: '2026-10-29T12:00:00Z' },
+    ];
+
+    expect(countCompletedFoundationLessons(rows)).toBe(2);
   });
 });

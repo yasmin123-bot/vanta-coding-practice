@@ -85,6 +85,19 @@
   white-space: nowrap;
 }
 
+.mabda-app-avatar-link {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  text-decoration: none;
+}
+
+.mabda-app-avatar-link:hover .mabda-student-avatar {
+  border-color: var(--color-focus);
+}
+
 .mabda-app-menu-trigger,
 .mabda-app-icon-button {
   min-width: 44px;

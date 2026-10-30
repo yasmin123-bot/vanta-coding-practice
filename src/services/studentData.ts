@@ -36,7 +36,7 @@ function displayNameFromUser(user: User): string {
 async function ensureProfile(user: User): Promise<StudentProfile> {
   const client = requireClient();
   const userId = requireUserId(user);
-  const profileColumns = 'user_id,display_name,created_at,updated_at';
+  const profileColumns = 'user_id,display_name,avatar_path,created_at,updated_at';
   const { data, error } = await client
     .from('profiles')
     .select(profileColumns)
@@ -173,7 +173,7 @@ export async function updateStudentDisplayName(user: User, displayName: string):
     .from('profiles')
     .update({ display_name: normalizedName, updated_at: new Date().toISOString() })
     .eq('user_id', userId)
-    .select('user_id,display_name,created_at,updated_at')
+    .select('user_id,display_name,avatar_path,created_at,updated_at')
     .single();
 
   if (error) throw error;

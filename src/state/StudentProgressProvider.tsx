@@ -11,9 +11,10 @@ import {
   updateStudentDisplayName,
   type StudentDataSnapshot,
 } from '../services/studentData';
+import { replaceProfileAvatar, type ProfileAvatarErrorCode } from '../services/profileAvatar';
 
 const emptySnapshot: StudentDataSnapshot = {
-  profile: { user_id: '', display_name: '', created_at: '', updated_at: '' },
+  profile: { user_id: '', display_name: '', avatar_path: null, created_at: '', updated_at: '' },
   paths: [],
   lessons: [],
 };
@@ -29,6 +30,7 @@ type StudentProgressContextValue = StudentDataSnapshot & {
   openLesson: (lessonId: FoundationLessonId) => Promise<boolean>;
   completeLessonQuiz: (lessonId: FoundationLessonId, score: number, total: number) => Promise<boolean>;
   updateDisplayName: (displayName: string) => Promise<boolean>;
+  updateAvatar: (file: File) => Promise<'saved' | 'cleanup-warning' | ProfileAvatarErrorCode | 'error'>;
 };
 
 const StudentProgressContext = createContext<StudentProgressContextValue | null>(null);
@@ -128,6 +130,22 @@ export function StudentProgressProvider({ children }: { children: ReactNode }) {
     })
   ), [runWrite]);
 
+  const updateAvatar = useCallback(async (file: File): Promise<'saved' | 'cleanup-warning' | ProfileAvatarErrorCode | 'error'> => {
+    const requestedUser = user;
+    if (!requestedUser || !supabaseClient) return 'error';
+    try {
+      const result = await replaceProfileAvatar(requestedUser, file, snapshot.profile.avatar_path);
+      if (currentUserId.current !== requestedUser.id) return 'error';
+      setSnapshot((current) => ({ ...current, profile: result.profile }));
+      return result.cleanupWarning ? 'cleanup-warning' : 'saved';
+    } catch (error) {
+      if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'string') {
+        return error.code as ProfileAvatarErrorCode;
+      }
+      return 'error';
+    }
+  }, [user, snapshot.profile.avatar_path]);
+
   const snapshotMatchesUser = snapshotUserId.current === (user?.id ?? null);
   const visibleSnapshot = snapshotMatchesUser ? snapshot : emptySnapshot;
   const hasLoadedForCurrentUser = Boolean(user) && hasLoaded && snapshotMatchesUser;
@@ -143,7 +161,8 @@ export function StudentProgressProvider({ children }: { children: ReactNode }) {
     openLesson,
     completeLessonQuiz,
     updateDisplayName,
-  }), [visibleSnapshot, authLoading, identitySwitchPending, loadState, snapshotMatchesUser, hasLoadedForCurrentUser, refresh, openPath, openLesson, completeLessonQuiz, updateDisplayName]);
+    updateAvatar,
+  }), [visibleSnapshot, authLoading, identitySwitchPending, loadState, snapshotMatchesUser, hasLoadedForCurrentUser, refresh, openPath, openLesson, completeLessonQuiz, updateDisplayName, updateAvatar]);
 
   return <StudentProgressContext.Provider value={value}>{children}</StudentProgressContext.Provider>;
 }
