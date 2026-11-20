@@ -11,6 +11,8 @@ This document records the implementation boundary and primary upstream reference
 5. Configure the Supabase Auth email provider, confirmation email, recovery email, and allowed redirect URLs. Test using a development project before production.
 6. Restart Vite after changing environment variables. Missing or malformed setup is shown in the UI; the app does not simulate a successful account or database operation.
 
+The five-attempt OTP lockout in the current client is local interface state only; it resets when the flow is remounted or the page is reloaded and is not server-side enforcement. It must not be treated as protection against automated guesses. Any server-side abuse protection requires rate limiting enforced by Supabase or another trusted server; this client counter does not configure or provide that control.
+
 The checked-in local Supabase CLI config uses the Vite development origin and enables email confirmations for local Auth. Email confirmation/recovery messages are handled by the local mail catcher when running Supabase locally. For a hosted project, configure the corresponding Auth email templates/provider and allowed URLs in that project's dashboard.
 
 ## Implementation map
@@ -24,7 +26,7 @@ The checked-in local Supabase CLI config uses the Vite development origin and en
 - `src/i18n/studentPortal.ts`: Arabic and English account/dashboard copy.
 - `src/components/StudentAccountPages.tsx`: login, signup, email confirmation callback, password reset, dashboard, and profile screens.
 - `src/components/StudentNavActions.tsx`: account-aware navigation and sign-out.
-- `supabase/migrations/20261028014756_add_student_accounts_and_learning_progress.sql`: profiles and progress tables, constraints, grants, and owner-only RLS.
+- `supabase/migrations/20261029081551_20261028014756_add_student_accounts_and_learning_progress.sql`: profiles and progress tables, constraints, grants, and owner-only RLS.
 - `supabase/migrations/20261029105841_practice_drafts.sql`: independent, size-bounded practice drafts keyed by student and foundation lesson; anonymous access and delete privileges are not granted.
 - `src/components/PracticeStudio.tsx` and `src/services/practiceDrafts.ts`: explicit save/restore of the signed-in learner's draft, isolated from lesson and quiz progress.
 

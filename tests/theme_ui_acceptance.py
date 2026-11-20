@@ -4,17 +4,26 @@ BASE_URL and EVIDENCE_DIR configurable; requires Playwright and Chromium.
 import json, os, traceback
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-BASE=os.environ.get('BASE_URL', 'http://127.0.0.1:5175').rstrip('/')
+from browser_origin import sanitize_diagnostic_text, validate_local_base_url
+BASE=validate_local_base_url(os.environ.get('BASE_URL', 'http://127.0.0.1:5175'))
 OUT=Path(os.environ.get('EVIDENCE_DIR', '/tmp/mabda-theme-ui')); OUT.mkdir(parents=True, exist_ok=True)
 checks=[]; errors=[]; result={}
 def check(label,condition,detail=None):
  checks.append({'name':label,'passed':bool(condition),'detail':detail})
  if not condition: raise AssertionError(label+': '+str(detail))
 def practice(page):
+ studio=page.locator('[data-testid="practice-studio"]')
  for _ in range(20):
-  if page.locator('[data-testid="practice-studio"]').count():
+  if studio.count() and studio.is_visible():
    page.locator('.cm-content').wait_for();return
-  page.locator('.lesson-flow-controls .button-primary, .learning-lesson-controls .button-primary').first.click()
+  next_button=page.locator('.lesson-flow-controls .button-primary, .learning-lesson-controls .button-primary').first
+  next_button.wait_for(state='visible')
+  progress=page.locator('.lesson-flow-progress-track, .learning-flow-progress-track').first
+  current=int(progress.get_attribute('aria-valuenow') or '0');maximum=int(progress.get_attribute('aria-valuemax') or '0')
+  next_button.click()
+  if maximum and current>=maximum:
+   studio.wait_for(state='visible',timeout=15000);page.locator('.cm-content').wait_for();return
+  page.wait_for_function("""(before)=>{const progress=document.querySelector('.lesson-flow-progress-track, .learning-flow-progress-track');return progress&&progress.getAttribute('aria-valuenow')!==before}""",arg=str(current))
  raise AssertionError('Practice unreachable')
 def toggle_shell_theme(page):
  page.locator('.mabda-app-menu-trigger').click();page.locator('.theme-toggle').wait_for()
@@ -24,7 +33,7 @@ def photo(page,name,full=False):
  page.screenshot(path=str(OUT/(name+'.png')),full_page=full)
 try:
  with sync_playwright() as p:
-  b=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH', '/usr/bin/chromium'),headless=True,args=['--no-sandbox']);ctx=b.new_context();page=ctx.new_page();page.on('pageerror',lambda e:errors.append(str(e)))
+  b=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH', '/usr/bin/chromium'),headless=True,args=['--no-sandbox']);ctx=b.new_context();page=ctx.new_page();page.on('pageerror',lambda e:errors.append(sanitize_diagnostic_text(e)))
   page.goto(BASE);page.evaluate('localStorage.removeItem("mabda-theme")');page.emulate_media(color_scheme='dark');page.reload()
   check('Default remains light even on dark OS',page.locator('html').get_attribute('data-theme')=='light')
   for theme in ['light','dark']:
@@ -56,10 +65,10 @@ try:
     toggle_shell_theme(page);photo(page,f'{theme}-{locale}-practice-desktop',True)
     page.set_viewport_size({'width':390,'height':844});photo(page,f'{theme}-{locale}-practice-mobile',True)
   page.goto(BASE+'/login');toggle=page.locator('.theme-toggle');toggle.focus();before=page.locator('html').get_attribute('data-theme');page.keyboard.press('Enter');after=page.locator('html').get_attribute('data-theme');check('Keyboard toggle changes mode',before!=after);page.reload();check('Manual choice survives refresh and dark OS',page.locator('html').get_attribute('data-theme')==after)
-  page.emulate_media(reduced_motion='reduce');page.goto(BASE);check('Reduced motion preserves Home identity',page.locator('.mabda-app-brand').is_visible() and page.locator('.mabda-home-hero h1').is_visible())
+  page.emulate_media(reduced_motion='reduce');page.goto(BASE);page.locator('.mabda-app-brand').wait_for(state='visible');page.locator('.mabda-home-hero h1').wait_for(state='visible');check('Reduced motion preserves Home identity',page.locator('.mabda-app-brand').is_visible() and page.locator('.mabda-home-hero h1').is_visible())
   page.locator('.mabda-app-menu-trigger').click();page.locator('.mabda-app-drawer .theme-toggle').focus();check('Theme focus ring',page.locator('.mabda-app-drawer .theme-toggle').evaluate('(e)=>parseFloat(getComputedStyle(e).outlineWidth)>=2'))
   check('No unexpected page errors',not errors,errors);b.close()
-except Exception: result['failure']=traceback.format_exc()
+except Exception: result['failure']=sanitize_diagnostic_text(traceback.format_exc())
 finally:
  result.update(checks=checks,errors=errors,passed=sum(x['passed'] for x in checks),total=len(checks));(OUT/'theme-acceptance.json').write_text(json.dumps(result,ensure_ascii=False,indent=2));print(json.dumps({k:v for k,v in result.items() if k!='checks'},ensure_ascii=False))
 if result.get('failure'):raise SystemExit(1)

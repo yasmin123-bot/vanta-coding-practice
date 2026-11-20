@@ -5,8 +5,9 @@ import re
 import traceback
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+from browser_origin import safe_origin_for_log, sanitize_diagnostic_text, validate_local_base_url
 
-BASE = os.environ.get('BASE_URL', 'http://127.0.0.1:5175').rstrip('/')
+BASE = validate_local_base_url(os.environ.get('BASE_URL', 'http://127.0.0.1:5175'))
 OUT = Path(os.environ.get('EVIDENCE_DIR', '/tmp/mabda-app-shell-acceptance'))
 OUT.mkdir(parents=True, exist_ok=True)
 checks = []
@@ -66,8 +67,8 @@ try:
         context = browser.new_context(viewport={'width': 390, 'height': 844})
         page = context.new_page()
         page.set_default_timeout(12000)
-        page.on('pageerror', lambda error: errors.append({'kind': 'page', 'message': str(error)}))
-        page.on('console', lambda message: errors.append({'kind': 'console', 'message': message.text}) if message.type == 'error' else None)
+        page.on('pageerror', lambda error: errors.append({'kind': 'page', 'message': sanitize_diagnostic_text(error)}))
+        page.on('console', lambda message: errors.append({'kind': 'console', 'message': sanitize_diagnostic_text(message.text)}) if message.type == 'error' else None)
 
         for locale, tagline in [('ar', 'كل بداية لها مبدأ.'), ('en', 'Every beginning needs a foundation.')]:
             for theme in ['light', 'dark']:
@@ -89,17 +90,15 @@ try:
                     check(prefix + ': theme persists', page.locator('html').get_attribute('data-theme') == theme)
                     check(prefix + ': Home slogan', re.sub(r'\s+', ' ', page.locator('.mabda-home-hero h1').inner_text()).strip() == tagline)
                     check(prefix + ': guest storage notice', page.locator('.mabda-home-guest-note').is_visible())
-                    check(prefix + ': first lesson CTA uses the existing lesson route', page.locator('.mabda-home-resume .button').get_attribute('href') == '/lesson/start')
-                    check(prefix + ': three language paths', page.locator('.mabda-home-path-card').count() == 3)
-                    check(prefix + ': CSS and JavaScript paths are available', page.locator('.mabda-home-path-card[href="/paths/css-fundamentals"] .mabda-home-state.is-available').count() == 1 and page.locator('.mabda-home-path-card[href="/paths/javascript-fundamentals"] .mabda-home-state.is-available').count() == 1)
+                    check(prefix + ': one primary action opens the path catalog', page.locator('.mabda-home-hero-actions .button-primary').get_attribute('href') == '/paths' and page.locator('.mabda-home-hero-actions .button').count() == 1)
+                    check(prefix + ': three concise language paths', page.locator('.mabda-home-path-row').count() == 3)
+                    check(prefix + ': each Home path has one icon and a separate readable title', all(page.locator('.mabda-home-path-row').nth(index).locator('.mabda-home-path-icon img').count() == 1 and page.locator('.mabda-home-path-row').nth(index).locator('.mabda-home-path-heading .programming-language-label').count() == 0 for index in range(page.locator('.mabda-home-path-row').count())))
+                    check(prefix + ': CSS and JavaScript path destinations remain available', page.locator('.mabda-home-path-row[href="/paths/css-fundamentals"]').count() == 1 and page.locator('.mabda-home-path-row[href="/paths/javascript-fundamentals"]').count() == 1)
+                    check(prefix + ': no featured HTML lesson or redundant dashboard blocks', page.locator('.mabda-home-resume, .mabda-home-stats, .mabda-home-loop, .mabda-home-feature-panel').count() == 0)
                     check(prefix + ': no horizontal overflow', page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1'))
                     mobile = width <= 760
                     check(prefix + ': mobile navigation visibility', page.locator('.mabda-mobile-nav').is_visible() == mobile)
-                    check(prefix + ': visual loop and separated secondary tagline', page.locator('.mabda-home-loop li').count() == 4 and page.locator('#vision p').is_visible())
-                    first_slogan_y = page.locator('.mabda-home-hero h1').evaluate('(el) => el.getBoundingClientRect().top')
-                    second_slogan_y = page.locator('#vision p').evaluate('(el) => el.getBoundingClientRect().top')
-                    check(prefix + ': slogans separated into distinct sections', second_slogan_y - first_slogan_y > 200)
-                    check(prefix + ': planned actions are not fake links', page.locator('.mabda-home-quick-action[aria-disabled="true"] a').count() == 0 and page.locator('.mabda-home-quick-action[aria-disabled="true"]').count() == 2)
+                    check(prefix + ': no repeated marketing slogan section', page.locator('#vision').count() == 0)
 
                     ratios = measure(page, '.mabda-home-guest-note', '.mabda-home-hero')
                     ratio = contrast(ratios['fg'], ratios['bg'])
@@ -115,7 +114,8 @@ try:
                     check(prefix + ': drawer has 3 language paths', drawer.locator('.mabda-app-drawer-paths li').count() == 3)
                     check(prefix + ': quiz destination is an existing HTML path', drawer.locator('.mabda-app-quiz-link').get_attribute('href') == '/paths/html-fundamentals')
                     check(prefix + ': drawer settings controls exist', drawer.locator('.mabda-app-language-choice').count() == 1 and drawer.locator('.theme-toggle').count() == 1)
-                    check(prefix + ': drawer has two planned destinations', drawer.locator('.mabda-app-future-link[aria-disabled="true"]').count() == 2)
+                    check(prefix + ': challenge is the only disabled future destination', drawer.locator('.mabda-app-future-link[aria-disabled="true"]').count() == 1)
+                    check(prefix + ': guided projects use an active destination', drawer.locator('.mabda-app-guided-project-link[href="/projects"]').count() == 1)
                     check(prefix + ': drawer header is not a card-shaped logo image', drawer.locator('.mabda-app-drawer-kicker').is_visible())
                     check(prefix + ': focus starts in drawer', page.evaluate("document.activeElement === document.querySelector('.mabda-app-icon-button')"))
                     focusables = drawer.locator('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')
@@ -152,8 +152,7 @@ try:
                   sessionStorage.setItem('mabda-has-seen-intro', 'true');
                 }""", [locale, theme])
                 page.reload(wait_until='domcontentloaded')
-                practice_link = page.locator('.mabda-home-feature-panel a[href="/lesson/start?view=practice"]').first
-                practice_link.click()
+                page.goto(BASE + '/lesson/start?view=practice')
                 page.locator('[data-testid="practice-studio"]').wait_for(state='visible')
                 page.locator('.cm-content').wait_for(state='visible')
                 check(f'{theme}/{locale}: Home opens existing Practice Studio', '/lesson/start?view=practice' in page.url and page.locator('.lesson-flow-controls').count() == 0)
@@ -170,7 +169,7 @@ try:
           localStorage.setItem('mabda-has-seen-intro', 'true');
         }""")
         page.reload(wait_until='domcontentloaded')
-        page.locator('.mabda-home-quick-action').last.click()
+        page.locator('.mabda-app-menu-trigger').click()
         drawer = page.locator('.mabda-app-drawer')
         drawer.wait_for(state='visible')
         page.locator('.mabda-app-language-choice').click()
@@ -182,12 +181,48 @@ try:
         page.reload(wait_until='domcontentloaded')
         check('Language and theme preferences persist after refresh', page.locator('html').get_attribute('lang') == 'en' and page.locator('html').get_attribute('data-theme') == 'dark')
 
+        course_paths = [
+            ('/paths/html-fundamentals', 'HTML', 12),
+            ('/paths/css-fundamentals', 'CSS', 19),
+            ('/paths/javascript-fundamentals', 'JavaScript', 23),
+        ]
+        for locale in ['ar', 'en']:
+            page.evaluate("([language]) => localStorage.setItem('vanta-locale', language)", [locale])
+            page.goto(BASE + '/paths', wait_until='domcontentloaded')
+            page.locator('.learning-path-catalog').wait_for()
+            catalog_cards = page.locator('.learning-path-catalog-link')
+            expected_path_hrefs = {
+                '/paths/html-fundamentals',
+                '/paths/css-fundamentals',
+                '/paths/javascript-fundamentals',
+                '/paths/programming-fundamentals',
+                '/paths/problem-solving',
+            }
+            actual_path_hrefs = {catalog_cards.nth(index).get_attribute('href') for index in range(catalog_cards.count())}
+            check(f'{locale}: catalog keeps all five existing path destinations', catalog_cards.count() == 5 and actual_path_hrefs == expected_path_hrefs)
+            check(f'{locale}: catalog keeps three available and two future paths', page.locator('.learning-path-catalog-row.path-status-available').count() == 3 and page.locator('.learning-path-catalog-row.path-status-future').count() == 2)
+            check(f'{locale}: every card contains exactly one icon and no duplicate language-mark label', all(catalog_cards.nth(index).locator('.learning-path-card-icon img, .learning-path-card-icon svg').count() == 1 and catalog_cards.nth(index).locator('.learning-path-language-mark').count() == 0 for index in range(catalog_cards.count())))
+            for path, course_name, lesson_count in course_paths:
+                page.goto(BASE + path, wait_until='domcontentloaded')
+                page.locator('.learning-course-overview h1').wait_for()
+                check(f'{locale}/{course_name}: short course title', page.locator('.learning-course-overview h1').inner_text().strip() == course_name)
+                meta_text = page.locator('.learning-course-meta').inner_text()
+                check(f'{locale}/{course_name}: beginner curriculum level is explicit', ('Course level' in meta_text and 'Beginner' in meta_text) if locale == 'en' else ('مستوى المنهج' in meta_text and 'مبتدئ' in meta_text))
+                details = page.locator('.learning-course-outline')
+                first_lesson_route = details.locator('.learning-path-lesson-link').first.get_attribute('href')
+                check(f'{locale}/{course_name}: first lesson action uses the actual route', page.locator('.learning-course-overview .button-primary').get_attribute('href') == first_lesson_route)
+                check(f'{locale}/{course_name}: lesson details start collapsed', details.count() == 1 and details.evaluate('(el) => !el.open') and not details.locator('.learning-path-lesson-link').first.is_visible())
+                details.locator('summary').click()
+                check(f'{locale}/{course_name}: all lessons remain available after expanding details', details.locator('.learning-path-lesson').count() == lesson_count and details.locator('.learning-path-lesson-link').first.is_visible())
+                check(f'{locale}/{course_name}: guest view does not invent progress or review history', page.locator('.learning-course-progress').count() == 0 and page.locator('.learning-course-actions .button-quiet').count() == 0)
+
         # Auth-protected routes still redirect logged-out visitors; no fake session is used.
         for protected in ['/dashboard', '/profile']:
             page.goto(BASE + protected, wait_until='domcontentloaded')
             page.wait_for_function("location.pathname === '/login' && new URLSearchParams(location.search).has('next')")
+            page.locator('[data-testid="auth-page"]').wait_for()
             protected_details = {
-                'url': page.url,
+                'origin': safe_origin_for_log(page.url),
                 'auth_visible': page.locator('[data-testid="auth-page"]').is_visible(),
                 'intro_visible': page.locator('[data-testid="welcome-intro"]').is_visible(),
                 'theme': page.locator('html').get_attribute('data-theme'),
@@ -198,7 +233,7 @@ try:
         check('No browser JavaScript/console errors', not errors, errors)
         browser.close()
 except Exception:
-    result['failure'] = traceback.format_exc()
+    result['failure'] = sanitize_diagnostic_text(traceback.format_exc())
 finally:
     result.update(checks=checks, errors=errors, passed=sum(item['passed'] for item in checks), total=len(checks))
     (OUT / 'results.json').write_text(json.dumps(result, ensure_ascii=False, indent=2))

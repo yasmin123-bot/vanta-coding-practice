@@ -25,6 +25,8 @@ export type LearningProgressSummary<TLessonId extends FoundationLessonId = Found
   recommendedLessonId: TLessonId | null;
 };
 
+export type FoundationLearningState = 'not-started' | 'getting-started' | 'in-progress' | 'completed';
+
 function newestFirst<T extends { last_opened_at: string }>(rows: readonly T[]): T[] {
   return [...rows].sort((left, right) => Date.parse(right.last_opened_at) - Date.parse(left.last_opened_at));
 }
@@ -32,6 +34,27 @@ function newestFirst<T extends { last_opened_at: string }>(rows: readonly T[]): 
 /** Counts distinct lessons marked complete in persisted progress rows. */
 export function countCompletedFoundationLessons(lessonRows: readonly LessonProgressSummaryInput[]): number {
   return new Set(lessonRows.filter((row) => row.completed_at !== null).map((row) => row.lesson_id)).size;
+}
+
+/** Uses saved activity only; it does not infer a learner's skill or proficiency level. */
+export function getFoundationLearningState(summary: LearningProgressSummary): FoundationLearningState {
+  if (summary.pathCompleted) return 'completed';
+  if (summary.completedLessonCount > 0) return 'in-progress';
+  if (summary.pathStarted || summary.lastOpenedLessonId !== null) return 'getting-started';
+  return 'not-started';
+}
+
+/** Picks the latest completed lesson for review, falling back to the latest lesson actually opened. */
+export function getMostRecentReviewLesson(
+  pathId: FoundationPathId,
+  lessonRows: readonly LessonProgressSummaryInput[],
+): FoundationLessonId | null {
+  const catalogIds = new Set<string>(getPathLessonIds(pathId));
+  const rows = lessonRows.filter((row) => catalogIds.has(row.lesson_id));
+  const completed = rows
+    .filter((row) => row.completed_at !== null)
+    .sort((left, right) => Date.parse(right.completed_at!) - Date.parse(left.completed_at!));
+  return completed[0]?.lesson_id ?? newestFirst(rows)[0]?.lesson_id ?? null;
 }
 
 /** Derives one Foundation path's learner-facing state only from persisted progress rows. */

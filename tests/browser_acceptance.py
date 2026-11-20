@@ -9,9 +9,10 @@ import subprocess
 import traceback
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+from browser_origin import safe_origin_for_log, sanitize_diagnostic_text, validate_local_base_url
 
 ROOT = Path(__file__).resolve().parents[1]
-BASE = os.environ.get('BASE_URL', 'http://127.0.0.1:5175').rstrip('/')
+BASE = validate_local_base_url(os.environ.get('BASE_URL', 'http://127.0.0.1:5175'))
 OUT = Path(os.environ.get('EVIDENCE_DIR', '/tmp/mabda-browser-acceptance'))
 OUT.mkdir(parents=True, exist_ok=True)
 THEME = os.environ.get('THEME', 'light')
@@ -32,12 +33,25 @@ def screenshot(page, name, full=True):
     RESULT['screenshots'].append(str(path))
 
 def reach_practice(page):
+    studio = page.locator('[data-testid="practice-studio"]')
     for _ in range(20):
-        studio = page.locator('[data-testid="practice-studio"]')
         if studio.count() and studio.is_visible():
             page.locator('.cm-content').wait_for(state='visible')
             return
-        page.locator('.lesson-flow-controls .button-primary, .learning-lesson-controls .button-primary').first.click()
+        next_button = page.locator('.lesson-flow-controls .button-primary, .learning-lesson-controls .button-primary').first
+        next_button.wait_for(state='visible')
+        progress = page.locator('.lesson-flow-progress-track, .learning-flow-progress-track').first
+        current = int(progress.get_attribute('aria-valuenow') or '0')
+        maximum = int(progress.get_attribute('aria-valuemax') or '0')
+        next_button.click()
+        if maximum and current >= maximum:
+            studio.wait_for(state='visible', timeout=15000)
+            page.locator('.cm-content').wait_for(state='visible')
+            return
+        page.wait_for_function("""(before) => {
+          const progress = document.querySelector('.lesson-flow-progress-track, .learning-flow-progress-track');
+          return progress && progress.getAttribute('aria-valuenow') !== before;
+        }""", arg=str(current))
     raise AssertionError('Practice not reachable')
 
 def compact(text):
@@ -50,9 +64,9 @@ def run():
         context = browser.new_context(viewport={'width': 1440, 'height': 900})
         page = context.new_page()
         page.set_default_timeout(15000)
-        page.on('pageerror', lambda e: RESULT['errors'].append({'kind': 'page', 'message': str(e)}))
-        page.on('console', lambda m: RESULT['errors'].append({'kind': 'console', 'message': m.text}) if m.type == 'error' else None)
-        page.on('requestfailed', lambda r: RESULT['errors'].append({'kind': 'request', 'url': r.url.split('?')[0], 'failure': r.failure}))
+        page.on('pageerror', lambda e: RESULT['errors'].append({'kind': 'page', 'message': sanitize_diagnostic_text(e)}))
+        page.on('console', lambda m: RESULT['errors'].append({'kind': 'console', 'message': sanitize_diagnostic_text(m.text)}) if m.type == 'error' else None)
+        page.on('requestfailed', lambda r: RESULT['errors'].append({'kind': 'request', 'origin': safe_origin_for_log(r.url), 'failure': r.failure}))
         for locale in ['ar', 'en']:
             page.goto(BASE)
             page.evaluate('([locale, theme]) => {localStorage.setItem("vanta-locale", locale);localStorage.setItem("mabda-theme", theme);localStorage.removeItem("mabda-has-seen-intro")}', [locale, THEME])
@@ -144,6 +158,8 @@ def run():
                 check(f'{locale}/{lesson["id"]}: restart quiz resets answer', page.locator('.lesson-choice, .learning-choice').count() == 4 and page.locator('.lesson-quiz-feedback, .learning-quiz-feedback').count() == 0)
         page.emulate_media(reduced_motion='reduce')
         page.goto(BASE)
+        page.locator('.mabda-app-brand').wait_for(state='visible')
+        page.locator('.mabda-home-hero h1').wait_for(state='visible')
         check('Reduced motion keeps Home brand and heading visible', page.locator('.mabda-app-brand').is_visible() and page.locator('.mabda-home-hero h1').is_visible())
         check('Reduced motion disables smooth scrolling', page.evaluate('getComputedStyle(document.documentElement).scrollBehavior') == 'auto')
         manifest = page.request.get(BASE + '/manus-routes.json')
@@ -156,7 +172,7 @@ def run():
 try:
     run()
 except Exception:
-    RESULT['failure'] = traceback.format_exc()
+    RESULT['failure'] = sanitize_diagnostic_text(traceback.format_exc())
 finally:
     (OUT / 'results.json').write_text(json.dumps(RESULT, ensure_ascii=False, indent=2))
     print(json.dumps({'passed': sum(x['passed'] for x in RESULT['checks']), 'total': len(RESULT['checks']), 'failure': RESULT.get('failure'), 'errors': RESULT['errors'], 'evidence': str(OUT)}, ensure_ascii=False, indent=2))

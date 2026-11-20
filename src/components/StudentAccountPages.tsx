@@ -8,14 +8,16 @@ import { getStudentPortalCopy } from '../i18n/studentPortal';
 import { supabaseClient, supabaseSetupState } from '../lib/supabaseClient';
 import { getStudentProgressName, useStudentProgress } from '../state/StudentProgressProvider';
 import { useAuth } from '../auth/AuthProvider';
-import { countCompletedFoundationLessons, summarizeFoundationLearningProgress } from '../utils/learningProgress';
+import { countCompletedFoundationLessons, getFoundationLearningState, summarizeFoundationLearningProgress } from '../utils/learningProgress';
 import { safeReturnPath } from '../utils/safeReturnPath';
+import { EMAIL_OTP_COOLDOWN_SECONDS, EMAIL_OTP_MAX_ATTEMPTS, getEmailOtpCooldownSeconds, isExpiredEmailOtpError, normalizeEmailOtp } from '../utils/emailOtp';
 import LearningHeader from './LearningHeader';
 import LearningHomePage from './LearningHomePage';
 import AppIcon from './AppIcon';
 import BrandLogo from './BrandLogo';
 import ThemeToggle from './ThemeToggle';
 import StudentAvatar from './StudentAvatar';
+import ProgrammingLanguageLabel, { type ProgrammingLanguage } from './ProgrammingLanguageLabel';
 import { getProfileAvatarFileError, type ProfileAvatarErrorCode } from '../services/profileAvatar';
 import type { StudentAuthMode } from '../content/learningSystem';
 
@@ -27,6 +29,13 @@ function authErrorMessage(error: AuthError, copy: ReturnType<typeof getStudentPo
   if (code === 'user_already_exists' || message.includes('user already registered')) return copy.auth.errorExists;
   if (code.includes('rate_limit') || code.includes('over_email_send_rate_limit') || error.status === 429) return copy.auth.errorRateLimit;
   return copy.auth.errorGeneric;
+}
+
+function otpErrorMessage(error: AuthError, copy: ReturnType<typeof getStudentPortalCopy>) {
+  if (error.status === 429 || error.code?.includes('rate_limit') || error.code?.includes('over_email_send_rate_limit')) {
+    return copy.auth.errorRateLimit;
+  }
+  return isExpiredEmailOtpError(error) ? copy.auth.errorOtpExpired : copy.auth.errorOtpInvalid;
 }
 
 function setupMessage(state: typeof supabaseSetupState, copy: ReturnType<typeof getStudentPortalCopy>) {
@@ -114,22 +123,56 @@ export function StudentAuthPage({
   const [errorMessage, setErrorMessage] = useState('');
   const [notice, setNotice] = useState('');
   const [callbackExpired, setCallbackExpired] = useState(callbackHasError);
+  const [authStep, setAuthStep] = useState<'form' | 'otp' | 'new-password' | 'complete'>('form');
+  const [otpFlow, setOtpFlow] = useState<'signup' | 'recovery' | null>(null);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpAttempts, setOtpAttempts] = useState(0);
+  const [resendAt, setResendAt] = useState(0);
+  const [resendSeconds, setResendSeconds] = useState(0);
+  const signupAttemptRef = useRef(false);
+  const otpInputRef = useRef<HTMLInputElement>(null);
 
-  const title = mode === 'login' ? copy.auth.loginTitle
+  const title = mode === 'signup' && authStep === 'otp' ? copy.auth.verifyEmailTitle
+    : mode === 'forgot-password' && authStep === 'otp' ? copy.auth.verifyRecoveryTitle
+      : mode === 'forgot-password' && authStep === 'complete' ? copy.auth.resetTitle
+        : mode === 'forgot-password' && authStep === 'new-password' ? copy.auth.resetTitle
+        : mode === 'login' ? copy.auth.loginTitle
     : mode === 'signup' ? copy.auth.signupTitle
       : mode === 'forgot-password' ? copy.auth.forgotTitle
         : mode === 'reset-password' ? copy.auth.resetTitle
           : copy.auth.callbackTitle;
-  const body = mode === 'login' ? copy.auth.loginBody
+  const body = mode === 'signup' && authStep === 'otp' ? copy.auth.verifyEmailBody
+    : mode === 'forgot-password' && authStep === 'otp' ? copy.auth.verifyRecoveryBody
+      : mode === 'forgot-password' && authStep === 'complete' ? copy.auth.passwordUpdated
+        : mode === 'forgot-password' && authStep === 'new-password' ? copy.auth.resetBody
+        : mode === 'login' ? copy.auth.loginBody
     : mode === 'signup' ? copy.auth.signupBody
       : mode === 'forgot-password' ? copy.auth.forgotBody
         : mode === 'reset-password' ? copy.auth.resetBody
           : copy.auth.callbackBody;
   useEffect(() => {
-    if (!authLoading && user && (mode === 'login' || mode === 'signup')) {
+    if (!authLoading && user && (mode === 'login' || (mode === 'signup' && !signupAttemptRef.current))) {
       window.location.replace(returnPath);
     }
   }, [authLoading, mode, returnPath, user]);
+
+  useEffect(() => {
+    if (mode === 'forgot-password' && !authLoading && user && recoverySession && authStep === 'form') {
+      setAuthStep('new-password');
+    }
+  }, [authLoading, authStep, mode, recoverySession, user]);
+
+  useEffect(() => {
+    if (authStep === 'otp') otpInputRef.current?.focus();
+  }, [authStep]);
+
+  useEffect(() => {
+    if (!resendAt) return;
+    const updateCountdown = () => setResendSeconds(getEmailOtpCooldownSeconds(resendAt));
+    updateCountdown();
+    const timer = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(timer);
+  }, [resendAt]);
 
   useEffect(() => {
     if (mode !== 'callback' || authLoading) return;
@@ -147,12 +190,13 @@ export function StudentAuthPage({
     setErrorMessage('');
     setNotice('');
 
-    if (mode === 'signup') {
+    if (mode === 'signup' && authStep === 'form') {
       if (displayName.trim().length < 2) return setErrorMessage(copy.auth.validationName);
       if (password.length < 8) return setErrorMessage(copy.auth.validationPassword);
       if (password !== confirmPassword) return setErrorMessage(copy.auth.validationConfirm);
     }
-    if (mode === 'reset-password') {
+    const isOtpRecoveryPassword = mode === 'forgot-password' && authStep === 'new-password';
+    if (mode === 'reset-password' || isOtpRecoveryPassword) {
       if (!user || !recoverySession) return setErrorMessage(copy.auth.passwordResetMissingSession);
       if (password.length < 8) return setErrorMessage(copy.auth.validationPassword);
       if (password !== confirmPassword) return setErrorMessage(copy.auth.validationConfirm);
@@ -172,7 +216,8 @@ export function StudentAuthPage({
         return;
       }
 
-      if (mode === 'signup') {
+      if (mode === 'signup' && authStep === 'form') {
+        signupAttemptRef.current = true;
         const { data, error } = await supabaseClient.auth.signUp({
           email: email.trim(),
           password,
@@ -183,19 +228,44 @@ export function StudentAuthPage({
         });
         if (error) throw error;
         if (data.session) {
-          window.location.assign(returnPath);
-        } else {
-          setNotice(copy.auth.confirmationBody);
+          const { error: signOutError } = await supabaseClient.auth.signOut({ scope: 'local' });
+          setErrorMessage(signOutError ? copy.auth.emailConfirmationSessionActive : copy.auth.emailConfirmationRequired);
+          return;
         }
+        setPassword('');
+        setConfirmPassword('');
+        setOtpFlow('signup');
+        setOtpCode('');
+        setOtpAttempts(0);
+        setResendAt(Date.now() + EMAIL_OTP_COOLDOWN_SECONDS * 1000);
+        setAuthStep('otp');
+        setNotice(copy.auth.signupOtpSentBody);
         return;
       }
 
-      if (mode === 'forgot-password') {
+      if (mode === 'forgot-password' && authStep === 'form') {
         const { error } = await supabaseClient.auth.resetPasswordForEmail(email.trim(), {
           redirectTo: new URL(`/reset-password?next=${encodeURIComponent(returnPath)}`, window.location.origin).toString(),
         });
         if (error) throw error;
+        setOtpFlow('recovery');
+        setOtpCode('');
+        setOtpAttempts(0);
+        setResendAt(Date.now() + EMAIL_OTP_COOLDOWN_SECONDS * 1000);
+        setAuthStep('otp');
         setNotice(copy.auth.resetSentBody);
+        return;
+      }
+
+      if (isOtpRecoveryPassword) {
+        const { error } = await supabaseClient.auth.updateUser({ password });
+        if (error) throw error;
+        setPassword('');
+        setConfirmPassword('');
+        const { error: signOutError } = await supabaseClient.auth.signOut({ scope: 'local' });
+        setAuthStep('complete');
+        setNotice(copy.auth.passwordUpdated);
+        if (signOutError) setErrorMessage(copy.auth.passwordUpdatedActiveSession);
         return;
       }
 
@@ -216,15 +286,118 @@ export function StudentAuthPage({
     }
   };
 
+  const verifyOtp = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setErrorMessage('');
+    setNotice('');
+    const token = normalizeEmailOtp(otpCode);
+    if (token.length !== 6) {
+      setErrorMessage(copy.auth.validationOtpCode);
+      return;
+    }
+    if (otpAttempts >= EMAIL_OTP_MAX_ATTEMPTS) {
+      setErrorMessage(copy.auth.otpAttemptsLimit);
+      return;
+    }
+    if (!supabaseClient || !otpFlow) {
+      setErrorMessage(setupMessage(supabaseSetupState, copy) || copy.auth.setupOnly);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { data, error } = await supabaseClient.auth.verifyOtp({
+        email: email.trim(),
+        token,
+        type: otpFlow === 'signup' ? 'email' : 'recovery',
+      });
+      if (error) {
+        const nextAttempts = otpAttempts + 1;
+        setOtpAttempts(nextAttempts);
+        setErrorMessage(nextAttempts >= EMAIL_OTP_MAX_ATTEMPTS ? copy.auth.otpAttemptsLimit : otpErrorMessage(error, copy));
+        return;
+      }
+      if (!data.user || !data.session) {
+        setErrorMessage(copy.auth.errorGeneric);
+        return;
+      }
+
+      setOtpCode('');
+      if (otpFlow === 'recovery') {
+        setPassword('');
+        setConfirmPassword('');
+        setAuthStep('new-password');
+        return;
+      }
+
+      window.location.replace(returnPath);
+    } catch (error) {
+      setErrorMessage(error instanceof Error && 'status' in error
+        ? authErrorMessage(error as AuthError, copy)
+        : copy.auth.errorGeneric);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const resendOtp = async () => {
+    setErrorMessage('');
+    setNotice('');
+    if (resendSeconds > 0 || submitting) return;
+    if (!supabaseClient || !otpFlow) {
+      setErrorMessage(setupMessage(supabaseSetupState, copy) || copy.auth.setupOnly);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { error } = otpFlow === 'signup'
+        ? await supabaseClient.auth.resend({
+            type: 'signup',
+            email: email.trim(),
+            options: { emailRedirectTo: new URL(`/auth/callback?next=${encodeURIComponent(returnPath)}`, window.location.origin).toString() },
+          })
+        : await supabaseClient.auth.resetPasswordForEmail(email.trim(), {
+            redirectTo: new URL(`/reset-password?next=${encodeURIComponent(returnPath)}`, window.location.origin).toString(),
+          });
+      if (error) throw error;
+      setOtpCode('');
+      setOtpAttempts(0);
+      setResendAt(Date.now() + EMAIL_OTP_COOLDOWN_SECONDS * 1000);
+      setNotice(copy.auth.otpResentBody);
+    } catch (error) {
+      setErrorMessage(error instanceof Error && 'status' in error
+        ? authErrorMessage(error as AuthError, copy)
+        : copy.auth.errorGeneric);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const returnToEmailForm = () => {
+    setAuthStep('form');
+    setOtpFlow(null);
+    setOtpCode('');
+    setErrorMessage('');
+    setNotice('');
+  };
+
   const isFormMode = mode !== 'callback';
-  const needsEmail = mode === 'login' || mode === 'signup' || mode === 'forgot-password';
-  const needsPassword = mode === 'login' || mode === 'signup' || mode === 'reset-password';
+  const isRecoveryFormReady = mode === 'forgot-password' && authStep === 'new-password' && Boolean(user && recoverySession);
+  const waitingForRecoverySession = mode === 'forgot-password' && authStep === 'new-password' && !isRecoveryFormReady;
+  const showOtpForm = authStep === 'otp' && (mode === 'signup' || mode === 'forgot-password');
+  const showCompletion = mode === 'forgot-password' && authStep === 'complete';
+  const showPrimaryForm = isFormMode && !showOtpForm && !showCompletion && !waitingForRecoverySession
+    && !(mode === 'reset-password' && (authLoading || !user || !recoverySession));
+  const needsEmail = mode === 'login' || mode === 'signup' || (mode === 'forgot-password' && authStep === 'form');
+  const needsPassword = mode === 'login' || mode === 'signup' || mode === 'reset-password' || isRecoveryFormReady;
   const needsName = mode === 'signup';
-  const needsConfirmation = mode === 'signup' || mode === 'reset-password';
+  const needsConfirmation = mode === 'signup' || mode === 'reset-password' || isRecoveryFormReady;
   const setupNotice = setupMessage(supabaseSetupState, copy);
   const submitLabel = submitting ? copy.auth.submitBusy : mode === 'login' ? copy.auth.signInAction
     : mode === 'signup' ? copy.auth.createAccountAction
-      : mode === 'forgot-password' ? copy.common.sendReset
+      : mode === 'forgot-password' && authStep === 'new-password' ? copy.common.updatePassword
+        : mode === 'forgot-password' ? copy.common.sendReset
         : copy.common.updatePassword;
 
   return (
@@ -268,7 +441,58 @@ export function StudentAuthPage({
               </div>
             )}
 
-            {isFormMode && !(mode === 'reset-password' && (authLoading || !user || !recoverySession)) && (
+            {showOtpForm && (
+              <form className="student-auth-form mabda-auth-form mabda-auth-otp-form" aria-busy={submitting} onSubmit={verifyOtp}>
+                <div className="mabda-auth-field">
+                  <label htmlFor="auth-email-otp">{copy.auth.otpCodeLabel}</label>
+                  <input
+                    ref={otpInputRef}
+                    autoComplete="one-time-code"
+                    dir="ltr"
+                    id="auth-email-otp"
+                    inputMode="numeric"
+                    maxLength={6}
+                    name="email-otp"
+                    placeholder="000000"
+                    required
+                    aria-describedby="auth-email-otp-hint"
+                    value={otpCode}
+                    onChange={(event) => { setOtpCode(normalizeEmailOtp(event.target.value)); setErrorMessage(''); }}
+                  />
+                  <small id="auth-email-otp-hint">{copy.auth.otpCodeHint}</small>
+                </div>
+                <button className="button button-primary student-auth-submit" type="submit" disabled={submitting || authLoading || otpAttempts >= EMAIL_OTP_MAX_ATTEMPTS}>
+                  <span className="student-submit-copy">{submitting ? copy.auth.submitBusy : copy.auth.verifyOtpAction}</span>
+                  {submitting ? <span className="student-submit-spinner" aria-hidden="true" /> : <span className="student-submit-arrow" aria-hidden="true">{isArabic ? '←' : '→'}</span>}
+                </button>
+                <div className="student-auth-otp-actions">
+                  <button className="student-auth-inline-button" type="button" onClick={() => { void resendOtp(); }} disabled={submitting || resendSeconds > 0}>
+                    {resendSeconds > 0
+                      ? copy.auth.resendIn.replace('{seconds}', new Intl.NumberFormat(isArabic ? 'ar' : 'en-US').format(resendSeconds))
+                      : copy.auth.resendOtpAction}
+                  </button>
+                  <button className="student-auth-inline-button" type="button" onClick={returnToEmailForm} disabled={submitting}>
+                    {copy.auth.changeOtpEmail}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {waitingForRecoverySession && (
+              <div className="student-callback-state" role="status" aria-live="polite">
+                <span className="student-loading-mark" aria-hidden="true" />
+                <p>{copy.common.loading}</p>
+              </div>
+            )}
+
+            {showCompletion && (
+              <div className="student-callback-state" role="status" aria-live="polite">
+                <p>{copy.auth.passwordUpdated}</p>
+                <a className="button button-primary" href={loginHref} onClick={internalAuthLink(loginHref)}>{copy.common.backToLogin}</a>
+              </div>
+            )}
+
+            {showPrimaryForm && (
               <form
                 className="student-auth-form mabda-auth-form"
                 aria-busy={submitting}
@@ -321,7 +545,7 @@ export function StudentAuthPage({
                     <label htmlFor="auth-password">{copy.common.password}</label>
                     <div className="mabda-auth-password" dir="ltr">
                       <input
-                        autoComplete={mode === 'reset-password' ? 'new-password' : mode === 'signup' ? 'new-password' : 'current-password'}
+                        autoComplete={mode === 'reset-password' || isRecoveryFormReady ? 'new-password' : mode === 'signup' ? 'new-password' : 'current-password'}
                         dir="ltr"
                         id="auth-password"
                         minLength={mode === 'login' ? undefined : 8}
@@ -335,7 +559,7 @@ export function StudentAuthPage({
                         <span aria-hidden="true">{showPassword ? '◉' : '◎'}</span>
                       </button>
                     </div>
-                    {(mode === 'signup' || mode === 'reset-password') && <small>{copy.common.minimumPassword}</small>}
+                    {(mode === 'signup' || mode === 'reset-password' || isRecoveryFormReady) && <small>{copy.common.minimumPassword}</small>}
                   </div>
                 )}
 
@@ -481,6 +705,18 @@ function lessonCopy(locale: Locale, lessonId: FoundationLessonId) {
     : getLearningLessonCopy(locale, lessonId);
 }
 
+function profilePathLanguage(pathId: (typeof FOUNDATION_PATH_IDS)[number]): ProgrammingLanguage {
+  if (pathId === 'html-fundamentals') return 'html';
+  if (pathId === 'css-fundamentals') return 'css';
+  return 'javascript';
+}
+
+function profilePathName(pathId: (typeof FOUNDATION_PATH_IDS)[number]): string {
+  if (pathId === 'html-fundamentals') return 'HTML';
+  if (pathId === 'css-fundamentals') return 'CSS';
+  return 'JavaScript';
+}
+
 function StudentDashboard({ locale, onSwitchLocale }: { locale: Locale; onSwitchLocale: () => void }) {
   return <LearningHomePage locale={locale} onSwitchLocale={onSwitchLocale} />;
 }
@@ -514,6 +750,7 @@ function StudentProfile({ locale, onSwitchLocale }: { locale: Locale; onSwitchLo
       pathId,
       lessonSummaries,
       summary,
+      state: getFoundationLearningState(summary),
       percentage: lessonSummaries.length
         ? Math.round((summary.completedLessonCount / lessonSummaries.length) * 100)
         : 0,
@@ -682,52 +919,79 @@ function StudentProfile({ locale, onSwitchLocale }: { locale: Locale; onSwitchLo
             </div>
             <div><dt>{copy.profile.email}</dt><dd dir="ltr">{user?.email ?? '—'}</dd></div>
             <div><dt>{copy.profile.joined}</dt><dd>{joined}</dd></div>
-            <div><dt>{copy.profile.currentLevel}</dt><dd>{copy.profile.beginnerLevel}</dd></div>
             <div><dt>{copy.profile.emailVerified}</dt><dd><span className={`student-verification ${verified ? 'is-verified' : ''}`}>{verified ? copy.profile.verified : copy.profile.pending}</span></dd></div>
           </dl>
           <a className="button button-quiet" href="/dashboard">{copy.profile.backDashboard}<span aria-hidden="true">{isArabic ? '←' : '→'}</span></a>
         </section>
-        <div className="student-profile-learning-grid">
-          {progress.loading && !progress.hasLoaded ? (
-            <section className="student-profile-card" aria-live="polite" role="status">
-              <p className="student-loading-state"><span className="student-loading-mark" aria-hidden="true" />{copy.common.loading}</p>
-            </section>
-          ) : foundationPathProgress.map(({ pathId, lessonSummaries, summary, percentage }) => {
-            const pathName = messages[locale].learningSystem.paths[pathId].title;
-            const hasActivity = summary.pathStarted || summary.lastOpenedLessonId !== null;
-            return (
-              <section className="student-profile-card" key={pathId} aria-labelledby={`profile-progress-${pathId}`}>
-                <div className="student-profile-card-heading">
-                  <h2 id={`profile-progress-${pathId}`}>{pathName}</h2>
-                  <span dir="ltr">{formattedNumber.format(percentage)}%</span>
-                </div>
-                <p className="student-profile-path-name">{copy.profile.pathProgress}</p>
-                <div className="student-progress-track" role="progressbar" aria-label={`${pathName} — ${copy.profile.overallProgress}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percentage}>
-                  <span style={{ width: `${percentage}%` }} />
-                </div>
-                <dl className="student-profile-counts">
-                  <div><dt>{copy.profile.lessonsCompleted}</dt><dd dir="ltr">{formattedNumber.format(summary.completedLessonCount)} / {formattedNumber.format(lessonSummaries.length)}</dd></div>
-                  <div><dt>{copy.profile.pathsCompleted}</dt><dd>{summary.pathCompleted ? (locale === 'ar' ? 'مكتمل' : 'Complete') : (locale === 'ar' ? 'قيد التعلّم' : 'In progress')}</dd></div>
-                </dl>
-                {!hasActivity && <p className="student-profile-empty">{locale === 'ar' ? 'لا يوجد تقدم في هذا المسار بعد.' : 'No progress in this path yet.'}</p>}
-                <ul className="student-profile-quiz-list">
-                  {lessonSummaries.map((lesson) => {
-                    const completed = progress.lessons.some((row) => row.lesson_id === lesson.id && row.completed_at !== null);
-                    return (
-                      <li key={lesson.id}>
-                        <span>
-                          <a href={getLessonHref(lesson.id)}>{lesson.title}</a>
-                          <small>{lesson.summary}</small>
-                        </span>
-                        <strong>{completed ? (locale === 'ar' ? 'مكتمل' : 'Completed') : (locale === 'ar' ? 'غير مكتمل' : 'Not completed')}</strong>
-                      </li>
-                    );
-                  })}
-                </ul>
+        <div className="student-profile-learning">
+          <div className="student-profile-course-grid">
+            {progress.loading && !progress.hasLoaded ? (
+              <section className="student-profile-card" aria-live="polite" role="status">
+                <p className="student-loading-state"><span className="student-loading-mark" aria-hidden="true" />{copy.common.loading}</p>
               </section>
-            );
-          })}
+            ) : foundationPathProgress.map(({ pathId, lessonSummaries, summary, state, percentage }) => {
+              const pathName = profilePathName(pathId);
+              const language = profilePathLanguage(pathId);
+              const stateLabel = state === 'completed' ? copy.profile.pathCompleted
+                : state === 'in-progress' ? copy.profile.inProgress
+                  : state === 'getting-started' ? copy.profile.gettingStarted
+                    : copy.profile.notStarted;
+              const actionLabel = state === 'completed' ? copy.profile.reviewLessons
+                : state === 'not-started' ? copy.profile.startLearning
+                  : copy.profile.continueLearning;
+              return (
+                <section className="student-profile-card student-profile-course-card" key={pathId} aria-labelledby={`profile-progress-${pathId}`}>
+                  <div className="student-profile-card-heading">
+                    <h2 id={`profile-progress-${pathId}`}>
+                      <ProgrammingLanguageLabel language={language} label={pathName}>{pathName}</ProgrammingLanguageLabel>
+                    </h2>
+                    <span className={`student-profile-learning-state is-${state}`}>{stateLabel}</span>
+                  </div>
+                  <p className="student-profile-learning-label">{copy.profile.learningStateLabel}</p>
+                  <div
+                    className="student-progress-track"
+                    role="progressbar"
+                    aria-label={`${pathName} — ${copy.profile.pathProgress}`}
+                    aria-valuemin={0}
+                    aria-valuemax={lessonSummaries.length}
+                    aria-valuenow={summary.completedLessonCount}
+                  >
+                    <span style={{ width: `${percentage}%` }} />
+                  </div>
+                  <p className="student-profile-course-count" dir={isArabic ? 'rtl' : 'ltr'}>
+                    {copy.progress.lessonCount
+                      .replace('{completed}', formattedNumber.format(summary.completedLessonCount))
+                      .replace('{total}', formattedNumber.format(lessonSummaries.length))}
+                  </p>
+                  <a className="button button-quiet student-profile-course-action" href={getLessonHref(summary.resumeLessonId)}>
+                    {actionLabel}<span aria-hidden="true">{isArabic ? '←' : '→'}</span>
+                  </a>
+                  <details className="student-profile-course-details">
+                    <summary>
+                      <span>{copy.profile.browseLessons}</span>
+                      <span>{formattedNumber.format(lessonSummaries.length)}</span>
+                    </summary>
+                    <ul className="student-profile-quiz-list">
+                      {lessonSummaries.map((lesson) => {
+                        const completed = summary.completedLessonIds.has(lesson.id);
+                        return (
+                          <li key={lesson.id}>
+                            <span>
+                              <a href={getLessonHref(lesson.id)}>{lesson.title}</a>
+                              <small>{lesson.summary}</small>
+                            </span>
+                            <strong>{completed ? copy.profile.lessonCompleted : copy.profile.lessonNotCompleted}</strong>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </details>
+                </section>
+              );
+            })}
+          </div>
 
+          <div className="student-profile-secondary-grid">
           <section className="student-profile-card" aria-labelledby="profile-quiz-title">
             <div className="student-profile-card-heading">
               <h2 id="profile-quiz-title">{copy.profile.quizResults}</h2>
@@ -753,6 +1017,7 @@ function StudentProfile({ locale, onSwitchLocale }: { locale: Locale; onSwitchLo
             <p>{completedLessonCount >= 5 ? copy.profile.milestoneReached : copy.profile.milestoneProgress(formattedNumber.format(milestoneProgress))}</p>
             <p className="student-profile-empty">{copy.profile.futureAchievementsNote}</p>
           </section>
+          </div>
         </div>
       </main>
     </div>

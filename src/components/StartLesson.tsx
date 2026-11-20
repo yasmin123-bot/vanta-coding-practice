@@ -6,7 +6,7 @@ import { practiceStudioMessages } from '../i18n/practiceStudio';
 import { useAuth } from '../auth/AuthProvider';
 import { useStudentProgress } from '../state/StudentProgressProvider';
 import { createQuizChoiceOrder, getOrderedQuizChoices } from '../utils/quizChoices';
-import PracticeStudio from './PracticeStudio';
+import LazyPracticeStudio from './LazyPracticeStudio';
 import LearningHeader from './LearningHeader';
 import ProgrammingLanguageLabel from './ProgrammingLanguageLabel';
 
@@ -14,6 +14,8 @@ type StartLessonProps = {
   locale: Locale;
   onSwitchLocale: () => void;
   onComplete: (score: number, total: number) => Promise<boolean>;
+  onQuizPassed?: () => void;
+  navigation?: { backHref?: string; nextHref?: string };
 };
 
 type LessonFlow = 'learn' | 'practice' | 'quiz' | 'result';
@@ -40,7 +42,7 @@ function interpolateProgress(template: string, current: number, total: number) {
   return template.replace('{current}', String(current)).replace('{total}', String(total));
 }
 
-function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
+function StartLesson({ locale, onSwitchLocale, onComplete, onQuizPassed, navigation }: StartLessonProps) {
   const pageCopy = messages[locale];
   const copy = pageCopy.lesson;
   const learningUi = pageCopy.learningSystem.ui;
@@ -142,6 +144,7 @@ function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
 
   const continueQuiz = () => {
     if (quizIndex === copy.questions.length - 1) {
+      onQuizPassed?.();
       setFlow('result');
       void persistQuizResult();
       return;
@@ -253,7 +256,7 @@ function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
       <LearningHeader locale={locale} onSwitchLocale={onSwitchLocale} allPathsLabel={learningUi.allPaths} stageLabel={copy.eyebrow} />
 
       <main className="lesson-main section-frame" aria-labelledby="lesson-title">
-        <a className="lesson-back-link" href="/paths/html-fundamentals">
+        <a className="lesson-back-link" href={navigation?.backHref ?? '/paths/html-fundamentals'}>
           <span aria-hidden="true">↩</span>
           {copy.backToJourney}
         </a>
@@ -334,7 +337,7 @@ function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
 
         {practiceOpened && (
           <section className="lesson-practice-shell" hidden={flow !== 'practice'}>
-            <PracticeStudio
+            <LazyPracticeStudio
               lessonId="html-introduction"
               lessonTitle={copy.title}
               locale={locale}
@@ -468,7 +471,7 @@ function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
               </div>
 
               <div className="learning-result-actions lesson-path-actions">
-                <a className="button button-primary learning-lesson-button" href="/lesson/headings-paragraphs">
+                <a className="button button-primary learning-lesson-button" href={navigation?.nextHref ?? '/lesson/headings-paragraphs'}>
                   {learningUi.nextLesson}
                   <span className="button-arrow" aria-hidden="true">{isArabic ? '←' : '→'}</span>
                 </a>
@@ -478,8 +481,8 @@ function StartLesson({ locale, onSwitchLocale, onComplete }: StartLessonProps) {
                 </button>
               </div>
               <nav className="learning-result-navigation" aria-label={isArabic ? 'التنقل بين الدروس' : 'Lesson navigation'}>
-                <a href="/paths/html-fundamentals">{learningUi.returnToPath}</a>
-                <a href="/lesson/headings-paragraphs">{learningUi.nextLesson}</a>
+                <a href={navigation?.backHref ?? '/paths/html-fundamentals'}>{learningUi.returnToPath}</a>
+                <a href={navigation?.nextHref ?? '/lesson/headings-paragraphs'}>{learningUi.nextLesson}</a>
               </nav>
             </article>
           </section>

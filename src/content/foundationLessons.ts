@@ -1,5 +1,7 @@
-import type { CssLessonId, JavaScriptLessonId } from './learningSystem';
+import { CSS_LESSON_IDS, JAVASCRIPT_LESSON_IDS, LEGACY_CSS_LESSON_IDS, LEGACY_JAVASCRIPT_LESSON_IDS, type CssLessonId, type JavaScriptLessonId } from './learningSystem';
 import type { PracticeValidationRule } from './practiceTypes';
+import { EXPANDED_CSS_LESSONS } from './expandedCssLessons';
+import { EXPANDED_JAVASCRIPT_LESSONS } from './expandedJavaScriptLessons';
 
 export type FoundationLessonContentId = CssLessonId | JavaScriptLessonId;
 
@@ -66,7 +68,9 @@ export interface FoundationLesson {
   validation_rules: FoundationValidationRule[];
 }
 
-export const FOUNDATION_LESSONS_BY_ID: Record<FoundationLessonContentId, FoundationLesson> = {
+type LegacyFoundationLessonContentId = (typeof LEGACY_CSS_LESSON_IDS)[number] | (typeof LEGACY_JAVASCRIPT_LESSON_IDS)[number];
+
+const LEGACY_FOUNDATION_LESSONS_BY_ID = {
   "css-what-is-css": {
     "code_explanation": [
       {
@@ -1720,20 +1724,22 @@ export const FOUNDATION_LESSONS_BY_ID: Record<FoundationLessonContentId, Foundat
     "validation_rules": [
       {
             "id": "card-mobile-width",
-            "note_ar": "في القاعدة الأساسية خارج media query، اضبط عرض `.card` على `100%`.",
-            "note_en": "In the base rule outside a media query, set `.card` width to `100%`.",
-            "property": "width",
-            "target": ".card",
-            "type": "css-declaration",
+        "note_ar": "في القاعدة الأساسية خارج media query، اضبط عرض `.card` على `100%`.",
+        "note_en": "In the base rule outside a media query, set `.card` width to `100%`.",
+        "property": "width",
+        "target": ".card",
+        "scope": "outside-media",
+        "type": "css-declaration",
             "value": "100%"
       },
       {
             "id": "card-mobile-padding",
-            "type": "css-declaration",
-            "target": ".card",
-            "property": "padding",
-            "value": "16px",
-            "note_ar": "في القاعدة الأساسية خارج media query، أضف `padding: 16px` إلى `.card`.",
+        "type": "css-declaration",
+        "target": ".card",
+        "property": "padding",
+        "value": "16px",
+        "scope": "outside-media",
+        "note_ar": "في القاعدة الأساسية خارج media query، أضف `padding: 16px` إلى `.card`.",
             "note_en": "In the base rule outside a media query, add `padding: 16px` to `.card`."
       },
       {
@@ -3606,4 +3612,29 @@ export const FOUNDATION_LESSONS_BY_ID: Record<FoundationLessonContentId, Foundat
       }
     ]
   }
-};
+} satisfies Record<LegacyFoundationLessonContentId, FoundationLesson>;
+
+const expandedCssLessons = Object.fromEntries(
+  Object.entries(EXPANDED_CSS_LESSONS).map(([id, lesson]) => [id, {
+    ...lesson,
+    id: id as CssLessonId,
+    sequence: CSS_LESSON_IDS.indexOf(id as CssLessonId) + 1,
+  }]),
+) as unknown as Record<Exclude<CssLessonId, (typeof LEGACY_CSS_LESSON_IDS)[number]>, FoundationLesson>;
+
+const expandedJavaScriptLessons = Object.fromEntries(
+  Object.entries(EXPANDED_JAVASCRIPT_LESSONS).map(([id, lesson]) => [id, {
+    ...lesson,
+    id: id as JavaScriptLessonId,
+    sequence: JAVASCRIPT_LESSON_IDS.indexOf(id as JavaScriptLessonId) + 1,
+  }]),
+) as unknown as Record<Exclude<JavaScriptLessonId, (typeof LEGACY_JAVASCRIPT_LESSON_IDS)[number]>, FoundationLesson>;
+
+export const FOUNDATION_LESSONS_BY_ID = Object.fromEntries(
+  [...CSS_LESSON_IDS, ...JAVASCRIPT_LESSON_IDS].map((id) => [
+    id,
+    LEGACY_FOUNDATION_LESSONS_BY_ID[id as LegacyFoundationLessonContentId]
+      ?? expandedCssLessons[id as Exclude<CssLessonId, (typeof LEGACY_CSS_LESSON_IDS)[number]>]
+      ?? expandedJavaScriptLessons[id as Exclude<JavaScriptLessonId, (typeof LEGACY_JAVASCRIPT_LESSON_IDS)[number]>],
+  ]),
+) as unknown as Record<FoundationLessonContentId, FoundationLesson>;

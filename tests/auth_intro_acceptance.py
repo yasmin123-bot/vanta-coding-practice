@@ -6,8 +6,9 @@ import os
 import traceback
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+from browser_origin import sanitize_diagnostic_text, validate_local_base_url
 
-BASE = os.environ.get('BASE_URL', 'http://127.0.0.1:5175').rstrip('/')
+BASE = validate_local_base_url(os.environ.get('BASE_URL', 'http://127.0.0.1:5175'))
 OUT = Path(os.environ.get('EVIDENCE_DIR', '/tmp/mabda-auth-intro-acceptance'))
 OUT.mkdir(parents=True, exist_ok=True)
 RESULT = {'base_url': BASE, 'checks': [], 'errors': [], 'screenshots': [], 'auth_submission': 'NOT SUBMITTED: requires a real student account; no cloud writes made'}
@@ -53,8 +54,8 @@ def run():
                     page = context.new_page()
                     page.set_default_timeout(12000)
                     page.add_init_script(f'''(() => {{ localStorage.setItem('vanta-locale', {json.dumps(locale)}); localStorage.setItem('mabda-theme', {json.dumps(theme)}); localStorage.removeItem('mabda-has-seen-intro'); }})()''')
-                    page.on('pageerror', lambda e: RESULT['errors'].append({'kind': 'page', 'message': str(e)}))
-                    page.on('console', lambda m: RESULT['errors'].append({'kind': 'console', 'message': m.text}) if m.type == 'error' else None)
+                    page.on('pageerror', lambda e: RESULT['errors'].append({'kind': 'page', 'message': sanitize_diagnostic_text(e)}))
+                    page.on('console', lambda m: RESULT['errors'].append({'kind': 'console', 'message': sanitize_diagnostic_text(m.text)}) if m.type == 'error' else None)
                     page.goto(BASE + '/login', wait_until='domcontentloaded')
                     intro = page.locator('[data-testid="welcome-intro"]')
                     intro.wait_for()
@@ -149,10 +150,13 @@ def run():
                     check(f'{locale}/{theme}/{width}: forgot-password route remains reachable', page.evaluate('location.pathname') == '/forgot-password' and page.locator('input[type="email"]').count() == 1)
                     page.evaluate('localStorage.removeItem("mabda-has-seen-intro");sessionStorage.removeItem("mabda-has-seen-intro")')
                     page.goto(BASE + '/reset-password', wait_until='domcontentloaded')
+                    page.locator('[data-testid="auth-page"]').wait_for()
                     check(f'{locale}/{theme}/{width}: reset callback bypasses Intro', page.locator('[data-testid="welcome-intro"]').count() == 0 and page.locator('[data-testid="auth-page"]').count() == 1)
                     page.goto(BASE + '/auth/callback', wait_until='domcontentloaded')
+                    page.locator('[data-testid="auth-page"]').wait_for()
                     check(f'{locale}/{theme}/{width}: Auth callback bypasses Intro', page.locator('[data-testid="welcome-intro"]').count() == 0 and page.locator('[data-testid="auth-page"]').count() == 1)
                     page.goto(BASE + '/signup?next=%2Fdashboard', wait_until='domcontentloaded')
+                    page.locator('[data-testid="welcome-intro"]').wait_for()
                     check(f'{locale}/{theme}/{width}: direct protected return route opens Intro first', page.locator('[data-testid="welcome-intro"]').count() == 1)
                     page.locator('.mabda-intro-next').click()
                     check(f'{locale}/{theme}/{width}: intro preserves the requested return route', page.url.endswith('/signup?next=%2Fdashboard'))
@@ -173,7 +177,7 @@ def run():
 try:
     run()
 except Exception:
-    RESULT['failure'] = traceback.format_exc()
+    RESULT['failure'] = sanitize_diagnostic_text(traceback.format_exc())
 finally:
     (OUT / 'results.json').write_text(json.dumps(RESULT, ensure_ascii=False, indent=2))
     print(json.dumps({'passed': sum(item['passed'] for item in RESULT['checks']), 'total': len(RESULT['checks']), 'errors': RESULT['errors'], 'failure': RESULT.get('failure'), 'auth_submission': RESULT['auth_submission'], 'evidence': str(OUT)}, ensure_ascii=False, indent=2))

@@ -1,10 +1,11 @@
-import { FOUNDATION_PATH_IDS, getLearningPathHref, getLessonHref, LEARNING_PATHS, type FoundationPathId, type LearningPathId, type PathStatus } from '../content/learningSystem';
+import { FOUNDATION_PATH_IDS, FOUNDATION_PATH_STAGE_LESSONS, getLearningPathHref, getLessonHref, getPathAssessmentHref, LEARNING_PATH_ARTWORK, LEARNING_PATHS, type FoundationPathId, type LearningPathId, type PathStatus } from '../content/learningSystem';
 import { getLearningPathLessonSummaries } from '../i18n/foundationLessonCopy';
 import { messages, type Locale } from '../i18n/messages';
 import { getStudentPortalCopy } from '../i18n/studentPortal';
 import { useAuth } from '../auth/AuthProvider';
 import { useStudentProgress } from '../state/StudentProgressProvider';
-import { summarizeFoundationLearningProgress } from '../utils/learningProgress';
+import { getFoundationLearningState, getMostRecentReviewLesson, summarizeFoundationLearningProgress } from '../utils/learningProgress';
+import AppIcon from './AppIcon';
 import LearningHeader from './LearningHeader';
 import ProgrammingLanguageLabel, { type ProgrammingLanguage } from './ProgrammingLanguageLabel';
 
@@ -47,6 +48,13 @@ function languageForPath(pathId: LearningPathId): ProgrammingLanguage | null {
   return null;
 }
 
+function shortPathName(pathId: LearningPathId, fallback: string): string {
+  if (pathId === 'html-fundamentals') return 'HTML';
+  if (pathId === 'css-fundamentals') return 'CSS';
+  if (pathId === 'javascript-fundamentals') return 'JavaScript';
+  return fallback;
+}
+
 function LearningSystemPage({ locale, onSwitchLocale, route }: LearningSystemPageProps) {
   const landingCopy = messages[locale];
   const copy = landingCopy.learningSystem;
@@ -54,6 +62,7 @@ function LearningSystemPage({ locale, onSwitchLocale, route }: LearningSystemPag
   const ui = copy.ui;
   const isArabic = locale === 'ar';
   const numberLocale = isArabic ? 'ar' : 'en-US';
+  const numberFormat = new Intl.NumberFormat(numberLocale);
   const { user } = useAuth();
   const studentProgress = useStudentProgress();
   const isAuthenticated = Boolean(user);
@@ -62,7 +71,7 @@ function LearningSystemPage({ locale, onSwitchLocale, route }: LearningSystemPag
 
   let metaStageLabel: string | undefined;
   if (route.kind === 'learning-path') {
-    metaStageLabel = copy.paths[route.pathId].title;
+    metaStageLabel = shortPathName(route.pathId, copy.paths[route.pathId].title);
   } else if (route.kind === 'not-found') {
     metaStageLabel = ui.notFoundTitle;
   }
@@ -90,50 +99,82 @@ function LearningSystemPage({ locale, onSwitchLocale, route }: LearningSystemPag
           </section>
         ) : !progressGate && route.kind === 'path-catalog' && (
           <>
-            <header className="learning-system-intro">
+            <header className="learning-system-intro learning-system-intro--catalog">
               <p className="eyebrow"><span className="eyebrow-line" />{copy.catalog.eyebrow}</p>
               <h1>{copy.catalog.title}</h1>
               <p className="learning-system-lead">{copy.catalog.description}</p>
             </header>
 
             <ol className="learning-path-catalog" aria-label={copy.catalog.title}>
-              {LEARNING_PATHS.map((path, index) => {
+              {LEARNING_PATHS.map((path) => {
                 const pathCopy = copy.paths[path.id];
                 const language = languageForPath(path.id);
                 const foundationPathId = path.status === 'available' && isFoundationPathId(path.id) ? path.id : null;
                 const foundationPath = foundationPathId !== null;
                 const summaries = foundationPathId ? getLearningPathLessonSummaries(locale, foundationPathId) : [];
-                const pathStarted = foundationPathId !== null && studentProgress.paths.some((row) => row.path_id === foundationPathId);
-                const progressSummary = foundationPathId
+                const hasRealPathData = isAuthenticated && studentProgress.hasLoaded && foundationPath;
+                const pathStarted = hasRealPathData && foundationPathId !== null && (
+                  studentProgress.paths.some((row) => row.path_id === foundationPathId)
+                  || studentProgress.lessons.some((row) => row.path_id === foundationPathId)
+                );
+                const progressSummary = hasRealPathData && foundationPathId
                   ? summarizeFoundationLearningProgress(foundationPathId, studentProgress.lessons, pathStarted)
                   : null;
-                const pathProgress = progressSummary
-                  ? fillTemplate(portalCopy.dashboard.pathProgress, {
-                    completed: new Intl.NumberFormat(numberLocale).format(progressSummary.completedLessonCount),
-                    total: new Intl.NumberFormat(numberLocale).format(summaries.length),
-                  })
-                  : pathCopy.summary;
-                const pathLevel = path.id === 'html-fundamentals' ? ui.beginnerLevel : ui.foundationalLevel;
                 const lessonAvailability = foundationPath
-                  ? fillTemplate(ui.lessonCountLabel, { count: new Intl.NumberFormat(numberLocale).format(summaries.length) })
+                  ? fillTemplate(ui.lessonCountLabel, { count: numberFormat.format(summaries.length) })
                   : ui.plannedLessonsUnavailable;
-                const studentPathState = progressSummary?.pathCompleted ? ui.pathCompleted
-                  : pathStarted ? ui.pathInProgress : ui.pathNotStarted;
+                const showProgress = Boolean(pathStarted && progressSummary && summaries.length > 0);
+                const progressPercent = progressSummary && summaries.length
+                  ? Math.round((progressSummary.completedLessonCount / summaries.length) * 100)
+                  : 0;
+                const pathName = shortPathName(path.id, pathCopy.title);
                 return (
                   <li className={`learning-path-catalog-row path-status-${path.status}`} key={path.id}>
                     <a className="learning-path-catalog-link" href={getLearningPathHref(path.id)}>
-                      <span className="learning-path-index" dir="ltr">0{index + 1}</span>
-                      <span className="learning-path-catalog-copy">
-                        <span className="learning-path-status path-status-label">{statusLabel(path.status, ui)}</span>
-                        <strong>{language ? <ProgrammingLanguageLabel language={language} label={pathCopy.title}>{pathCopy.title}</ProgrammingLanguageLabel> : pathCopy.title}</strong>
-                        <span>{pathProgress}</span>
-                        <span className="learning-path-catalog-meta">
-                          <span>{ui.pathLevelLabel}: {pathLevel}</span>
-                          <span>{lessonAvailability}</span>
-                          {isAuthenticated && studentProgress.hasLoaded && foundationPath && <span>{studentPathState}</span>}
+                      <span className="learning-path-card-top">
+                        <span className="learning-path-card-icon" aria-hidden="true">
+                          {language
+                            ? <ProgrammingLanguageLabel language={language} label={pathName} className="learning-path-card-language">{pathName}</ProgrammingLanguageLabel>
+                            : <AppIcon name={path.id === 'programming-fundamentals' ? 'practice' : 'challenge'} size={24} />}
+                        </span>
+                        <span className={`learning-path-status path-status-label path-status-${path.status}`}>
+                          {statusLabel(path.status, ui)}
                         </span>
                       </span>
-                      <span className="learning-path-open" aria-hidden="true">{isArabic ? '←' : '→'}</span>
+                      <span className="learning-path-card-visual" aria-hidden="true">
+                        <img src={LEARNING_PATH_ARTWORK[path.id]} alt="" loading="lazy" decoding="async" />
+                      </span>
+                      <span className="learning-path-catalog-copy">
+                        <strong>{pathCopy.title}</strong>
+                        <span>{pathCopy.summary}</span>
+                      </span>
+                      <span className="learning-path-card-footer">
+                        <span className="learning-path-card-lesson-count">{lessonAvailability}</span>
+                        {showProgress && progressSummary && (
+                          <span className="learning-path-card-progress">
+                            <span className="learning-path-card-progress-label">
+                              <span>{fillTemplate(portalCopy.dashboard.pathProgress, {
+                                completed: numberFormat.format(progressSummary.completedLessonCount),
+                                total: numberFormat.format(summaries.length),
+                              })}</span>
+                              <span dir="ltr">{numberFormat.format(progressPercent)}%</span>
+                            </span>
+                            <span
+                              className="learning-path-card-progress-track"
+                              role="progressbar"
+                              aria-label={fillTemplate(portalCopy.dashboard.pathProgress, {
+                                completed: numberFormat.format(progressSummary.completedLessonCount),
+                                total: numberFormat.format(summaries.length),
+                              })}
+                              aria-valuemin={0}
+                              aria-valuemax={summaries.length}
+                              aria-valuenow={progressSummary.completedLessonCount}
+                            >
+                              <span style={{ width: `${progressPercent}%` }} />
+                            </span>
+                          </span>
+                        )}
+                      </span>
                       <span className="visually-hidden">{path.status === 'available' ? ui.openPath : ui.viewOutline}</span>
                     </a>
                   </li>
@@ -151,53 +192,111 @@ function LearningSystemPage({ locale, onSwitchLocale, route }: LearningSystemPag
           const foundationPathId = path?.status === 'available' && isFoundationPathId(route.pathId) ? route.pathId : null;
           const foundationPath = foundationPathId !== null;
           const summaries = foundationPathId ? getLearningPathLessonSummaries(locale, foundationPathId) : [];
-          const pathStarted = foundationPathId !== null
+          const hasRealProgress = isAuthenticated && studentProgress.hasLoaded && foundationPath;
+          const pathStarted = hasRealProgress && foundationPathId !== null
             && (studentProgress.paths.some((row) => row.path_id === foundationPathId)
               || studentProgress.lessons.some((row) => row.path_id === foundationPathId));
           const progressSummary = foundationPathId
-            ? summarizeFoundationLearningProgress(foundationPathId, studentProgress.lessons, pathStarted)
+            ? summarizeFoundationLearningProgress(foundationPathId, hasRealProgress ? studentProgress.lessons : [], pathStarted)
             : null;
           const completed = progressSummary?.completedLessonIds ?? new Set<string>();
           const completedCount = progressSummary?.completedLessonCount ?? 0;
-          const progressPercent = foundationPath && isAuthenticated
+          const progressPercent = hasRealProgress
             ? (completedCount / summaries.length) * 100
             : 0;
-          const allComplete = isAuthenticated && progressSummary?.pathCompleted === true;
-          const nextLesson = foundationPath && isAuthenticated && progressSummary
+          const allComplete = hasRealProgress && progressSummary?.pathCompleted === true;
+          const nextLesson = foundationPath && progressSummary
             ? summaries.find((lesson) => lesson.id === progressSummary.resumeLessonId) ?? null
             : null;
-          const pathState = allComplete ? ui.pathCompleted
-            : pathStarted ? ui.pathInProgress : ui.pathNotStarted;
-          const pathLevel = route.pathId === 'html-fundamentals' ? ui.beginnerLevel : ui.foundationalLevel;
+          const learningState = progressSummary ? getFoundationLearningState(progressSummary) : 'not-started';
+          const pathState = learningState === 'completed' ? ui.pathCompleted
+            : learningState === 'in-progress' ? ui.pathInProgress
+              : learningState === 'getting-started' ? ui.pathGettingStarted
+                : ui.pathNotStarted;
+          const pathLevel = foundationPath ? ui.beginnerLevel : ui.foundationalLevel;
           const language = languageForPath(route.pathId);
+          const pathName = shortPathName(route.pathId, pathCopy.title);
+          const reviewLessonId = hasRealProgress && foundationPathId
+            ? getMostRecentReviewLesson(foundationPathId, studentProgress.lessons)
+            : null;
+          const stageGroups = foundationPathId && pathCopy.stages
+            ? FOUNDATION_PATH_STAGE_LESSONS[foundationPathId].flatMap((stage) => {
+              const stageCopy = pathCopy.stages?.find((item) => item.id === stage.id);
+              const lessons = stage.lessonIds.flatMap((lessonId) => {
+                const summary = summaries.find((item) => item.id === lessonId);
+                return summary ? [summary] : [];
+              });
+              return stageCopy && lessons.length ? [{ copy: stageCopy, lessons }] : [];
+            })
+            : [];
 
           return (
             <>
               <nav className="learning-breadcrumb" aria-label={isArabic ? 'مسار التنقل' : 'Breadcrumb'}>
                 <a href="/paths">{ui.allPaths}</a>
                 <span aria-hidden="true">/</span>
-                <span aria-current="page">{pathCopy.title}</span>
+                <span aria-current="page">{pathName}</span>
               </nav>
 
-              <header className="learning-system-intro learning-path-intro">
-                <p className="eyebrow"><span className="eyebrow-line" />{pathCopy.eyebrow}</p>
-                <div className="learning-title-row">
-                  <h1>{language ? <ProgrammingLanguageLabel language={language} label={pathCopy.title}>{pathCopy.title}</ProgrammingLanguageLabel> : pathCopy.title}</h1>
+              <header className="learning-course-overview">
+                <p className="eyebrow"><span className="eyebrow-line" />{path?.status === 'available' ? ui.available : pathCopy.eyebrow}</p>
+                <div className="learning-course-title-row">
+                  <h1>{language ? <ProgrammingLanguageLabel language={language} label={pathCopy.title}>{pathName}</ProgrammingLanguageLabel> : pathCopy.title}</h1>
                   <span className={`learning-path-status path-status-label path-status-${path?.status ?? 'future'}`}>
-                    {path ? statusLabel(path.status, ui) : ui.future}
+                    {hasRealProgress && foundationPath ? pathState : path ? statusLabel(path.status, ui) : ui.future}
                   </span>
                 </div>
                 <p className="learning-system-lead">{pathCopy.summary}</p>
+                <div className="learning-course-meta">
+                  {foundationPath && <span><strong>{ui.courseLevelLabel}:</strong> {pathLevel}</span>}
+                  <span>{foundationPath
+                    ? fillTemplate(ui.lessonCountLabel, { count: new Intl.NumberFormat(numberLocale).format(summaries.length) })
+                    : ui.plannedLessonsUnavailable}</span>
+                </div>
+                {hasRealProgress && foundationPath && progressSummary && (
+                  <div className="learning-course-progress">
+                    <div className="learning-course-progress-label">
+                      <strong>{ui.pathProgress}</strong>
+                      <span>{fillTemplate(portalCopy.dashboard.pathProgress, {
+                        completed: new Intl.NumberFormat(numberLocale).format(completedCount),
+                        total: new Intl.NumberFormat(numberLocale).format(summaries.length),
+                      })}</span>
+                    </div>
+                    <div
+                      className="learning-path-progress-track"
+                      role="progressbar"
+                      aria-label={ui.pathProgress}
+                      aria-valuemin={0}
+                      aria-valuemax={summaries.length}
+                      aria-valuenow={completedCount}
+                    >
+                      <span style={{ width: `${progressPercent}%` }} />
+                    </div>
+                  </div>
+                )}
+                <div className="learning-course-actions">
+                  {foundationPath && nextLesson && (
+                    <a className="button button-primary" href={getLessonHref(nextLesson.id)}>
+                      {hasRealProgress && pathStarted
+                        ? allComplete ? ui.openLesson : ui.continueLearning
+                        : ui.startPath}
+                      <span className="button-arrow" aria-hidden="true">{isArabic ? '←' : '→'}</span>
+                    </a>
+                  )}
+                  {reviewLessonId && reviewLessonId !== nextLesson?.id && (
+                    <a className="button button-quiet" href={getLessonHref(reviewLessonId)}>{ui.reviewPreviousLesson}</a>
+                  )}
+                  <a className="learning-course-browse" href="#course-outline">{ui.browseLessons}</a>
+                </div>
+                {foundationPath && !isAuthenticated && <p className="learning-session-note">{portalCopy.progress.catalogNote}</p>}
               </header>
 
-              <div className="learning-path-meta" aria-label={pathCopy.title}>
-                <span><strong>{ui.pathLevelLabel}:</strong> {pathLevel}</span>
-                <span>{foundationPath
-                  ? fillTemplate(ui.lessonCountLabel, { count: new Intl.NumberFormat(numberLocale).format(summaries.length) })
-                  : ui.plannedLessonsUnavailable}</span>
-                {isAuthenticated && studentProgress.hasLoaded && foundationPath && <span className="student-path-state">{pathState}</span>}
-              </div>
-
+              <details className="learning-course-outline" id="course-outline">
+                <summary>
+                  <span>{ui.browseLessons}</span>
+                  {foundationPath && <span>{fillTemplate(ui.lessonCountLabel, { count: new Intl.NumberFormat(numberLocale).format(summaries.length) })}</span>}
+                </summary>
+                <div className="learning-course-outline-content">
               <div className="learning-path-facts">
                 <section className="learning-path-fact" aria-labelledby="path-audience-title">
                   <h2 id="path-audience-title">{pathCopy.forWhomLabel}</h2>
@@ -217,41 +316,6 @@ function LearningSystemPage({ locale, onSwitchLocale, route }: LearningSystemPag
                   {pathCopy.concepts.map((concept) => <li key={concept}>{concept}</li>)}
                 </ul>
               </section>
-
-              {foundationPath && isAuthenticated && progressSummary && studentProgress.hasLoaded && (
-                <section className="learning-path-progress" aria-labelledby="path-progress-title">
-                  <div className="learning-path-progress-copy">
-                    <h2 id="path-progress-title">{ui.pathProgress}</h2>
-                    <p>{fillTemplate(portalCopy.dashboard.pathProgress, {
-                      completed: new Intl.NumberFormat(numberLocale).format(completedCount),
-                      total: new Intl.NumberFormat(numberLocale).format(summaries.length),
-                    })}</p>
-                  </div>
-                  <div
-                    className="learning-path-progress-track"
-                    role="progressbar"
-                    aria-label={ui.pathProgress}
-                    aria-valuemin={0}
-                    aria-valuemax={summaries.length}
-                    aria-valuenow={isAuthenticated ? completedCount : 0}
-                  >
-                    <span style={{ width: `${progressPercent}%` }} />
-                  </div>
-                  <p className="learning-session-note">{portalCopy.common.accountOnly}</p>
-                  {nextLesson && (
-                    <a className="button button-primary learning-path-continue" href={getLessonHref(nextLesson.id)}>
-                      {allComplete ? ui.openLesson : pathStarted ? ui.continueLearning : ui.startPath}
-                      <span className="button-arrow" aria-hidden="true">{isArabic ? '←' : '→'}</span>
-                    </a>
-                  )}
-                </section>
-              )}
-              {foundationPath && !isAuthenticated && (
-                <p className="learning-session-note">{portalCopy.progress.catalogNote}</p>
-              )}
-              {foundationPath && isAuthenticated && studentProgress.loading && !studentProgress.hasLoaded && (
-                <p className="learning-session-note" role="status">{portalCopy.common.loading}</p>
-              )}
               {foundationPath && isAuthenticated && studentProgress.error && (
                 <p className="student-form-error" role="alert">
                   {portalCopy.common.dataError}{' '}
@@ -269,27 +333,48 @@ function LearningSystemPage({ locale, onSwitchLocale, route }: LearningSystemPag
                 </div>
 
                 {foundationPath ? (
-                  <ol className="learning-path-lessons">
-                    {summaries.map((lesson, index) => {
-                      const isComplete = isAuthenticated && completed.has(lesson.id);
-                      const isNext = isAuthenticated && !allComplete && lesson.id === progressSummary?.recommendedLessonId;
-                      const isCurrent = isAuthenticated && !isComplete && lesson.id === progressSummary?.lastOpenedLessonId;
-                      const stateLabel = isComplete ? ui.completedStatus : isNext ? ui.nextStatus : ui.availableStatus;
-                      return (
-                        <li className={`learning-path-lesson ${isComplete ? 'is-complete' : ''} ${isNext ? 'is-next' : ''} ${isCurrent ? 'is-current' : ''}`} key={lesson.id}>
-                          <a href={getLessonHref(lesson.id)} className="learning-path-lesson-link">
-                            <span className="learning-path-lesson-marker" aria-hidden="true">{isComplete ? '✓' : String(index + 1).padStart(2, '0')}</span>
-                            <span className="learning-path-lesson-copy">
-                              <span className="learning-path-lesson-status">{stateLabel}</span>
-                              <strong>{lesson.title}</strong>
-                              <span>{lesson.summary}</span>
-                            </span>
-                            <span className="learning-path-open" aria-hidden="true">{isArabic ? '←' : '→'}</span>
-                          </a>
-                        </li>
-                      );
-                    })}
-                  </ol>
+                  <div className="learning-path-stages">
+                    {stageGroups.map(({ copy: stageCopy, lessons }, stageIndex) => (
+                      <section className="learning-path-stage" key={stageCopy.id} aria-labelledby={`learning-stage-${stageCopy.id}`}>
+                        <header className="learning-path-stage-heading">
+                          <span className="learning-stage-index" dir="ltr">{String(stageIndex + 1).padStart(2, '0')}</span>
+                          <div>
+                            <h3 id={`learning-stage-${stageCopy.id}`}>{stageCopy.title}</h3>
+                            <p><strong>{ui.stagePurposeLabel}:</strong> {stageCopy.purpose}</p>
+                          </div>
+                        </header>
+                        <div className="learning-stage-details">
+                          <p><strong>{ui.stagePrerequisitesLabel}:</strong> {stageCopy.prerequisites}</p>
+                          <div>
+                            <strong>{ui.stageSkillsLabel}</strong>
+                            <ul>{stageCopy.skills.map((skill) => <li key={skill}>{skill}</li>)}</ul>
+                          </div>
+                        </div>
+                        <ol className="learning-path-lessons">
+                          {lessons.map((lesson) => {
+                            const lessonIndex = summaries.findIndex((item) => item.id === lesson.id);
+                            const isComplete = hasRealProgress && completed.has(lesson.id);
+                            const isNext = hasRealProgress && !allComplete && lesson.id === progressSummary?.recommendedLessonId;
+                            const isCurrent = hasRealProgress && !isComplete && lesson.id === progressSummary?.lastOpenedLessonId;
+                            const stateLabel = isComplete ? ui.completedStatus : isNext ? ui.nextStatus : ui.availableStatus;
+                            return (
+                              <li className={`learning-path-lesson ${isComplete ? 'is-complete' : ''} ${isNext ? 'is-next' : ''} ${isCurrent ? 'is-current' : ''}`} key={lesson.id}>
+                                <a href={getLessonHref(lesson.id)} className="learning-path-lesson-link">
+                                  <span className="learning-path-lesson-marker" aria-hidden="true">{isComplete ? '✓' : String(lessonIndex + 1).padStart(2, '0')}</span>
+                                  <span className="learning-path-lesson-copy">
+                                    <span className="learning-path-lesson-status">{stateLabel}</span>
+                                    <strong>{lesson.title}</strong>
+                                    <span>{lesson.summary}</span>
+                                  </span>
+                                  <span className="learning-path-open" aria-hidden="true">{isArabic ? '←' : '→'}</span>
+                                </a>
+                              </li>
+                            );
+                          })}
+                        </ol>
+                      </section>
+                    ))}
+                  </div>
                 ) : (
                   <>
                     <ol className="learning-outline-list">
@@ -306,7 +391,24 @@ function LearningSystemPage({ locale, onSwitchLocale, route }: LearningSystemPag
                 )}
               </section>
 
+              {foundationPath && (
+                <section className="learning-path-next-steps" aria-labelledby="learning-path-next-steps-title">
+                  <div>
+                    <p className="eyebrow"><span className="eyebrow-line" />{ui.finalAssessmentTitle}</p>
+                    <p>{ui.finalAssessmentBody}</p>
+                    <a className="button button-primary" href={getPathAssessmentHref(foundationPathId!)}>{ui.finalAssessmentAction}<span className="button-arrow" aria-hidden="true">{isArabic ? '←' : '→'}</span></a>
+                  </div>
+                  <div>
+                    <p className="eyebrow"><span className="eyebrow-line" />{ui.projectsTitle}</p>
+                    <p>{ui.projectsBody}</p>
+                    <a className="button button-quiet" href="/projects">{ui.projectsAction}<span className="button-arrow" aria-hidden="true">{isArabic ? '←' : '→'}</span></a>
+                  </div>
+                  <p id="learning-path-next-steps-title" className="learning-path-next-steps-note">{ui.assessmentNotSaved}</p>
+                </section>
+              )}
               {foundationPath && <p className="learning-future-note">{pathCopy.availableNote}</p>}
+                </div>
+              </details>
               <a className="learning-text-link" href="/paths">{ui.allPaths}<span aria-hidden="true"> {isArabic ? '←' : '→'}</span></a>
             </>
           );

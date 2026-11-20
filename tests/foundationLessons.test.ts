@@ -23,13 +23,13 @@ const removeInlineCode = (value: string) => value.replace(/`[^`]*`/gu, '');
 describe('Foundation lesson content', () => {
   it('contains exactly all listed CSS and JavaScript lessons, in path order', () => {
     const ids = Object.keys(FOUNDATION_LESSONS_BY_ID);
-    expect(ids).toHaveLength(17);
+    expect(ids).toHaveLength(42);
     expect(ids).toEqual([...CSS_LESSON_IDS, ...JAVASCRIPT_LESSON_IDS]);
     expect(ids).toEqual(FOUNDATION_LESSON_IDS.filter((id) => id.startsWith('css-') || id.startsWith('js-')));
-    expect(CSS_LESSON_IDS).toHaveLength(8);
-    expect(JAVASCRIPT_LESSON_IDS).toHaveLength(9);
-    expect(Object.values(FOUNDATION_LESSONS_BY_ID).filter((item) => item.path_id === 'css-fundamentals')).toHaveLength(8);
-    expect(Object.values(FOUNDATION_LESSONS_BY_ID).filter((item) => item.path_id === 'javascript-fundamentals')).toHaveLength(9);
+    expect(CSS_LESSON_IDS).toHaveLength(19);
+    expect(JAVASCRIPT_LESSON_IDS).toHaveLength(23);
+    expect(Object.values(FOUNDATION_LESSONS_BY_ID).filter((item) => item.path_id === 'css-fundamentals')).toHaveLength(19);
+    expect(Object.values(FOUNDATION_LESSONS_BY_ID).filter((item) => item.path_id === 'javascript-fundamentals')).toHaveLength(23);
   });
 
   it('provides independent Arabic and English learning copy and non-solution starters', () => {
@@ -74,13 +74,16 @@ describe('Foundation lesson content', () => {
           .replace(/\b(?:CSS|HTML|JavaScript|Flexbox|box-sizing|mobile-first|min-width|max-width|padding|border|margin|display|selector|property|value|class|id|true|false|null|const|let|querySelector|textContent|addEventListener|callback|block|inline|none|row|column|gap|color|background-color|width|font-size|align-items|justify-content|px|h1|message|status)\b/giu, '');
         expect(arabicProse, `${item.id}: English prose leaked into Arabic steps`).not.toMatch(/\b(?:Learning|Understand|Practice|Apply|The|This|Then|with|from|when|which|is|are|you|your|and|for|to)\b/iu);
       }
-      if (item.path_id === 'css-fundamentals') expect(item.starter_css, item.id).toBe('');
-      if (item.path_id === 'javascript-fundamentals') expect(item.starter_js, item.id).toBe('');
+      const language = item.path_id === 'css-fundamentals' ? 'css' : 'javascript';
+      const starter = language === 'css' ? item.starter_css : item.starter_js;
+      const starterResults = validateAstPractice(language, item.starter_html, starter, item.validation_rules);
+      expect(starterResults, `${item.id}: every validation rule should be evaluated`).toHaveLength(item.validation_rules.length);
+      expect(starterResults.some(({ passed }) => !passed), `${item.id}: starter must leave work for the learner`).toBe(true);
     }
   });
 
   it('numbers one measurable practice instruction per validation requirement in both languages', () => {
-    const numberedItems = (text: string) => [...text.matchAll(/(?:^|\s)(?:\d+|[٠-٩]+|[۰-۹]+|[٠-٩۰-۹]+)[.)](?!\d)/gu)].length;
+    const numberedItems = (text: string) => [...text.matchAll(/(?:^|[.!?:]\s+)(?:\d+|[٠-٩]+|[۰-۹]+)[.)]\s+/gu)].length;
     for (const item of Object.values(FOUNDATION_LESSONS_BY_ID)) {
       expect(new Set(item.validation_rules.map(({ id }) => id)).size, `${item.id}: duplicate rule ids`).toBe(item.validation_rules.length);
       expect(item.validation_rules.length, `${item.id}: no measurable requirements`).toBeGreaterThan(0);
@@ -111,8 +114,10 @@ describe('Foundation lesson content', () => {
           expect(hasArabic(en)).toBe(false);
         }
         for (const choice of question.choices) {
+          expect(choice.text_ar.trim(), `${item.id}/${question.id}/${choice.id}: Arabic option`).not.toBe('');
+          expect(choice.text_en.trim(), `${item.id}/${question.id}/${choice.id}: English option`).not.toBe('');
           if (hasArabic(choice.text_ar)) expect(choice.text_ar).not.toBe(choice.text_en);
-          else expect(/^(?:\d+(?:\.\d+)?)$/u.test(choice.text_ar) || /^[A-Za-z][\w-]*$/u.test(choice.text_ar) || /[`{};=<>#.[\]()"']/u.test(choice.text_ar)).toBe(true);
+          else expect(/^(?:\d+(?:\.\d+)?(?:px|rem|em|%)?)$/u.test(choice.text_ar) || /^[A-Za-z][\w-]*$/u.test(choice.text_ar) || /[`{};=<>#.[\]()("']/u.test(choice.text_ar), `${item.id}/${question.id}/${choice.id}: untranslated Arabic option`).toBe(true);
           expect(hasArabic(choice.text_en)).toBe(false);
         }
       }

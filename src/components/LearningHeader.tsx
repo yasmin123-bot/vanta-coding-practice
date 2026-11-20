@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { LEARNING_PATHS, getLearningPathHref, type LearningPathId } from '../content/learningSystem';
+import { LEARNING_PATHS, getLearningPathHref, getLearningLevelsHref, type LearningPathId } from '../content/learningSystem';
 import { messages, type Locale } from '../i18n/messages';
 import { getStudentPortalCopy } from '../i18n/studentPortal';
 import { useAuth } from '../auth/AuthProvider';
@@ -43,6 +43,7 @@ function LearningHeader({ locale, onSwitchLocale, allPathsLabel, stageLabel }: L
   const practiceHref = '/lesson/start?view=practice';
   const isHomeActive = path === '/' || path === '/dashboard';
   const isPathsActive = path === '/paths' || path.startsWith('/paths/');
+  const isLevelsActive = path === '/levels' || path.startsWith('/levels/');
   const isPracticeActive = path.startsWith('/lesson/') && new URLSearchParams(search).get('view') === 'practice';
   const isProfileActive = path === '/profile';
   const pathItems = primaryPathDefinitions.flatMap((definition) => {
@@ -175,6 +176,9 @@ function LearningHeader({ locale, onSwitchLocale, allPathsLabel, stageLabel }: L
               <a className="mabda-app-drawer-link" href="/paths" aria-current={isPathsActive ? 'page' : undefined} onClick={closeAfterNavigation}>
                 <AppIcon name="paths" /><span>{allPathsLabel}</span>
               </a>
+              <a className="mabda-app-drawer-link" href={getLearningLevelsHref()} aria-current={isLevelsActive ? 'page' : undefined} onClick={closeAfterNavigation}>
+                <AppIcon name="challenge" /><span>{portalCopy.appShell.levels}</span>
+              </a>
               <a className="mabda-app-drawer-link" href={practiceHref} aria-current={isPracticeActive ? 'page' : undefined} onClick={closeAfterNavigation}>
                 <AppIcon name="practice" /><span>{portalCopy.appShell.practice}</span>
               </a>
@@ -212,9 +216,9 @@ function LearningHeader({ locale, onSwitchLocale, allPathsLabel, stageLabel }: L
               <div className="mabda-app-future-link" aria-disabled="true">
                 <AppIcon name="challenge" /><span>{portalCopy.appShell.challenges}</span><small>{portalCopy.appShell.comingSoon}</small>
               </div>
-              <div className="mabda-app-future-link" aria-disabled="true">
-                <AppIcon name="project" /><span>{portalCopy.appShell.projects}</span><small>{portalCopy.appShell.comingSoon}</small>
-              </div>
+              <a className="mabda-app-future-link mabda-app-guided-project-link" href="/projects" aria-current={path === '/projects' ? 'page' : undefined} onClick={closeAfterNavigation}>
+                <AppIcon name="project" /><span>{learningCopy.ui.projectsTitle}</span><small>{learningCopy.ui.projectsAction}</small>
+              </a>
             </section>
 
             <section className="mabda-app-preferences" aria-labelledby="mabda-app-preferences-title">

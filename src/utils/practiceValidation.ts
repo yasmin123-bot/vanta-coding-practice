@@ -1,6 +1,6 @@
 import { practiceExercises, type PracticeValidatorId } from '../content/practiceExercises';
 import { HTML_LESSON_IDS, type FoundationLessonId, type HtmlLessonId } from '../content/learningSystem';
-import type { PracticeRequirementResult } from '../content/practiceTypes';
+import type { PracticeRequirementResult, PracticeValidationRule } from '../content/practiceTypes';
 import type { Locale } from '../i18n/messages';
 import { practiceStudioMessages } from '../i18n/practiceStudio';
 import { validateAstPractice } from './astPracticeValidation';
@@ -222,27 +222,26 @@ function pairElements(source: string): HtmlElement[] {
     .sort((left, right) => left.openStart - right.openStart);
 }
 
-function attributeValue(attributes: string, name: string): string | null {
+function rawAttributeValue(attributes: string, name: string): string | null {
   const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const normalizedAttributes = attributes.replace(/\/\s*$/, '');
   const match = normalizedAttributes.match(new RegExp(`(?:^|\\s)${escapedName}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, 'i'));
-  return match ? (match[1] ?? match[2] ?? match[3] ?? '').trim() : null;
+  return match ? (match[1] ?? match[2] ?? match[3] ?? '') : null;
+}
+
+function attributeValue(attributes: string, name: string): string | null {
+  return rawAttributeValue(attributes, name)?.trim() ?? null;
 }
 
 function textContent(source: string, element: HtmlElement): string {
-  return source.slice(element.contentStart, element.closeStart)
+  const rawText = source.slice(element.contentStart, element.closeStart)
     .replace(/<!--[\s\S]*?-->/g, ' ')
     .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, ' ')
     .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, ' ')
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '&')
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;|&apos;/gi, "'")
-    .replace(/\s+/g, ' ')
-    .trim();
+    .replace(/<[^>]*>/g, ' ');
+  const decoder = document.createElement('textarea');
+  decoder.innerHTML = rawText.replace(/</g, '&lt;');
+  return decoder.value.replace(/\s+/g, ' ').trim();
 }
 
 function elementsWithText(source: string, elements: HtmlElement[], tag: string): Array<HtmlElement & { text: string }> {
@@ -401,6 +400,159 @@ function runValidator(validator: PracticeValidatorId, html: string): Record<Prac
   }
 }
 
+function hasBooleanAttribute(attributes: string, name: string): boolean {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`(?:^|\\s)${escaped}(?:\\s|=|$)`, 'i').test(attributes.replace(/\/$/, ''));
+}
+
+function isNestedWithin(element: HtmlElement, parent: HtmlElement): boolean {
+  return element.openStart > parent.openStart && element.openStart < parent.closeStart;
+}
+
+function isDirectlyWithin(element: HtmlElement, parent: HtmlElement, elements: HtmlElement[]): boolean {
+  return isNestedWithin(element, parent) && !elements.some((candidate) => candidate !== element && candidate !== parent
+    && isNestedWithin(candidate, parent) && isNestedWithin(element, candidate));
+}
+
+function hasAncestorTag(element: HtmlElement, ancestorTag: string, elements: HtmlElement[]): boolean {
+  return elements.some((candidate) => candidate.tag === ancestorTag.toLowerCase() && isNestedWithin(element, candidate));
+}
+
+function evaluateHtmlRule(source: string, elements: HtmlElement[], rule: Extract<PracticeValidationRule, { type: 'html-element' | 'html-document' | 'html-list' | 'html-label-control' }>): boolean {
+  if (rule.type === 'html-element') {
+    const matches = elements.filter((element) => element.tag === rule.tag.toLowerCase()
+      && (!rule.parentTag || elements.some((parent) => parent.tag === rule.parentTag?.toLowerCase() && isNestedWithin(element, parent)))
+      && (!rule.ancestorTag || hasAncestorTag(element, rule.ancestorTag, elements))
+      && (!rule.requiredAttributes || rule.requiredAttributes.every((attribute) => hasBooleanAttribute(element.attrs, attribute)))
+      && (!rule.minimumAttributeLengths || Object.entries(rule.minimumAttributeLengths).every(([attribute, length]) => {
+        const value = attributeValue(element.attrs, attribute);
+        return Boolean(value && value.length >= length && (attribute.toLowerCase() !== 'alt' || hasUsefulAltText(value)));
+      }))
+      && (!rule.attributeValues || Object.entries(rule.attributeValues).every(([attribute, value]) => {
+        const actual = attributeValue(element.attrs, attribute);
+        if (element.tag === 'button' && attribute.toLowerCase() === 'type' && value.toLowerCase() === 'submit') {
+          const rawType = rawAttributeValue(element.attrs, attribute);
+          return rawType === null || !['button', 'reset'].includes(rawType.toLowerCase());
+        }
+        return actual === value;
+      }))
+      && (!rule.attributePrefixes || Object.entries(rule.attributePrefixes).every(([attribute, prefix]) => attributeValue(element.attrs, attribute)?.startsWith(prefix)))
+      && (!rule.minimumTextLength || textContent(source, element).length >= rule.minimumTextLength)
+      && (!rule.textIncludes || textContent(source, element).toLocaleLowerCase().includes(rule.textIncludes.toLocaleLowerCase())));
+    const perParentCount = rule.minimumPerParent
+      ? elements.filter((parent) => parent.tag === rule.minimumPerParent?.parentTag.toLowerCase())
+        .filter((parent) => matches.filter((child) => isNestedWithin(child, parent)).length >= (rule.minimumPerParent?.count ?? 1)).length
+      : Number.POSITIVE_INFINITY;
+    const minimumPerParentPassed = !rule.minimumPerParent || perParentCount >= (rule.minimumCount ?? 1);
+    const sameContainerPassed = !rule.sameContainerAs || elements
+      .filter((container) => container.tag === rule.sameContainerAs?.containerTag.toLowerCase())
+      .some((container) => {
+        const hasOwnMatch = matches.some((match) => isNestedWithin(match, container));
+        const requirementsMet = rule.sameContainerAs?.requiredChildren.every(({ tag, count }) => (
+          elements.filter((child) => child.tag === tag.toLowerCase() && isNestedWithin(child, container)).length >= count
+        )) ?? false;
+        return hasOwnMatch && requirementsMet;
+      });
+    return matches.length >= (rule.minimumCount ?? 1) && minimumPerParentPassed && sameContainerPassed;
+  }
+
+  if (rule.type === 'html-document') {
+    const root = elements.find((element) => element.tag === 'html');
+    if (rule.check === 'doctype') {
+      const firstContent = source.search(/\S/);
+      return scanHtml(source).some((token) => token.kind === 'doctype' && token.start === (firstContent < 0 ? 0 : firstContent));
+    }
+    if (rule.check === 'lang') return Boolean(root && attributeValue(root.attrs, 'lang') === rule.expected);
+    if (rule.check === 'direction') return Boolean(root && attributeValue(root.attrs, 'dir') === rule.expected);
+    if (rule.check === 'html-root') {
+      const head = elements.find((element) => element.tag === 'head' && root && isNestedWithin(element, root));
+      const body = elements.find((element) => element.tag === 'body' && root && isNestedWithin(element, root));
+      return Boolean(root && head && body && head.openStart < body.openStart);
+    }
+    if (rule.check === 'title') return elements.some((element) => element.tag === 'title'
+      && textContent(source, element).length > 0
+      && elements.some((head) => head.tag === 'head' && isNestedWithin(element, head)));
+    if (rule.check === 'charset') return elements.some((element) => element.tag === 'meta'
+      && Boolean(attributeValue(element.attrs, 'charset'))
+      && (!rule.expected || attributeValue(element.attrs, 'charset')?.toLowerCase() === rule.expected.toLowerCase())
+      && elements.some((head) => head.tag === 'head' && isNestedWithin(element, head)));
+    return elements.some((element) => element.tag === 'meta'
+      && attributeValue(element.attrs, 'name')?.toLowerCase() === 'viewport'
+      && Boolean(attributeValue(element.attrs, 'content'))
+      && elements.some((head) => head.tag === 'head' && isNestedWithin(element, head)));
+  }
+
+  if (rule.type === 'html-list') {
+    const lists = elements.filter((element) => element.tag === rule.tag);
+    const listsWithEnoughItems = lists.filter((list) => elements.filter((element) => element.tag === 'li'
+      && (rule.directChildren ? isDirectlyWithin(element, list, elements) : isNestedWithin(element, list))).length >= rule.minimumItems);
+    return listsWithEnoughItems.length >= (rule.minimumLists ?? 1);
+  }
+
+  const inputs = elements.filter((element) => element.tag === 'input'
+    && (!rule.inputType || attributeValue(element.attrs, 'type')?.toLowerCase() === rule.inputType.toLowerCase())
+    && (!rule.requireRequired || hasBooleanAttribute(element.attrs, 'required')));
+  const forms = elements.filter((element) => element.tag === 'form');
+  const idCounts = new Map<string, number>();
+  for (const element of elements) {
+    const id = attributeValue(element.attrs, 'id');
+    if (id) idCounts.set(id, (idCounts.get(id) ?? 0) + 1);
+  }
+  const pairs = inputs.filter((input) => {
+    const id = attributeValue(input.attrs, 'id');
+    if (!id || idCounts.get(id) !== 1) return false;
+    const matchingLabels = elements.filter((element) => element.tag === 'label' && attributeValue(element.attrs, 'for') === id);
+    if (!matchingLabels.length) return false;
+    return !rule.formScoped || forms.some((form) => isNestedWithin(input, form) && matchingLabels.some((label) => isNestedWithin(label, form)));
+  });
+  const validPairs = rule.fieldsetScoped
+    ? pairs.filter((input) => {
+      const id = attributeValue(input.attrs, 'id');
+      const matchingLabels = id ? elements.filter((element) => element.tag === 'label' && attributeValue(element.attrs, 'for') === id) : [];
+      return elements.some((fieldset) => fieldset.tag === 'fieldset'
+        && isNestedWithin(input, fieldset) && matchingLabels.some((label) => isNestedWithin(label, fieldset))
+        && forms.some((form) => isNestedWithin(fieldset, form)));
+    })
+    : pairs;
+  return validPairs.length >= (rule.minimumPairs ?? 1);
+}
+
+function htmlRuleLocation(html: string, rule: PracticeValidationRule) {
+  const tag = rule.type === 'html-element' ? rule.tag
+    : rule.type === 'html-list' ? rule.tag
+      : rule.type === 'html-label-control' ? 'input'
+        : rule.type === 'html-document' ? rule.check === 'title' ? 'title' : rule.check === 'doctype' ? '!doctype' : rule.check === 'charset' || rule.check === 'viewport' ? 'meta' : 'html'
+          : null;
+  const matcher = tag === '!doctype' ? /<!doctype\b/i : tag ? new RegExp(`<${tag}\\b`, 'i') : null;
+  const index = matcher ? html.search(matcher) : -1;
+  return index < 0 ? null : editorLocation(html, 'html', index, Math.min(html.length, index + Math.max(2, (tag?.length ?? 1) + 1)));
+}
+
+function validateHtmlRules(html: string, rules: readonly PracticeValidationRule[], locale: Locale): PracticeRequirementResult[] {
+  const elements = pairElements(html);
+  const hasMarkup = /<[a-z][a-z0-9:-]*\b/i.test(html);
+  const htmlRules = rules.filter((rule) => rule.type === 'html-element' || rule.type === 'html-document' || rule.type === 'html-list' || rule.type === 'html-label-control') as Array<Extract<PracticeValidationRule, { type: 'html-element' | 'html-document' | 'html-list' | 'html-label-control' }>>;
+  return htmlRules.map((rule) => {
+    const passed = evaluateHtmlRule(html, elements, rule);
+    const label = locale === 'ar' ? rule.label_ar ?? rule.note_ar : rule.label_en ?? rule.note_en;
+    const explanation = passed
+      ? (locale === 'ar' ? 'تم استيفاء هذا المتطلب.' : 'This requirement is satisfied.')
+      : (locale === 'ar' ? rule.note_ar : rule.note_en);
+    const status = passed ? 'passed' : hasMarkup ? 'failed' : 'missing';
+    return {
+      id: rule.id,
+      status,
+      passed,
+      label,
+      explanation,
+      concept: locale === 'ar' ? rule.concept_ar ?? 'بنية HTML' : rule.concept_en ?? 'HTML structure',
+      reason: passed ? 'satisfied' : status === 'failed' ? 'wrong-structure' : 'missing',
+      severity: passed ? 'hint' : status === 'failed' ? 'warning' : 'hint',
+      location: htmlRuleLocation(html, rule),
+    } satisfies PracticeRequirementResult;
+  });
+}
+
 function htmlCheckTag(id: string): string | null {
   const tags: Record<string, string> = {
     heading: 'h1', subheading: 'h2', paragraph: 'p', 'paragraph-order': 'p', 'link-element': 'a', 'link-href': 'a', 'link-text': 'a',
@@ -431,6 +583,7 @@ export function validatePractice(lessonId: FoundationLessonId, source: PracticeS
     return validateAstPractice(exercise.language as 'css' | 'javascript', html, code, exercise.validationRules ?? [], locale);
   }
   const html = typeof source === 'string' ? source : source.html_code;
+  if (exercise.validationRules?.length) return validateHtmlRules(html, exercise.validationRules, locale);
   const validator = exercise.validator as PracticeValidatorId;
   const checks = runValidator(validator, html);
   const checkIds: Record<PracticeValidatorId, PracticeCheckId[]> = {

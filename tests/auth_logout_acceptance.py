@@ -12,8 +12,9 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from playwright.sync_api import sync_playwright
+from browser_origin import is_same_origin, sanitize_diagnostic_text, validate_local_base_url
 
-BASE = os.environ.get('BASE_URL', 'http://127.0.0.1:5175').rstrip('/')
+BASE = validate_local_base_url(os.environ.get('BASE_URL', 'http://127.0.0.1:5175'))
 OUT = Path(os.environ.get('EVIDENCE_DIR', '/tmp/mabda-auth-logout-acceptance'))
 OUT.mkdir(parents=True, exist_ok=True)
 RESULT = {
@@ -106,13 +107,13 @@ def run():
         guard_page = guard_context.new_page()
         guard_page.set_default_timeout(12000)
         guard_page.add_init_script('localStorage.removeItem(' + json.dumps(AUTH_STORAGE_KEY) + '); localStorage.removeItem("mabda-has-seen-intro"); sessionStorage.removeItem("mabda-has-seen-intro");')
-        guard_page.on('pageerror', lambda error: RESULT['errors'].append(str(error)))
+        guard_page.on('pageerror', lambda error: RESULT['errors'].append(sanitize_diagnostic_text(error)))
         guard_page.goto(BASE + '/dashboard', wait_until='domcontentloaded')
         guard_page.wait_for_url(re.compile(r'/login(?:\?.*)?$'))
         guard_page.locator('[data-testid="welcome-intro"]').wait_for()
-        check('unauthenticated refresh leaves protected dashboard', guard_page.url.startswith(BASE + '/login'))
+        check('unauthenticated refresh leaves protected dashboard', is_same_origin(guard_page.url, BASE) and urlparse(guard_page.url).path == '/login')
         check('guard opens Intro after redirect when not previously completed', guard_page.locator('[data-testid="welcome-intro"]').is_visible())
-        check('protected dashboard content is not exposed', guard_page.locator('.mabda-home-welcome').count() == 0)
+        check('protected dashboard content is not exposed', guard_page.locator('.mabda-home-page').count() == 0)
         guard_context.close()
 
         # A synthetic persisted session exercises the actual provider and signOut method,
@@ -126,14 +127,15 @@ def run():
           if (sessionStorage.getItem("mabda-auth-test-seeded") === "true") return;
           localStorage.setItem({key}, {json.dumps(session)});
           localStorage.setItem("mabda-has-seen-intro", "true");
+          localStorage.setItem("vanta-locale", "en");
           sessionStorage.setItem("mabda-auth-test-seeded", "true");
         }})()''')
         page.route(SUPABASE_URL + '/**', mock_supabase)
-        page.on('pageerror', lambda error: RESULT['errors'].append(str(error)))
-        page.on('console', lambda message: RESULT['errors'].append(message.text) if message.type == 'error' else None)
+        page.on('pageerror', lambda error: RESULT['errors'].append(sanitize_diagnostic_text(error)))
+        page.on('console', lambda message: RESULT['errors'].append(sanitize_diagnostic_text(message.text)) if message.type == 'error' else None)
         page.goto(BASE + '/dashboard', wait_until='domcontentloaded')
-        page.locator('.mabda-home-welcome').wait_for()
-        check('synthetic authenticated session opens protected dashboard', page.locator('.mabda-home-welcome').is_visible())
+        page.locator('.mabda-home-hero h1').wait_for()
+        check('synthetic authenticated session opens protected dashboard with its available name', page.locator('.mabda-home-hero h1').inner_text().strip() == 'Local Test Learner')
         check('intro previously marked as complete', page.evaluate('localStorage.getItem("mabda-has-seen-intro") === "true"'))
 
         navigations = []
@@ -147,7 +149,10 @@ def run():
         check('landing page is shown after logout', page.locator('.mabda-home-hero h1').is_visible())
         check('intro completion is cleared after logout', page.evaluate('localStorage.getItem("mabda-has-seen-intro") === null && sessionStorage.getItem("mabda-has-seen-intro") === null'))
         check('no Login route flash during logout navigation', all(urlparse(url).path != '/login' for url in navigations))
-        check('logged-out page does not expose authenticated welcome', page.locator('.mabda-home-welcome').count() == 0)
+        guest_eyebrow = page.locator('.mabda-home-eyebrow').inner_text().strip()
+        logged_out_heading = page.locator('.mabda-home-hero h1').inner_text().strip()
+        check('logged-out page shows guest welcome', guest_eyebrow == 'Welcome to Mabda', guest_eyebrow)
+        check('logged-out page does not expose the prior account name', logged_out_heading != 'Local Test Learner', logged_out_heading)
         page.screenshot(path=str(OUT / 'logged-out-landing.png'), full_page=True)
 
         page.locator('.mabda-app-menu-trigger').click()
@@ -162,7 +167,7 @@ def run():
 try:
     run()
 except Exception:
-    RESULT['failure'] = traceback.format_exc()
+    RESULT['failure'] = sanitize_diagnostic_text(traceback.format_exc())
 finally:
     (OUT / 'results.json').write_text(json.dumps(RESULT, ensure_ascii=False, indent=2))
     print(json.dumps({

@@ -12,7 +12,9 @@ function checks(lessonId: Parameters<typeof validatePractice>[0], html: string) 
 describe('exercise-specific HTML validation', () => {
   it('keeps every HTML lesson checklist bilingual and aligned with its validator checks', () => {
     for (const lessonId of HTML_LESSON_IDS) {
-      const checkIds = Object.keys(practiceStudioMessages.ar.exercises[lessonId].checks);
+      const staticCheckIds = Object.keys(practiceStudioMessages.ar.exercises[lessonId].checks);
+      const rules = practiceExercises[lessonId].validationRules ?? [];
+      const checkIds = staticCheckIds.length > 0 ? staticCheckIds : rules.map(({ id }) => id);
       expect(checkIds.length, `${lessonId}: checklist requirements`).toBeGreaterThan(0);
       expect(new Set(checkIds).size, `${lessonId}: duplicate checklist IDs`).toBe(checkIds.length);
       expect(validatePractice(lessonId, '').map(({ id }) => id), `${lessonId}: validator IDs`).toEqual(checkIds);
@@ -20,10 +22,19 @@ describe('exercise-specific HTML validation', () => {
         const copy = practiceStudioMessages[locale].exercises[lessonId];
         expect(copy.task.trim(), `${lessonId}/${locale}: task`).not.toBe('');
         expect(copy.expected.trim(), `${lessonId}/${locale}: expected outcome`).not.toBe('');
-        for (const [checkId, check] of Object.entries(copy.checks)) {
-          expect(check?.label.trim(), `${lessonId}/${locale}/${checkId}: label`).not.toBe('');
-          expect(check?.missing.trim(), `${lessonId}/${locale}/${checkId}: measurable instructions`).not.toBe('');
-          expect(check?.passed.trim(), `${lessonId}/${locale}/${checkId}: feedback`).not.toBe('');
+        if (staticCheckIds.length > 0) {
+          for (const [checkId, check] of Object.entries(copy.checks)) {
+            expect(check?.label.trim(), `${lessonId}/${locale}/${checkId}: label`).not.toBe('');
+            expect(check?.missing.trim(), `${lessonId}/${locale}/${checkId}: measurable instructions`).not.toBe('');
+            expect(check?.passed.trim(), `${lessonId}/${locale}/${checkId}: feedback`).not.toBe('');
+          }
+        } else {
+          for (const rule of rules) {
+            const label = locale === 'ar' ? rule.label_ar : rule.label_en;
+            const instruction = locale === 'ar' ? rule.note_ar : rule.note_en;
+            expect(label?.trim(), `${lessonId}/${locale}/${rule.id}: rule label`).not.toBe('');
+            expect(instruction?.trim(), `${lessonId}/${locale}/${rule.id}: rule instruction`).not.toBe('');
+          }
         }
       }
     }
@@ -66,12 +77,76 @@ describe('exercise-specific HTML validation', () => {
   });
 
   it('checks an explicit document structure without relying on DOMParser defaults', () => {
-    expect(checks('html-first-page', 'Page title and visible content')).toEqual({ doctype: false, head: false, title: false, body: false });
-    expect(checks('html-first-page', '<!doctype html><html><head><title>My first page</title></head><body><h1>Hello</h1></body></html>')).toEqual({ doctype: true, head: true, title: true, body: true });
-    expect(checks('html-first-page', '<!doctype html><html><head></head><body>Content</body></html>')).toEqual({ doctype: true, head: true, title: false, body: true });
+    expect(checks('html-first-page', 'Page title and visible content')).toEqual({ 'first-page-doctype': false, 'first-page-html-root': false, 'first-page-title': false });
+    expect(checks('html-first-page', '<!doctype html><html><head><title>My first page</title></head><body><h1>Hello</h1></body></html>')).toEqual({ 'first-page-doctype': true, 'first-page-html-root': true, 'first-page-title': true });
+    expect(checks('html-first-page', '<!doctype html><html><head></head><body>Content</body></html>')).toEqual({ 'first-page-doctype': true, 'first-page-html-root': true, 'first-page-title': false });
     // A browser-created/default title or body must not satisfy the source requirement.
-    expect(checks('html-first-page', '<!doctype html><title>Decoy outside head</title><body>Content</body>')).toEqual({ doctype: true, head: false, title: false, body: false });
-    expect(checks('html-first-page', '<!doctype html><body>Content</body><head><title>Late head</title></head>')).toEqual({ doctype: true, head: true, title: true, body: false });
+    expect(checks('html-first-page', '<!doctype html><title>Decoy outside head</title><body>Content</body>')).toEqual({ 'first-page-doctype': true, 'first-page-html-root': false, 'first-page-title': false });
+    expect(checks('html-first-page', '<!doctype html><body>Content</body><head><title>Late head</title></head>')).toEqual({ 'first-page-doctype': true, 'first-page-html-root': false, 'first-page-title': true });
+  });
+
+  it('requires at least eight characters in the metadata description', () => {
+    const pageWithDescription = (description: string) => (
+      `<html><head><meta name="description" content="${description}"></head><body></body></html>`
+    );
+
+    expect(checks('html-document-metadata', pageWithDescription('1234567'))['metadata-description']).toBe(false);
+    expect(checks('html-document-metadata', pageWithDescription('12345678'))['metadata-description']).toBe(true);
+    expect(checks('html-document-metadata', pageWithDescription('A longer description'))['metadata-description']).toBe(true);
+    expect(practiceStudioMessages.ar.exercises['html-document-metadata'].task).toContain('8 أحرف على الأقل');
+    expect(practiceStudioMessages.en.exercises['html-document-metadata'].task).toContain('at least 8 content characters');
+    expect(practiceExercises['html-document-metadata'].instructions?.ar).toContain('8 أحرف على الأقل');
+    expect(practiceExercises['html-document-metadata'].instructions?.en).toContain('at least 8 characters');
+  });
+
+  it('does not let duplicate control IDs satisfy multiple label requirements', () => {
+    const duplicateIds = '<form><fieldset><legend>Contact</legend><label for="contact">Name</label><input id="contact"><input id="contact"><button>Send</button></fieldset></form>';
+    const distinctIds = '<form><fieldset><legend>Contact</legend><label for="name">Name</label><input id="name"><label for="email">Email</label><input id="email"><button>Send</button></fieldset></form>';
+    expect(checks('html-accessible-forms', duplicateIds)['contact-label-pairs']).toBe(false);
+    expect(checks('html-accessible-forms', distinctIds)['contact-label-pairs']).toBe(true);
+  });
+
+  it('accepts missing or invalid default submit types but rejects explicit non-submit buttons', () => {
+    const accessibleForm = (button: string) => `<form><fieldset><legend>Contact</legend><label for="name">Name</label><input id="name"><label for="email">Email</label><input id="email">${button}</fieldset></form>`;
+    expect(checks('html-accessible-forms', accessibleForm('<button>Send</button>'))['contact-submit']).toBe(true);
+    expect(checks('html-accessible-forms', accessibleForm('<button type="">Send</button>'))['contact-submit']).toBe(true);
+    expect(checks('html-accessible-forms', accessibleForm('<button type="future-value">Send</button>'))['contact-submit']).toBe(true);
+    expect(checks('html-accessible-forms', accessibleForm('<button type=" reset ">Send</button>'))['contact-submit']).toBe(true);
+    expect(checks('html-accessible-forms', accessibleForm('<button type=" button ">Send</button>'))['contact-submit']).toBe(true);
+    expect(checks('html-accessible-forms', accessibleForm('<button type="button">Send</button>'))['contact-submit']).toBe(false);
+
+    const emailForm = (button: string) => `<form><label for="email">Email</label><input id="email" type="email" required><small>Use a valid email address.</small>${button}</form>`;
+    expect(checks('html-form-validation', emailForm('<button>Send</button>'))['email-submit-button']).toBe(true);
+    expect(checks('html-form-validation', emailForm('<button type="future-value">Send</button>'))['email-submit-button']).toBe(true);
+    expect(checks('html-form-validation', emailForm('<button type=" reset ">Send</button>'))['email-submit-button']).toBe(true);
+    expect(checks('html-form-validation', emailForm('<button type="reset">Clear</button>'))['email-submit-button']).toBe(false);
+  });
+
+  it('requires actual non-empty footer text in both footer exercises', () => {
+    expect(checks('html-semantic-structure', '<footer></footer>')['semantic-footer']).toBe(false);
+    expect(checks('html-semantic-structure', '<footer><!-- closing note --></footer>')['semantic-footer']).toBe(false);
+    expect(checks('html-semantic-structure', '<footer>&#32;</footer>')['semantic-footer']).toBe(false);
+    expect(checks('html-semantic-structure', '<footer>&#x20;&Tab;&NewLine;</footer>')['semantic-footer']).toBe(false);
+    expect(checks('html-semantic-structure', '<footer>&#32;Contact</footer>')['semantic-footer']).toBe(true);
+    expect(checks('html-semantic-structure', '<footer>Contact the workshop</footer>')['semantic-footer']).toBe(true);
+    expect(checks('html-multi-section-page', '<footer></footer>')['page-footer']).toBe(false);
+    expect(checks('html-multi-section-page', '<footer>Copyright 2026</footer>')['page-footer']).toBe(true);
+  });
+
+  it('keeps the bilingual media task limited to the three validated requirements', () => {
+    expect(validatePractice('html-media', '').map(({ id }) => id)).toEqual(['media-image-alternative', 'media-caption', 'media-video-controls']);
+    for (const locale of ['ar', 'en'] as const) {
+      const task = practiceStudioMessages[locale].exercises['html-media'].task;
+      expect(task).not.toMatch(/iframe/i);
+      expect(task.match(/(?:^|\s)(?:١\.|٢\.|٣\.|1\.|2\.|3\.)/g)).toHaveLength(3);
+    }
+  });
+
+  it('states the non-empty footer requirement in both semantic-structure tasks', () => {
+    expect(practiceStudioMessages.ar.exercises['html-semantic-structure'].task).toContain('غير فارغ');
+    expect(practiceStudioMessages.en.exercises['html-semantic-structure'].task).toContain('non-empty');
+    expect(practiceExercises['html-semantic-structure'].instructions.ar).toContain('غير فارغ');
+    expect(practiceExercises['html-semantic-structure'].instructions.en).toContain('non-empty');
   });
 });
 

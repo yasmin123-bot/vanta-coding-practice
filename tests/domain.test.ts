@@ -15,7 +15,14 @@ import {
 } from '../src/content/learningSystem';
 import { practiceExercises } from '../src/content/practiceExercises';
 import { messages, type Locale } from '../src/i18n/messages';
-import { summarizeFoundationLearningProgress, summarizeHtmlLearningProgress, type LessonProgressSummaryInput } from '../src/utils/learningProgress';
+import { additionalHtmlLearningMessages } from '../src/i18n/expandedHtmlLessonCopy';
+import {
+  getFoundationLearningState,
+  getMostRecentReviewLesson,
+  summarizeFoundationLearningProgress,
+  summarizeHtmlLearningProgress,
+  type LessonProgressSummaryInput,
+} from '../src/utils/learningProgress';
 import { validatePractice } from '../src/utils/practiceValidation';
 import { createQuizChoiceOrder, getOrderedQuizChoices } from '../src/utils/quizChoices';
 import { safeReturnPath } from '../src/utils/safeReturnPath';
@@ -28,7 +35,7 @@ function getQuestions(locale: Locale, lessonId: HtmlLessonId) {
   const copy = messages[locale];
   return lessonId === 'html-introduction'
     ? copy.lesson.questions
-    : copy.learningSystem.lessons[lessonId].questions;
+    : additionalHtmlLearningMessages[locale][lessonId].questions;
 }
 
 function getCheckMap(lessonId: HtmlLessonId, html: string): Record<string, boolean> {
@@ -42,8 +49,8 @@ function parseWithJsdom(html: string): Document {
 }
 
 describe('HTML learning catalog and localized quiz contracts', () => {
-  it('keeps exactly five lesson IDs aligned across routes, exercises, and Arabic/English copy', () => {
-    expect(HTML_LESSON_IDS).toHaveLength(5);
+  it('keeps all twelve lesson IDs aligned across routes, exercises, and Arabic/English copy', () => {
+    expect(HTML_LESSON_IDS).toHaveLength(12);
     expect(Object.keys(HTML_LESSON_ROUTES)).toEqual([...HTML_LESSON_IDS]);
     expect(Object.keys(practiceExercises)).toEqual([...FOUNDATION_LESSON_IDS]);
     expect(HTML_LESSON_IDS.every((lessonId) => lessonId in practiceExercises)).toBe(true);
@@ -149,12 +156,15 @@ describe('HTML learning catalog and localized quiz contracts', () => {
       .toEqual(choices.map(({ id }) => id));
   });
 
-  it('keeps all exercise starters unresolved and safe to open as blank practice editors', () => {
-    for (const lessonId of HTML_LESSON_IDS) {
+  it('keeps every exercise starter incomplete so students still have measurable work to do', () => {
+    for (const lessonId of FOUNDATION_LESSON_IDS) {
       const exercise = practiceExercises[lessonId];
-      expect(exercise.starterHtml.trim(), lessonId).toBe('');
-      expect(exercise.starterCss.trim(), lessonId).not.toBe('');
-      expect(exercise.starterJs.trim(), lessonId).not.toBe('');
+      const results = validatePractice(lessonId, {
+        html_code: exercise.starterHtml,
+        css_code: exercise.starterCss,
+        js_code: exercise.starterJs,
+      });
+      expect(results.some(({ passed }) => !passed), `${lessonId}: starter must not satisfy every requirement`).toBe(true);
     }
   });
 
@@ -202,8 +212,8 @@ describe('HTML learning catalog and localized quiz contracts', () => {
       lessonId: 'html-first-page' as const,
       valid: '<!doctype html><html><head><title>My first page</title></head><body><h1>Hello</h1><p>Welcome.</p></body></html>',
       invalid: '<html><head><title>Missing doctype</title></head><body>Visible content</body></html>',
-      validChecks: { doctype: true, head: true, title: true, body: true },
-      invalidChecks: { doctype: false, head: false, title: false, body: false },
+      validChecks: { 'first-page-doctype': true, 'first-page-html-root': true, 'first-page-title': true },
+      invalidChecks: { 'first-page-doctype': false, 'first-page-html-root': true, 'first-page-title': true },
     },
   ])('validates positive and negative $lessonId practice HTML through jsdom parsing', ({ lessonId, valid, invalid, validChecks, invalidChecks }) => {
     const validDocument = parseWithJsdom(valid);
@@ -226,9 +236,16 @@ describe('pure learning progress summary', () => {
     expect(summary.lastOpenedLessonId).toBeNull();
     expect(summary.resumeLessonId).toBe('html-introduction');
     expect(summary.recommendedLessonId).toBe('html-introduction');
+    expect(getFoundationLearningState(summary)).toBe('not-started');
+    expect(getMostRecentReviewLesson('html-fundamentals', [])).toBeNull();
   });
 
   it('deduplicates completed lessons, ignores unknown rows, and resumes the newest incomplete lesson', () => {
+    const startedOnly = summarizeHtmlLearningProgress([
+      { lesson_id: 'html-introduction', completed_at: null, last_opened_at: '2026-10-02T10:00:00.000Z' },
+    ], true);
+    expect(getFoundationLearningState(startedOnly)).toBe('getting-started');
+
     const rows: LessonProgressSummaryInput[] = [
       {
         lesson_id: 'html-introduction',
@@ -261,13 +278,15 @@ describe('pure learning progress summary', () => {
     expect(summary.lastOpenedLessonId).toBe('html-introduction');
     expect(summary.resumeLessonId).toBe('html-introduction');
     expect(summary.recommendedLessonId).toBe('html-headings-paragraphs');
+    expect(getFoundationLearningState(summary)).toBe('in-progress');
+    expect(getMostRecentReviewLesson('html-fundamentals', rows)).toBe('html-introduction');
   });
 
-  it('marks the path complete only after all five lessons are completed', () => {
+  it('marks the path complete only after all twelve lessons are completed', () => {
     const rows: LessonProgressSummaryInput[] = HTML_LESSON_IDS.map((lessonId, index) => ({
       lesson_id: lessonId,
-      completed_at: `2026-10-0${index + 1}T10:00:00.000Z`,
-      last_opened_at: `2026-10-0${index + 1}T10:00:00.000Z`,
+      completed_at: `2026-10-${String(index + 1).padStart(2, '0')}T10:00:00.000Z`,
+      last_opened_at: `2026-10-${String(index + 1).padStart(2, '0')}T10:00:00.000Z`,
     }));
 
     const summary = summarizeHtmlLearningProgress(rows, true);
@@ -275,13 +294,27 @@ describe('pure learning progress summary', () => {
     expect(summary.completedLessonCount).toBe(HTML_LESSON_IDS.length);
     expect(summary.pathCompleted).toBe(true);
     expect(summary.recommendedLessonId).toBeNull();
-    expect(summary.lastOpenedLessonId).toBe('html-first-page');
-    expect(summary.resumeLessonId).toBe('html-first-page');
+    expect(summary.lastOpenedLessonId).toBe('html-multi-section-page');
+    expect(summary.resumeLessonId).toBe('html-multi-section-page');
+    expect(getFoundationLearningState(summary)).toBe('completed');
+  });
+
+  it('uses in-progress only after at least one lesson is completed', () => {
+    const summary = summarizeFoundationLearningProgress('html-fundamentals', [
+      { lesson_id: 'html-introduction', completed_at: '2026-10-02T10:00:00.000Z', last_opened_at: '2026-10-03T10:00:00.000Z' },
+      { lesson_id: 'html-headings-paragraphs', completed_at: null, last_opened_at: '2026-10-04T10:00:00.000Z' },
+    ], true);
+
+    expect(getFoundationLearningState(summary)).toBe('in-progress');
+    expect(getMostRecentReviewLesson('html-fundamentals', [
+      { lesson_id: 'html-introduction', completed_at: '2026-10-02T10:00:00.000Z', last_opened_at: '2026-10-03T10:00:00.000Z' },
+      { lesson_id: 'html-headings-paragraphs', completed_at: null, last_opened_at: '2026-10-04T10:00:00.000Z' },
+    ])).toBe('html-introduction');
   });
 
   it.each([
-    [CSS_PATH_ID, 8],
-    [JAVASCRIPT_PATH_ID, 9],
+    [CSS_PATH_ID, 19],
+    [JAVASCRIPT_PATH_ID, 23],
   ] as const)('summarizes an untouched and fully completed %s path with %i catalog lessons', (pathId, lessonCount) => {
     const lessonIds = FOUNDATION_LESSON_IDS_BY_PATH[pathId];
     const empty = summarizeFoundationLearningProgress(pathId, [], false);

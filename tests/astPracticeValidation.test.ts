@@ -54,6 +54,29 @@ describe('validateAstPractice', () => {
     expect(result('javascript', 'const count = 4;', check)).toBe(false);
   });
 
+  it('classifies Number(...) from source and binds the conversion to the requested declaration', () => {
+    const declaration = rule({ id: 'number-declaration', type: 'js-declaration', target: 'score', property: 'const', expectedType: 'number' });
+    const assignment = rule({ id: 'number-assignment', type: 'js-assignment', target: 'score', expectedType: 'number' });
+    const call = rule({ id: 'number-argument', type: 'js-call', target: 'console.log', argumentType: 'number' });
+    expect(result('javascript', 'const score = Number("12");', declaration)).toBe(true);
+    expect(result('javascript', 'score = Number("12");', assignment)).toBe(true);
+    expect(result('javascript', 'console.log(Number("12"));', call)).toBe(true);
+
+    const conversionLessonRules = FOUNDATION_LESSONS_BY_ID['js-type-conversion'].validation_rules;
+    expect(validateAstPractice('javascript', '', 'const score = Number("12");', conversionLessonRules).map(({ passed }) => passed)).toEqual([true, true]);
+    expect(validateAstPractice('javascript', '', 'const score = 12; Number("12");', conversionLessonRules).map(({ passed }) => passed)).toEqual([true, false]);
+    expect(validateAstPractice('javascript', '', 'const score = Number("13");', conversionLessonRules).map(({ passed }) => passed)).toEqual([false, false]);
+  });
+
+  it('requires the js-loops counter to move toward the stated stopping condition', () => {
+    const checks = FOUNDATION_LESSONS_BY_ID['js-loops'].validation_rules;
+    const correct = 'for (let index = 0; index < 3; index++) { console.log(index); }';
+    expect(validateAstPractice('javascript', '', correct, checks).map(({ passed }) => passed)).toEqual([true, true]);
+    expect(validateAstPractice('javascript', '', 'for (let index = 0; index < 3; ) { console.log(index); }', checks).map(({ passed }) => passed)).toEqual([false, true]);
+    expect(result('javascript', 'for (let index = 0; index < 3; index--) { console.log(index); }', checks[0])).toBe(false);
+    expect(result('javascript', 'for (let index = 0; index <= 3; index++) { console.log(index); }', checks[0])).toBe(false);
+  });
+
   it('checks selector call argument and verifies selector binding exists in supplied HTML', () => {
     const call = rule({ id: 'call', type: 'js-call', target: 'document.querySelector', argument: '.action', argumentIndex: 0 });
     expect(result('javascript', 'document.querySelector(".action");', call)).toBe(true);

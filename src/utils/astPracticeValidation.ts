@@ -116,12 +116,13 @@ function declarationInfo(node: AstNode, source: string) {
   return { name: text(source, name), kind: kind.name, initializer };
 }
 
-function expressionType(node: AstNode | undefined): 'number' | 'string' | 'boolean' | 'array' | 'other' {
+function expressionType(node: AstNode | undefined, source = ''): 'number' | 'string' | 'boolean' | 'array' | 'object' | 'other' {
   if (!node) return 'other';
-  if (node.name === 'Number' || node.name === 'NumberLiteral') return 'number';
+  if (node.name === 'Number' || node.name === 'NumberLiteral' || (node.name === 'CallExpression' && /^Number\s*\(/.test(text(source, node)))) return 'number';
   if (node.name === 'String' || node.name === 'TemplateString') return 'string';
   if (node.name === 'true' || node.name === 'false') return 'boolean';
   if (node.name === 'ArrayExpression') return 'array';
+  if (node.name === 'ObjectExpression') return 'object';
   return 'other';
 }
 
@@ -131,6 +132,28 @@ function callParts(node: AstNode, source: string) {
   const argsNode = node.children.find((child) => child.name === 'ArgList');
   if (!callee || !argsNode) return null;
   return { callee: normalized(text(source, callee)), args: expressionChildren(argsNode) };
+}
+
+function callIsInsideLoopFor(node: AstNode, source: string, variable: string): boolean {
+  let ancestor = node.parent;
+  while (ancestor) {
+    if (ancestor.name === 'ForStatement') {
+      const header = text(source, ancestor).split('{', 1)[0];
+      return new RegExp(`\\b(?:let|const|var)\\s+${variable}\\b`).test(header);
+    }
+    ancestor = ancestor.parent;
+  }
+  return false;
+}
+
+function namedFunctionNodes(root: AstNode, source: string, functionName: string): AstNode[] {
+  return allNodes(root).filter((node) => {
+    if (node.name === 'FunctionDeclaration') {
+      return node.children.some((child) => child.name === 'VariableDefinition' && text(source, child) === functionName);
+    }
+    const declaration = declarationInfo(node, source);
+    return declaration?.name === functionName && (declaration.initializer?.name === 'ArrowFunction' || declaration.initializer?.name === 'FunctionExpression');
+  });
 }
 
 function targetText(node: AstNode, source: string): string {
@@ -282,10 +305,16 @@ function cssRuleMatches(root: AstNode, source: string, rule: PracticeValidationR
     return allNodes(root).some((media) => media.name === 'MediaStatement'
       && normalizedMediaCondition(cssMediaCondition(media, source)) === normalizedMediaCondition(rule.target));
   }
+  if (rule.type === 'css-forbid-declaration') {
+    return !getCssDeclarationFacts(source).some((declaration) => selectorListIncludes(declaration.selector, rule.target)
+      && declaration.property === rule.property.trim().toLowerCase());
+  }
   if (rule.type !== 'css-declaration' && rule.type !== 'css-declaration-in-media') return false;
   const expectedMedia = rule.type === 'css-declaration-in-media' ? normalizeCssMediaCondition(rule.media) : null;
   return getCssDeclarationFacts(source).some((declaration) => selectorListIncludes(declaration.selector, rule.target)
     && (expectedMedia === null || normalizeCssMediaCondition(declaration.media ?? '') === expectedMedia)
+    && (rule.type !== 'css-declaration' || rule.scope === undefined || rule.scope === 'any'
+      || (rule.scope === 'outside-media' ? !declaration.media : Boolean(declaration.media)))
     && declaration.property === rule.property.trim().toLowerCase()
     && cssRuleValueMatches(declaration.value, rule.value, rule.property, rule.valueMatch === 'semantic-color')
     && (!rule.requireSemicolon || declaration.hasSemicolon));
@@ -324,6 +353,12 @@ function cssEvidence(root: AstNode, source: string, rule: PracticeValidationRule
       ? { passed: false, reason: 'wrong-value', from: media.from, to: media.to, severity: 'warning' }
       : { passed: false, reason: 'missing', severity: 'hint' };
   }
+  if (rule.type === 'css-forbid-declaration') {
+    if (cssRuleMatches(root, source, rule)) return { passed: true, reason: 'satisfied', severity: 'hint' };
+    const match = getCssDeclarationFacts(source).find((item) => selectorListIncludes(item.selector, rule.target)
+      && item.property === rule.property.trim().toLowerCase());
+    return { passed: false, reason: 'wrong-behavior', from: match?.propertyFrom, to: match?.propertyTo, severity: 'warning' };
+  }
   if (rule.type !== 'css-declaration' && rule.type !== 'css-declaration-in-media') {
     return { passed: false, reason: 'missing', severity: 'hint' };
   }
@@ -332,6 +367,8 @@ function cssEvidence(root: AstNode, source: string, rule: PracticeValidationRule
     const exact = getCssDeclarationFacts(source).find((item) => item.selector === normalized(rule.target)
       && item.property === rule.property.toLowerCase()
       && (expectedMedia === null || normalizeCssMediaCondition(item.media ?? '') === expectedMedia)
+      && (rule.type !== 'css-declaration' || rule.scope === undefined || rule.scope === 'any'
+        || (rule.scope === 'outside-media' ? !item.media : Boolean(item.media)))
       && cssRuleValueMatches(item.value, rule.value, rule.property, rule.valueMatch === 'semantic-color')
       && (!rule.requireSemicolon || item.hasSemicolon));
     return { passed: true, reason: 'satisfied', from: exact?.from, to: exact?.to, severity: 'hint' };
@@ -341,7 +378,9 @@ function cssEvidence(root: AstNode, source: string, rule: PracticeValidationRule
   const selectorDeclarations = declarations.filter((item) => item.selector === normalized(rule.target));
   const scopedDeclarations = rule.type === 'css-declaration-in-media'
     ? selectorDeclarations.filter((item) => normalizeCssMediaCondition(item.media ?? '') === normalizeCssMediaCondition(rule.media))
-    : selectorDeclarations;
+    : rule.scope === 'outside-media' ? selectorDeclarations.filter((item) => !item.media)
+      : rule.scope === 'inside-media' ? selectorDeclarations.filter((item) => Boolean(item.media))
+        : selectorDeclarations;
   const sameProperty = scopedDeclarations.find((item) => item.property === rule.property.toLowerCase());
   if (sameProperty && cssRuleValueMatches(sameProperty.value, rule.value, rule.property, rule.valueMatch === 'semantic-color') && rule.requireSemicolon && !sameProperty.hasSemicolon) {
     return { passed: false, reason: 'missing-semicolon', from: sameProperty.to, to: sameProperty.to, severity: 'warning' };
@@ -445,9 +484,9 @@ function htmlHasSelector(html: string, selector: string, expectedTag?: string): 
   });
 }
 
-function declarationHasTypeAndValue(source: string, initializer: AstNode | undefined, expectedType?: 'number' | 'string' | 'boolean' | 'array', expectedValue?: string | number | boolean): boolean {
+function declarationHasTypeAndValue(source: string, initializer: AstNode | undefined, expectedType?: 'number' | 'string' | 'boolean' | 'array' | 'object', expectedValue?: string | number | boolean): boolean {
   if (!initializer) return expectedType === undefined && expectedValue === undefined;
-  if (expectedType && expressionType(initializer) !== expectedType) return false;
+  if (expectedType && expressionType(initializer, source) !== expectedType) return false;
   if (expectedValue !== undefined && !matchesLiteral(source, initializer, expectedValue)) return false;
   return true;
 }
@@ -466,7 +505,7 @@ function assignmentMatches(
   const left = operands[0];
   const right = operands[1];
   if (!left || !right || targetText(left, source) !== normalized(target)) return false;
-  if (expectedType && expressionType(right) !== expectedType) return false;
+  if (expectedType && expressionType(right, source) !== expectedType) return false;
   if (expectedValue !== undefined && !matchesLiteral(source, right, expectedValue)) return false;
   if (mustDifferFrom !== undefined && literalValue(source, right) === mustDifferFrom) return false;
   if (mustBeNonEmpty) {
@@ -504,23 +543,44 @@ function jsRuleMatches(root: AstNode, source: string, html: string, rule: Practi
     case 'js-declaration':
       return nodes.some((node) => {
         const info = declarationInfo(node, source);
+        const initializerCall = info?.initializer ? callParts(info.initializer, source) : null;
+        const initializerCallMatches = rule.initializerCall === undefined
+          || (initializerCall?.callee === normalized(rule.initializerCall)
+            && (rule.initializerCallArgument === undefined
+              || (initializerCall.args[rule.initializerCallArgumentIndex ?? 0]
+                && matchesLiteral(source, initializerCall.args[rule.initializerCallArgumentIndex ?? 0], rule.initializerCallArgument))));
         return Boolean(info && info.name === rule.target && info.kind === rule.property
-          && declarationHasTypeAndValue(source, info.initializer, rule.expectedType, rule.expectedValue));
+          && declarationHasTypeAndValue(source, info.initializer, rule.expectedType, rule.expectedValue)
+          && initializerCallMatches);
       });
     case 'js-call':
       return nodes.some((node) => {
         const call = callParts(node, source);
         if (!call || call.callee !== normalized(rule.target)) return false;
+        if (rule.minimumArguments !== undefined && call.args.length < rule.minimumArguments) return false;
         if (rule.argument !== undefined) {
           const candidates = rule.argumentIndex === undefined
           ? call.args
           : (call.args[rule.argumentIndex] ? [call.args[rule.argumentIndex]] : []);
           if (!candidates.some((arg) => matchesLiteral(source, arg, rule.argument as string | number))) return false;
         }
+        if (rule.argumentVariable !== undefined) {
+          const index = rule.argumentIndex ?? 0;
+          if (!call.args[index] || targetText(call.args[index], source) !== rule.argumentVariable) return false;
+        }
+        if (rule.argumentType !== undefined) {
+          const index = rule.argumentIndex ?? 0;
+          if (!call.args[index] || expressionType(call.args[index], source) !== rule.argumentType) return false;
+        }
+        if (rule.argumentTypes && !Object.entries(rule.argumentTypes).every(([indexText, type]) => {
+          const arg = call.args[Number(indexText)];
+          return Boolean(arg && expressionType(arg, source) === type);
+        })) return false;
         if (rule.requireCallback) {
           const callback = call.args.at(-1);
           if (!callback || (callback.name !== 'ArrowFunction' && callback.name !== 'FunctionExpression')) return false;
         }
+        if (rule.withinLoopVariable && !callIsInsideLoopFor(node, source, rule.withinLoopVariable)) return false;
         return true;
       });
     case 'js-assignment':
@@ -575,8 +635,15 @@ function jsRuleMatches(root: AstNode, source: string, html: string, rule: Practi
         if (!info || !condition || !info.initializer || literalValue(source, info.initializer) !== rule.lowerBound) return false;
         const sides = expressionChildren(condition);
         const op = condition.children.find((child) => /(?:CompareOp|ArithOp|LogicOp)/.test(child.name));
-        return Boolean(sides[0] && sides[1] && targetText(sides[0], source) === rule.variable
-          && literalValue(source, sides[1]) === rule.upperBound && op && ['<', '<=', '>', '>='].includes(text(source, op)));
+        if (!sides[0] || !sides[1] || targetText(sides[0], source) !== rule.variable
+          || literalValue(source, sides[1]) !== rule.upperBound || !op) return false;
+        const operator = text(source, op);
+        if (rule.operator ? operator !== rule.operator : !['<', '<=', '>', '>='].includes(operator)) return false;
+        if (rule.requireIncrement) {
+          const header = text(source, node).split('{', 1)[0];
+          if (!new RegExp(`\\b${rule.variable}\\s*(?:\\+\\+|\\+=\\s*1|=\\s*${rule.variable}\\s*\\+\\s*1)`).test(header)) return false;
+        }
+        return true;
       });
     case 'js-condition-branches':
       if (rule.branchCheck === 'condition') return Boolean(conditionMatches(root, source, rule.variable, rule.operator, rule.threshold));
@@ -585,6 +652,38 @@ function jsRuleMatches(root: AstNode, source: string, html: string, rule: Practi
       return false;
     case 'js-function-behavior':
       return nodes.some((node) => functionBehaviorMatches(node, source, rule.functionName, rule.parameter, rule.operator, rule.operand));
+    case 'js-function-return':
+      return namedFunctionNodes(root, source, rule.functionName).some((fn) => descendants(fn).some((candidate) => {
+        if (candidate.name !== 'ReturnStatement') return false;
+        return descendants(candidate).some((returned) => {
+          const call = callParts(returned, source);
+          return call?.callee === `${rule.parameter}.${rule.method}`;
+        });
+      }));
+    case 'js-method-assignment':
+      return nodes.some((node) => {
+        const info = declarationInfo(node, source);
+        if (info?.name !== rule.target || info.kind !== 'const' || !info.initializer) return false;
+        const expectedCallee = rule.callTarget ?? (rule.source && rule.method ? `${rule.source}.${rule.method}` : null);
+        if (!expectedCallee) return false;
+        const call = [info.initializer, ...descendants(info.initializer)]
+          .map((candidate) => callParts(candidate, source))
+          .find((candidate) => candidate?.callee === expectedCallee);
+        if (!call || (rule.minimumArguments !== undefined && call.args.length < rule.minimumArguments)) return false;
+        if (rule.argument !== undefined) {
+          const index = rule.argumentIndex ?? 0;
+          if (!call.args[index] || !matchesLiteral(source, call.args[index], rule.argument)) return false;
+        }
+        if (rule.argumentType !== undefined) {
+          const index = rule.argumentIndex ?? 0;
+          if (!call.args[index] || expressionType(call.args[index], source) !== rule.argumentType) return false;
+        }
+        if (rule.requireCallback) {
+          const callback = call.args.at(-1);
+          if (!callback || (callback.name !== 'ArrowFunction' && callback.name !== 'FunctionExpression')) return false;
+        }
+        return true;
+      });
     case 'js-array-access':
       return nodes.some((node) => {
         const call = callParts(node, source);

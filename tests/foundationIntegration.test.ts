@@ -4,21 +4,35 @@ import {
   FOUNDATION_LESSON_IDS,
   FOUNDATION_LESSON_IDS_BY_PATH,
   FOUNDATION_PATH_IDS,
+  FOUNDATION_PATH_STAGE_LESSONS,
   HTML_LESSON_IDS,
   JAVASCRIPT_LESSON_IDS,
 } from '../src/content/learningSystem';
 import { practiceExercises } from '../src/content/practiceExercises';
+import { getLearningPathLessonSummaries } from '../src/i18n/foundationLessonCopy';
 import { validatePractice } from '../src/utils/practiceValidation';
 import { countCompletedFoundationLessons, summarizeFoundationLearningProgress } from '../src/utils/learningProgress';
 
 describe('Foundation integration', () => {
   it('maps every active lesson to a language-specific practice exercise', () => {
     expect(FOUNDATION_PATH_IDS).toHaveLength(3);
-    expect(FOUNDATION_LESSON_IDS).toHaveLength(22);
-    expect(Object.keys(practiceExercises)).toHaveLength(22);
+    expect(FOUNDATION_LESSON_IDS).toHaveLength(54);
+    expect(Object.keys(practiceExercises)).toHaveLength(54);
     expect(HTML_LESSON_IDS.every((id) => practiceExercises[id].language === 'html')).toBe(true);
     expect(CSS_LESSON_IDS.every((id) => practiceExercises[id].language === 'css')).toBe(true);
     expect(JAVASCRIPT_LESSON_IDS.every((id) => practiceExercises[id].language === 'javascript')).toBe(true);
+  });
+
+  it('shows every lesson in the staged path sequence in Arabic and English', () => {
+    for (const pathId of FOUNDATION_PATH_IDS) {
+      const stagedIds = FOUNDATION_PATH_STAGE_LESSONS[pathId].flatMap((stage) => stage.lessonIds);
+      expect(stagedIds, `${pathId}: stage membership`).toEqual(FOUNDATION_LESSON_IDS_BY_PATH[pathId]);
+      for (const locale of ['ar', 'en'] as const) {
+        const summaries = getLearningPathLessonSummaries(locale, pathId);
+        expect(summaries.map(({ id }) => id), `${pathId}/${locale}: visible lesson IDs`).toEqual(stagedIds);
+        expect(summaries.every(({ title, summary }) => title.trim() && summary.trim()), `${pathId}/${locale}: localized lesson copy`).toBe(true);
+      }
+    }
   });
 
   it('keeps HTML validation working and validates CSS/JavaScript requirements structurally', () => {
@@ -53,7 +67,7 @@ describe('Foundation integration', () => {
     expect(inProgressCss.resumeLessonId).toBe('css-selectors');
 
     const completedJs = summarizeFoundationLearningProgress('javascript-fundamentals', jsRows, true);
-    expect(completedJs.completedLessonCount).toBe(9);
+    expect(completedJs.completedLessonCount).toBe(23);
     expect(completedJs.pathCompleted).toBe(true);
     expect(completedJs.recommendedLessonId).toBeNull();
   });

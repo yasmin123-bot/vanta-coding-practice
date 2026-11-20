@@ -363,6 +363,19 @@
   font-size: 10px;
 }
 
+.mabda-app-guided-project-link {
+  border-style: solid;
+  text-decoration: none;
+  transition: color var(--motion-fast), border-color var(--motion-fast), background var(--motion-fast);
+}
+
+.mabda-app-guided-project-link:hover,
+.mabda-app-guided-project-link:focus-visible {
+  color: var(--color-ink);
+  border-color: var(--color-copper-light);
+  background: var(--color-surface);
+}
+
 .mabda-app-preferences {
   padding: 13px;
   background: var(--color-graphite);
@@ -1147,5 +1160,233 @@ button.mabda-home-quick-action {
   .mabda-app-icon-button {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+.app-route-loading {
+  display: grid;
+  min-height: 100vh;
+  min-height: 100svh;
+  place-items: center;
+  padding: 24px;
+}
+
+.app-route-loading .student-loading-state {
+  margin: 0;
+}
+
+
+/* Simplified student home: one welcome action and compact path rows. */
+.mabda-home-hero--simple {
+  display: block;
+  padding: clamp(26px, 5vw, 52px);
+}
+
+.mabda-home-hero--simple .mabda-home-hero-copy {
+  max-width: 760px;
+}
+
+.mabda-home-hero--simple .mabda-home-eyebrow {
+  margin-bottom: 13px;
+}
+
+.mabda-home-hero--simple h1 {
+  max-width: 22ch;
+  font-size: clamp(32px, 5vw, 52px);
+  overflow-wrap: anywhere;
+}
+
+.mabda-home-hero--simple .mabda-home-hero-lead {
+  max-width: 56ch;
+  margin-block: 14px 22px;
+}
+
+.mabda-home-hero--simple .mabda-home-guest-note {
+  margin-block-start: 16px;
+}
+
+.mabda-home-path-section {
+  max-width: 920px;
+  margin-inline: auto;
+}
+
+.mabda-home-path-list {
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg);
+}
+
+.mabda-home-path-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 16px;
+  padding: 17px 20px;
+  color: var(--color-ink);
+  text-decoration: none;
+  transition: background-color var(--motion-fast);
+}
+
+.mabda-home-path-row + .mabda-home-path-row {
+  border-top: 1px solid var(--color-hairline);
+}
+
+.mabda-home-path-row:hover {
+  background: var(--color-graphite);
+}
+
+.mabda-home-path-row:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 3px solid var(--color-focus);
+  outline-offset: -3px;
+}
+
+.mabda-home-path-icon {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  color: var(--color-primary);
+  background: var(--color-info-bg);
+  border: 1px solid var(--color-hairline);
+  border-radius: 13px;
+  font-family: var(--font-code);
+  font-size: 12px;
+  font-weight: 800;
+}
+.mabda-home-path-language-icon {
+  display: grid;
+  place-items: center;
+  gap: 0;
+}
+.mabda-home-path-language-icon .programming-language-label__icon {
+  width: 25px;
+  height: 25px;
+  flex-basis: 25px;
+}
+.mabda-home-path-language-icon .programming-language-label__text { display: none; }
+
+.mabda-home-path-copy {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.mabda-home-path-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 7px 12px;
+}
+
+.mabda-home-path-heading strong {
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 760;
+}
+
+.mabda-home-path-count {
+  color: var(--color-muted);
+  font-size: 11px;
+}
+
+.mabda-home-path-description {
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.mabda-home-path-status {
+  max-width: 150px;
+  padding: 5px 9px;
+  color: var(--color-info);
+  background: var(--color-info-bg);
+  border: 1px solid var(--color-hairline);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.mabda-home-path-status.is-in-progress,
+.mabda-home-path-status.is-completed {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+}
+
+.mabda-home-path-status.is-getting-started {
+  color: var(--color-primary);
+}
+
+.mabda-home-path-progress {
+  display: grid;
+  gap: 5px;
+  margin-block-start: 3px;
+}
+
+.mabda-home-path-progress-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--color-muted);
+  font-size: 10px;
+}
+
+.mabda-home-path-progress .mabda-home-progress {
+  display: block;
+  height: 5px;
+}
+
+.mabda-home-path-row > svg {
+  color: var(--color-muted);
+}
+
+.mabda-home-loading {
+  margin: 14px 0 0;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+@media (max-width: 760px) {
+  .mabda-home-hero--simple {
+    padding: 24px 20px;
+  }
+
+  .mabda-home-path-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 11px;
+    padding: 14px;
+  }
+
+  .mabda-home-path-row > .mabda-home-path-status {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .mabda-home-path-row > svg {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 360px) {
+  .mabda-home-hero--simple {
+    padding: 19px 16px;
+  }
+
+  .mabda-home-path-row {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .mabda-home-path-row > svg {
+    display: none;
+  }
+
+  .mabda-home-path-row > .mabda-home-path-status {
+    grid-column: 2;
   }
 }

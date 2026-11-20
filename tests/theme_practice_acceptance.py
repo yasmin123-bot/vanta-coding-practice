@@ -6,8 +6,9 @@ import os
 import traceback
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+from browser_origin import sanitize_diagnostic_text, validate_local_base_url
 
-BASE = os.environ.get('BASE_URL', 'http://127.0.0.1:5175').rstrip('/')
+BASE = validate_local_base_url(os.environ.get('BASE_URL', 'http://127.0.0.1:5175'))
 OUT = Path(os.environ.get('EVIDENCE_DIR', '/tmp/mabda-theme-practice'))
 OUT.mkdir(parents=True, exist_ok=True)
 checks = []
@@ -22,11 +23,25 @@ def check(name, passed, detail=None):
 
 
 def reach_practice(page):
+    studio = page.locator('[data-testid="practice-studio"]')
     for _ in range(20):
-        if page.locator('[data-testid="practice-studio"]').count():
+        if studio.count() and studio.is_visible():
             page.locator('.cm-content').wait_for()
             return
-        page.locator('.lesson-flow-controls .button-primary').click()
+        next_button = page.locator('.lesson-flow-controls .button-primary').first
+        next_button.wait_for(state='visible')
+        progress = page.locator('.lesson-flow-progress-track').first
+        current = int(progress.get_attribute('aria-valuenow') or '0')
+        maximum = int(progress.get_attribute('aria-valuemax') or '0')
+        next_button.click()
+        if maximum and current >= maximum:
+            studio.wait_for(state='visible', timeout=15000)
+            page.locator('.cm-content').wait_for()
+            return
+        page.wait_for_function("""(before) => {
+          const progress = document.querySelector('.lesson-flow-progress-track');
+          return progress && progress.getAttribute('aria-valuenow') !== before;
+        }""", arg=str(current))
     raise AssertionError('Practice not reachable')
 
 
@@ -48,7 +63,7 @@ try:
     with sync_playwright() as p:
         browser = p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH', '/usr/bin/chromium'), headless=True, args=['--no-sandbox'])
         page = browser.new_page(viewport={'width': 1440, 'height': 900})
-        page.on('pageerror', lambda error: errors.append(str(error)))
+        page.on('pageerror', lambda error: errors.append(sanitize_diagnostic_text(error)))
         for theme in ['light', 'dark']:
             for locale in ['ar', 'en']:
                 page.goto(BASE)
@@ -96,7 +111,7 @@ try:
         check('No unexpected page errors', not errors, errors)
         browser.close()
 except Exception:
-    result['failure'] = traceback.format_exc()
+    result['failure'] = sanitize_diagnostic_text(traceback.format_exc())
 finally:
     result.update(checks=checks, errors=errors, passed=sum(x['passed'] for x in checks), total=len(checks))
     (OUT / 'results.json').write_text(json.dumps(result, ensure_ascii=False, indent=2))

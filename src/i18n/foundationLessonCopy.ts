@@ -7,6 +7,7 @@ import {
   type FoundationPathId,
 } from '../content/learningSystem';
 import { FOUNDATION_LESSONS_BY_ID, type FoundationLesson, type FoundationLessonContentId } from '../content/foundationLessons';
+import { additionalHtmlLearningMessages } from './expandedHtmlLessonCopy';
 import type { LearningLessonCopy, PathLessonSummary } from './learningSystem';
 import { learningSystemMessages } from './learningSystem';
 import type { Locale } from './messages';
@@ -16,12 +17,12 @@ const lessonText = (lesson: FoundationLesson, locale: Locale) => locale === 'ar'
   : { title: lesson.title_en, objective: lesson.objective_en, outcome: lesson.outcome_en };
 
 function isAdditionalHtmlLesson(lessonId: FoundationLessonId): lessonId is AdditionalHtmlLessonId {
-  return lessonId !== 'html-introduction' && lessonId in learningSystemMessages.en.lessons;
+  return lessonId !== 'html-introduction' && lessonId in additionalHtmlLearningMessages.en;
 }
 
 export function getLearningLessonCopy(locale: Locale, lessonId: FoundationLessonId): LearningLessonCopy {
   if (lessonId === 'html-introduction') throw new Error('The HTML introduction uses the dedicated StartLesson page.');
-  if (isAdditionalHtmlLesson(lessonId)) return learningSystemMessages[locale].lessons[lessonId];
+  if (isAdditionalHtmlLesson(lessonId)) return additionalHtmlLearningMessages[locale][lessonId];
 
   const source = FOUNDATION_LESSONS_BY_ID[lessonId as FoundationLessonContentId];
   const pathId = getPathForLesson(lessonId);
@@ -72,7 +73,15 @@ export function getLearningLessonCopy(locale: Locale, lessonId: FoundationLesson
 
 export function getLearningPathLessonSummaries(locale: Locale, pathId: FoundationPathId): PathLessonSummary[] {
   if (pathId === 'html-fundamentals') {
-    return learningSystemMessages[locale].paths[pathId].lessonSummaries ?? [];
+    const pathSummaries = new Map(
+      (learningSystemMessages[locale].paths[pathId].lessonSummaries ?? []).map((summary) => [summary.id, summary]),
+    );
+    return getPathLessonIds(pathId).map((lessonId) => {
+      const existingSummary = pathSummaries.get(lessonId);
+      if (existingSummary) return existingSummary;
+      const lesson = additionalHtmlLearningMessages[locale][lessonId as AdditionalHtmlLessonId];
+      return { id: lessonId, title: lesson.title, summary: lesson.objectiveText };
+    });
   }
   return getPathLessonIds(pathId).map((lessonId) => {
     const source = FOUNDATION_LESSONS_BY_ID[lessonId as FoundationLessonContentId];

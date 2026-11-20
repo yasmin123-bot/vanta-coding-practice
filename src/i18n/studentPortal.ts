@@ -60,6 +60,7 @@ export type StudentPortalMessages = {
     menuTitle: string;
     primaryNavigation: string;
     learningPaths: string;
+    levels: string;
     practice: string;
     quizzes: string;
     quizNote: string;
@@ -74,6 +75,8 @@ export type StudentPortalMessages = {
     bottomNavigation: string;
   };
   home: {
+    welcomeBack: string;
+    welcomeGuest: string;
     heroEyebrow: string;
     heroBody: string;
     heroAction: string;
@@ -111,6 +114,10 @@ export type StudentPortalMessages = {
     signupBody: string;
     forgotTitle: string;
     forgotBody: string;
+    verifyEmailTitle: string;
+    verifyEmailBody: string;
+    verifyRecoveryTitle: string;
+    verifyRecoveryBody: string;
     resetTitle: string;
     resetBody: string;
     callbackTitle: string;
@@ -121,12 +128,27 @@ export type StudentPortalMessages = {
     submitBusy: string;
     setupOnly: string;
     confirmationBody: string;
+    signupOtpSentBody: string;
     resetSentBody: string;
+    otpResentBody: string;
+    otpCodeLabel: string;
+    otpCodeHint: string;
+    verifyOtpAction: string;
+    resendOtpAction: string;
+    resendIn: string;
+    changeOtpEmail: string;
+    errorOtpInvalid: string;
+    errorOtpExpired: string;
+    otpAttemptsLimit: string;
+    emailConfirmationRequired: string;
+    emailConfirmationSessionActive: string;
     passwordUpdated: string;
+    passwordUpdatedActiveSession: string;
     passwordResetMissingSession: string;
       validationName: string;
       validationRequired: string;
       validationEmail: string;
+      validationOtpCode: string;
       validationPassword: string;
     validationConfirm: string;
     errorCredentials: string;
@@ -216,6 +238,17 @@ export type StudentPortalMessages = {
     lessonsCompleted: string;
     overallProgress: string;
     pathProgress: string;
+    learningStateLabel: string;
+    notStarted: string;
+    gettingStarted: string;
+    inProgress: string;
+    pathCompleted: string;
+    continueLearning: string;
+    startLearning: string;
+    reviewLessons: string;
+    browseLessons: string;
+    lessonCompleted: string;
+    lessonNotCompleted: string;
     quizResults: string;
     noQuizResults: string;
     futureAchievements: string;
@@ -295,6 +328,7 @@ const portal: Record<Locale, StudentPortalMessages> = {
       menuTitle: 'التنقّل والتفضيلات',
       primaryNavigation: 'التنقّل الرئيسي',
       learningPaths: 'مسارات التعلّم',
+      levels: 'المستويات',
       practice: 'التدريب',
       quizzes: 'الاختبارات',
       quizNote: 'الاختبارات جزء من الدروس المتاحة في مسارات التعلّم، ولا توجد صفحة اختبارات مستقلة.',
@@ -317,9 +351,13 @@ const portal: Record<Locale, StudentPortalMessages> = {
       loginTitle: 'مرحبًا بعودتك',
       loginBody: 'سجّل الدخول لمتابعة مسارات التعلّم والاحتفاظ بتقدمك على حسابك.',
       signupTitle: 'ابدأ رحلتك مع Mabda',
-      signupBody: 'أنشئ حسابًا لحفظ تقدمك والعودة إلى الدروس من حيث توقفت.',
+      signupBody: 'أنشئ حسابًا، ثم أكّد بريدك برمز لمرة واحدة لحماية حسابك.',
       forgotTitle: 'استعادة كلمة المرور',
-      forgotBody: 'أدخل البريد المرتبط بحسابك وسنرسل رابطًا آمنًا لإعادة تعيين كلمة المرور.',
+      forgotBody: 'أدخل البريد المرتبط بحسابك وسنرسل رمزًا لمرة واحدة لاستعادة كلمة المرور.',
+      verifyEmailTitle: 'تحقق من بريدك الإلكتروني',
+      verifyEmailBody: 'أدخل الرمز المكوّن من ستة أرقام الذي أرسلناه لإكمال إنشاء الحساب.',
+      verifyRecoveryTitle: 'تحقق من رمز الاستعادة',
+      verifyRecoveryBody: 'أدخل رمز الاستعادة المكوّن من ستة أرقام للمتابعة إلى كلمة مرور جديدة.',
       resetTitle: 'اختر كلمة مرور جديدة',
       resetBody: 'اكتب كلمة مرور جديدة لحسابك ثم أكّدها.',
       callbackTitle: 'تأكيد حسابك',
@@ -329,24 +367,39 @@ const portal: Record<Locale, StudentPortalMessages> = {
       gatewayLoading: 'جارٍ تجهيز بوابة Mabda الآمنة…',
       submitBusy: 'جارٍ المعالجة…',
       setupOnly: 'إعداد خدمة الحسابات غير مكتمل بعد.',
-      confirmationBody: 'إذا كان البريد صالحًا، ستصلك رسالة من Supabase لتأكيد الحساب. افتح الرابط للمتابعة.',
-      resetSentBody: 'إذا كان البريد مرتبطًا بحساب، ستصلك رسالة تتضمن رابط استعادة صالحًا لفترة محدودة.',
-      passwordUpdated: 'تم تحديث كلمة المرور. يمكنك متابعة رحلتك في حسابك.',
-      passwordResetMissingSession: 'افتح رابط الاستعادة الذي أرسله Supabase أولًا. إذا انتهت صلاحيته، اطلب رابطًا جديدًا.',
+      confirmationBody: 'إذا أمكن إنشاء حساب بهذا البريد، فتحقق من صندوق الوارد وأدخل الرمز المرسل.',
+      signupOtpSentBody: 'إذا أمكن إنشاء حساب بهذا البريد، تحقق من صندوق الوارد وأدخل رمز التأكيد.',
+      resetSentBody: 'إذا كان البريد مرتبطًا بحساب، فتحقق من صندوق الوارد وأدخل رمز الاستعادة.',
+      otpResentBody: 'أُرسل طلب رمز جديد. تحقق من بريدك وأدخل أحدث رمز وصلك.',
+      otpCodeLabel: 'رمز التحقق المكوّن من ستة أرقام',
+      otpCodeHint: 'اكتب أحدث رمز وصلك عبر البريد الإلكتروني.',
+      verifyOtpAction: 'تحقق وتابع',
+      resendOtpAction: 'إعادة إرسال الرمز',
+      resendIn: 'يمكنك طلب رمز جديد بعد {seconds} ث',
+      changeOtpEmail: 'استخدم بريدًا إلكترونيًا آخر',
+      errorOtpInvalid: 'الرمز غير صحيح. تحقق منه وحاول مرة أخرى.',
+      errorOtpExpired: 'انتهت صلاحية الرمز. أرسل رمزًا جديدًا للمتابعة.',
+      otpAttemptsLimit: 'بلغت حد المحاولات المحلي في هذه الواجهة لهذا الرمز. هذا الحد لا يفرض الحماية على الخادم؛ تتطلب الحماية الخادمية تحديد المعدل من جهة الخادم. يمكنك طلب رمز جديد بعد انتهاء مهلة الإعادة.',
+      emailConfirmationRequired: 'إعداد Supabase الحالي لم يطلب تأكيد البريد. لم نتابع إلى الحساب؛ يلزم تفعيل تأكيد البريد قبل التسجيل.',
+      emailConfirmationSessionActive: 'لم يتطلب Supabase تأكيد البريد، وتعذر إنهاء الجلسة المحلية تلقائيًا. أغلق هذه الصفحة وسجّل الخروج من أي تبويب مفتوح قبل المتابعة.',
+      passwordUpdated: 'تم تحديث كلمة المرور. سجّل الدخول مجددًا باستخدام كلمة المرور الجديدة.',
+      passwordUpdatedActiveSession: 'تم تحديث كلمة المرور، لكن تعذّر إنهاء الجلسة الحالية تلقائيًا. سجّل الخروج ثم ادخل مجددًا.',
+      passwordResetMissingSession: 'تحقق من رمز الاستعادة أولًا. إذا انتهت صلاحيته، اطلب رمزًا جديدًا.',
       validationName: 'اكتب اسمًا من حرفين على الأقل.',
       validationRequired: 'أكمل الحقول المطلوبة.',
       validationEmail: 'أدخل بريدًا إلكترونيًا صالحًا.',
+      validationOtpCode: 'أدخل رمزًا مكوّنًا من ستة أرقام.',
       validationPassword: 'استخدم كلمة مرور من 8 أحرف على الأقل.',
       validationConfirm: 'كلمتا المرور غير متطابقتين.',
       errorCredentials: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
-      errorUnconfirmed: 'أكّد بريدك الإلكتروني من الرسالة التي أرسلها Supabase أولًا.',
+      errorUnconfirmed: 'أكّد بريدك الإلكتروني من الرسالة المرسلة أولًا، ثم سجّل الدخول.',
       errorExists: 'تعذر إنشاء الحساب بهذه البيانات. جرّب تسجيل الدخول أو استعادة كلمة المرور.',
       errorRateLimit: 'تم إرسال طلبات كثيرة. انتظر قليلًا ثم حاول مجددًا.',
       errorGeneric: 'تعذر إكمال الطلب. تحقق من البيانات وإعدادات Supabase ثم أعد المحاولة.',
       forgotLink: 'نسيت كلمة المرور؟',
       signupLink: 'أنشئ حسابًا',
       loginLink: 'تسجيل الدخول',
-      resetLink: 'طلب رابط استعادة جديد',
+      resetLink: 'طلب رمز استعادة جديد',
     },
     intro: {
       preferencesLabel: 'تفضيلات العرض واللغة',
@@ -395,15 +448,17 @@ const portal: Record<Locale, StudentPortalMessages> = {
       profileLink: 'عرض الملف الشخصي',
     },
     home: {
+      welcomeBack: 'أهلًا بعودتك',
+      welcomeGuest: 'أهلًا بك في مبدأ',
       heroEyebrow: 'مساحة تعلّمك',
-      heroBody: 'ابدأ بأساسيات HTML، ثم تعلّم تنسيق الصفحات بـCSS وإضافة التفاعل بـJavaScript عبر دروس قصيرة وممارسة خطوة بخطوة.',
-      heroAction: 'استكشف مسار HTML',
+      heroBody: 'تعلّم البرمجة خطوة بخطوة، وابدأ بالمسار الذي يناسب ما تريد بناءه.',
+      heroAction: 'استكشف مسارات التعلّم',
       firstLessonAction: 'ابدأ الدرس الأول',
       pathsTitle: 'مسارات التعلّم',
       pathsBody: 'اختر مسار HTML أو CSS أو JavaScript المتاح، واجمع في كل واحد بين الدروس القصيرة والتطبيق العملي.',
       htmlPathBody: 'تعلّم كيف تصف بنية الصفحة باستخدام عناصر HTML.',
-      cssPathBody: 'تعلّم تنسيق واجهات الويب عبر المحددات والألوان والطباعة والتخطيط والتصميم المتجاوب في 8 دروس.',
-      javascriptPathBody: 'أضف السلوك والتفاعل إلى صفحاتك عبر المتغيرات والشروط والدوال وDOM في 9 دروس.',
+      cssPathBody: 'تعلّم تنسيق واجهات الويب عبر المحددات والألوان والطباعة والتخطيط والتصميم المتجاوب في 19 درسًا.',
+      javascriptPathBody: 'أضف السلوك والتفاعل إلى صفحاتك عبر المتغيرات والشروط والدوال وDOM في 23 درسًا.',
       loopTitle: 'من الفهم إلى التطبيق',
       loopSteps: ['تعلّم', 'افهم', 'تدرّب', 'طبّق'],
       practiceTitle: 'جرّب بنفسك',
@@ -451,6 +506,17 @@ const portal: Record<Locale, StudentPortalMessages> = {
       lessonsCompleted: 'الدروس المكتملة',
       overallProgress: 'التقدم الكلي',
       pathProgress: 'تقدم المسار',
+      learningStateLabel: 'حالة التعلّم',
+      notStarted: 'لم يبدأ بعد',
+      gettingStarted: 'بدأ التعلّم',
+      inProgress: 'قيد التعلّم',
+      pathCompleted: 'اكتمل المسار',
+      continueLearning: 'متابعة التعلّم',
+      startLearning: 'ابدأ التعلّم',
+      reviewLessons: 'راجع الدروس',
+      browseLessons: 'استعراض الدروس',
+      lessonCompleted: 'مكتمل',
+      lessonNotCompleted: 'لم يكتمل بعد',
       quizResults: 'نتائج الاختبارات',
       noQuizResults: 'لا توجد نتائج اختبارات بعد. ستظهر هنا بعد إكمال اختبار درس.',
       futureAchievements: 'الإنجازات',
@@ -528,6 +594,7 @@ const portal: Record<Locale, StudentPortalMessages> = {
       menuTitle: 'Navigation and preferences',
       primaryNavigation: 'Primary navigation',
       learningPaths: 'Learning paths',
+      levels: 'Levels',
       practice: 'Practice',
       quizzes: 'Quizzes',
       quizNote: 'Quizzes are built into lessons across the active learning paths; there is no standalone quiz page.',
@@ -550,9 +617,13 @@ const portal: Record<Locale, StudentPortalMessages> = {
       loginTitle: 'Welcome back',
       loginBody: 'Sign in to continue your learning paths and keep your progress on your account.',
       signupTitle: 'Start your Mabda journey',
-      signupBody: 'Create an account to save your progress and return to your lessons where you left off.',
+      signupBody: 'Create an account, then verify your email with a one-time code to protect it.',
       forgotTitle: 'Reset your password',
-      forgotBody: 'Enter the email for your account and we will send a secure password-reset link.',
+      forgotBody: 'Enter the email for your account and we will send a one-time password-recovery code.',
+      verifyEmailTitle: 'Verify your email',
+      verifyEmailBody: 'Enter the six-digit code we sent to finish creating your account.',
+      verifyRecoveryTitle: 'Verify your recovery code',
+      verifyRecoveryBody: 'Enter the six-digit recovery code to continue to a new password.',
       resetTitle: 'Choose a new password',
       resetBody: 'Enter and confirm a new password for your account.',
       callbackTitle: 'Confirm your account',
@@ -562,24 +633,39 @@ const portal: Record<Locale, StudentPortalMessages> = {
       gatewayLoading: 'Preparing your secure Mabda gateway…',
       submitBusy: 'Working…',
       setupOnly: 'Account service setup is not complete yet.',
-      confirmationBody: 'If this email can be registered, Supabase will send a confirmation message. Open its link to continue.',
-      resetSentBody: 'If this email belongs to an account, Supabase will send a password-reset link that expires after a limited time.',
-      passwordUpdated: 'Your password has been updated. You can continue your learning journey.',
-      passwordResetMissingSession: 'Open the password-reset link sent by Supabase first. If it expired, request a new link.',
+      confirmationBody: 'If this email can be registered, check your inbox and enter the code we sent.',
+      signupOtpSentBody: 'If this email can be registered, check your inbox and enter the confirmation code.',
+      resetSentBody: 'If this email belongs to an account, check your inbox and enter the recovery code.',
+      otpResentBody: 'A new code request was sent. Check your email and enter the latest code.',
+      otpCodeLabel: 'Six-digit verification code',
+      otpCodeHint: 'Enter the latest code sent to your email address.',
+      verifyOtpAction: 'Verify and continue',
+      resendOtpAction: 'Resend code',
+      resendIn: 'You can request another code in {seconds}s',
+      changeOtpEmail: 'Use a different email address',
+      errorOtpInvalid: 'That code is incorrect. Check it and try again.',
+      errorOtpExpired: 'That code has expired. Request a new code to continue.',
+      otpAttemptsLimit: 'This interface has reached its local attempt limit for this code. This client-side limit does not enforce server protection; that requires server-side rate limiting. Request a new code after the resend cooldown.',
+      emailConfirmationRequired: 'Supabase did not require email confirmation. We did not continue into the account; email confirmation must be enabled before sign-up.',
+      emailConfirmationSessionActive: 'Supabase did not require email confirmation, and the local session could not be ended automatically. Close this page and sign out of any open tab before continuing.',
+      passwordUpdated: 'Your password has been updated. Sign in again with your new password.',
+      passwordUpdatedActiveSession: 'Your password was updated, but the current session could not be ended automatically. Sign out and sign in again.',
+      passwordResetMissingSession: 'Verify the recovery code first. If it expired, request a new code.',
       validationName: 'Enter a name with at least two characters.',
       validationRequired: 'Complete all required fields.',
       validationEmail: 'Enter a valid email address.',
+      validationOtpCode: 'Enter a six-digit code.',
       validationPassword: 'Use a password with at least eight characters.',
       validationConfirm: 'The passwords do not match.',
       errorCredentials: 'The email or password is incorrect.',
-      errorUnconfirmed: 'Confirm your email using the message from Supabase first.',
+      errorUnconfirmed: 'Confirm your email using the message we sent, then sign in.',
       errorExists: 'We could not create an account with these details. Try signing in or resetting your password.',
       errorRateLimit: 'Too many requests were sent. Wait a little and try again.',
       errorGeneric: 'We could not complete the request. Check the details and Supabase setup, then try again.',
       forgotLink: 'Forgot password?',
       signupLink: 'Create one',
       loginLink: 'Sign in',
-      resetLink: 'Request a new reset link',
+      resetLink: 'Request a new recovery code',
     },
     intro: {
       preferencesLabel: 'Display and language preferences',
@@ -628,15 +714,17 @@ const portal: Record<Locale, StudentPortalMessages> = {
       profileLink: 'View profile',
     },
     home: {
+      welcomeBack: 'Welcome back',
+      welcomeGuest: 'Welcome to Mabda',
       heroEyebrow: 'Your learning space',
-      heroBody: 'Start with HTML, then style pages with CSS and add interaction with JavaScript through short lessons and practice.',
-      heroAction: 'Explore the HTML path',
+      heroBody: 'Learn to code one step at a time. Choose the path that fits what you want to build.',
+      heroAction: 'Explore learning paths',
       firstLessonAction: 'Start the first lesson',
       pathsTitle: 'Learning paths',
       pathsBody: 'Choose an active HTML, CSS, or JavaScript path. Each combines short lessons with hands-on practice.',
       htmlPathBody: 'Learn how to describe page structure with HTML elements.',
-      cssPathBody: 'Learn to style web interfaces through selectors, color, typography, layout, and responsive design in 8 lessons.',
-      javascriptPathBody: 'Add behavior and interaction with variables, conditions, functions, and the DOM across 9 lessons.',
+      cssPathBody: 'Learn to style web interfaces through selectors, color, typography, layout, and responsive design in 19 lessons.',
+      javascriptPathBody: 'Add behavior and interaction with variables, conditions, functions, and the DOM across 23 lessons.',
       loopTitle: 'From understanding to application',
       loopSteps: ['Learn', 'Understand', 'Practice', 'Apply'],
       practiceTitle: 'Try it yourself',
@@ -684,6 +772,17 @@ const portal: Record<Locale, StudentPortalMessages> = {
       lessonsCompleted: 'Lessons completed',
       overallProgress: 'Overall progress',
       pathProgress: 'Path progress',
+      learningStateLabel: 'Learning status',
+      notStarted: 'Not started',
+      gettingStarted: 'Getting started',
+      inProgress: 'In progress',
+      pathCompleted: 'Path completed',
+      continueLearning: 'Continue learning',
+      startLearning: 'Start learning',
+      reviewLessons: 'Review lessons',
+      browseLessons: 'Browse lessons',
+      lessonCompleted: 'Completed',
+      lessonNotCompleted: 'Not completed yet',
       quizResults: 'Quiz results',
       noQuizResults: 'No quiz results yet. They will appear here after you complete a lesson quiz.',
       futureAchievements: 'Achievements',

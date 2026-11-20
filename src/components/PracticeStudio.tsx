@@ -43,7 +43,7 @@ function PracticeStudio({ lessonId, lessonTitle, expectedOutcome, locale, isVisi
   const expectedCopy = exerciseCopy?.expected ?? expectedOutcome
     ?? (locale === 'ar' ? 'اكتب الكود المطلوب ثم افحص كل شرط على حدة.' : 'Write the requested code, then check each requirement separately.');
   const taskRequirements = useMemo(() => {
-    if (exerciseCopy) {
+    if (exerciseCopy && Object.keys(exerciseCopy.checks).length > 0) {
       return Object.entries(exerciseCopy.checks).flatMap(([id, item]) => item ? [{
         id,
         label: item.label,

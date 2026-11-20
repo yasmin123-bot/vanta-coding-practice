@@ -1,40 +1,944 @@
 {
   "routes": [
-    { "path": "/", "title": "Mabda" },
-    { "path": "/paths", "title": "Learning paths" },
-    { "path": "/paths/html-fundamentals", "title": "html-fundamentals" },
-    { "path": "/paths/css-fundamentals", "title": "css-fundamentals" },
-    { "path": "/paths/javascript-fundamentals", "title": "javascript-fundamentals" },
-    { "path": "/paths/programming-fundamentals", "title": "programming-fundamentals" },
-    { "path": "/paths/problem-solving", "title": "problem-solving" },
-    { "path": "/lesson/start", "title": "start" },
-    { "path": "/lesson/headings-paragraphs", "title": "headings-paragraphs" },
-    { "path": "/lesson/links-navigation", "title": "links-navigation" },
-    { "path": "/lesson/images-attributes", "title": "images-attributes" },
-    { "path": "/lesson/first-page", "title": "first-page" },
-    { "path": "/lesson/css/what-is-css", "title": "css-what-is-css" },
-    { "path": "/lesson/css/selectors", "title": "css-selectors" },
-    { "path": "/lesson/css/colors-backgrounds", "title": "css-colors-backgrounds" },
-    { "path": "/lesson/css/typography", "title": "css-typography" },
-    { "path": "/lesson/css/box-model", "title": "css-box-model" },
-    { "path": "/lesson/css/display-layout", "title": "css-display-layout" },
-    { "path": "/lesson/css/flexbox", "title": "css-flexbox" },
-    { "path": "/lesson/css/responsive", "title": "css-responsive" },
-    { "path": "/lesson/javascript/what-is-javascript", "title": "js-what-is-javascript" },
-    { "path": "/lesson/javascript/variables", "title": "js-variables" },
-    { "path": "/lesson/javascript/data-types", "title": "js-data-types" },
-    { "path": "/lesson/javascript/operators", "title": "js-operators" },
-    { "path": "/lesson/javascript/conditionals", "title": "js-conditionals" },
-    { "path": "/lesson/javascript/functions", "title": "js-functions" },
-    { "path": "/lesson/javascript/arrays", "title": "js-arrays" },
-    { "path": "/lesson/javascript/dom-basics", "title": "js-dom-basics" },
-    { "path": "/lesson/javascript/events", "title": "js-events" },
-    { "path": "/login", "title": "login" },
-    { "path": "/signup", "title": "signup" },
-    { "path": "/forgot-password", "title": "forgot-password" },
-    { "path": "/reset-password", "title": "reset-password" },
-    { "path": "/auth/callback", "title": "auth/callback" },
-    { "path": "/dashboard", "title": "dashboard" },
-    { "path": "/profile", "title": "profile" }
+    {
+      "path": "/",
+      "title": "Mabda"
+    },
+    {
+      "path": "/paths",
+      "title": "Learning paths"
+    },
+    {
+      "path": "/paths/html-fundamentals",
+      "title": "HTML fundamentals"
+    },
+    {
+      "path": "/paths/css-fundamentals",
+      "title": "CSS fundamentals"
+    },
+    {
+      "path": "/paths/javascript-fundamentals",
+      "title": "JavaScript fundamentals"
+    },
+    {
+      "path": "/paths/programming-fundamentals",
+      "title": "Programming fundamentals"
+    },
+    {
+      "path": "/paths/problem-solving",
+      "title": "Problem solving"
+    },
+    {
+      "path": "/assessment/html-fundamentals",
+      "title": "HTML path assessment"
+    },
+    {
+      "path": "/assessment/css-fundamentals",
+      "title": "CSS path assessment"
+    },
+    {
+      "path": "/assessment/javascript-fundamentals",
+      "title": "JavaScript path assessment"
+    },
+    {
+      "path": "/projects",
+      "title": "Guided projects"
+    },
+    {
+      "path": "/lesson/start",
+      "title": "HTML introduction"
+    },
+    {
+      "path": "/lesson/headings-paragraphs",
+      "title": "Headings and paragraphs"
+    },
+    {
+      "path": "/lesson/links-navigation",
+      "title": "Links and navigation"
+    },
+    {
+      "path": "/lesson/images-attributes",
+      "title": "Images and attributes"
+    },
+    {
+      "path": "/lesson/first-page",
+      "title": "First page"
+    },
+    {
+      "path": "/lesson/document-metadata",
+      "title": "Document metadata"
+    },
+    {
+      "path": "/lesson/semantic-structure",
+      "title": "Semantic structure"
+    },
+    {
+      "path": "/lesson/lists-tables",
+      "title": "Lists and tables"
+    },
+    {
+      "path": "/lesson/accessible-forms",
+      "title": "Accessible forms"
+    },
+    {
+      "path": "/lesson/form-validation",
+      "title": "Form validation"
+    },
+    {
+      "path": "/lesson/media",
+      "title": "HTML media"
+    },
+    {
+      "path": "/lesson/multi-section-page",
+      "title": "Multi-section page"
+    },
+    {
+      "path": "/lesson/css/what-is-css",
+      "title": "What is CSS"
+    },
+    {
+      "path": "/lesson/css/selectors",
+      "title": "CSS selectors"
+    },
+    {
+      "path": "/lesson/css/colors-backgrounds",
+      "title": "Colors and backgrounds"
+    },
+    {
+      "path": "/lesson/css/typography",
+      "title": "Typography"
+    },
+    {
+      "path": "/lesson/css/box-model",
+      "title": "Box model"
+    },
+    {
+      "path": "/lesson/css/display-layout",
+      "title": "Display and layout"
+    },
+    {
+      "path": "/lesson/css/flexbox",
+      "title": "Flexbox"
+    },
+    {
+      "path": "/lesson/css/responsive",
+      "title": "Responsive design"
+    },
+    {
+      "path": "/lesson/css/specificity-inheritance",
+      "title": "Specificity and inheritance"
+    },
+    {
+      "path": "/lesson/css/sizing-units",
+      "title": "Sizing units"
+    },
+    {
+      "path": "/lesson/css/display-visibility",
+      "title": "Display and visibility"
+    },
+    {
+      "path": "/lesson/css/positioning",
+      "title": "Positioning"
+    },
+    {
+      "path": "/lesson/css/grid",
+      "title": "CSS Grid"
+    },
+    {
+      "path": "/lesson/css/pseudo-selectors",
+      "title": "Pseudo-classes and pseudo-elements"
+    },
+    {
+      "path": "/lesson/css/custom-properties",
+      "title": "CSS custom properties"
+    },
+    {
+      "path": "/lesson/css/web-fonts-surfaces",
+      "title": "Web fonts and surfaces"
+    },
+    {
+      "path": "/lesson/css/motion",
+      "title": "Transitions and motion"
+    },
+    {
+      "path": "/lesson/css/layout-debugging",
+      "title": "Layout debugging"
+    },
+    {
+      "path": "/lesson/css/responsive-page",
+      "title": "Responsive page layout"
+    },
+    {
+      "path": "/lesson/javascript/what-is-javascript",
+      "title": "What is JavaScript"
+    },
+    {
+      "path": "/lesson/javascript/variables",
+      "title": "Variables"
+    },
+    {
+      "path": "/lesson/javascript/data-types",
+      "title": "Data types"
+    },
+    {
+      "path": "/lesson/javascript/operators",
+      "title": "Operators"
+    },
+    {
+      "path": "/lesson/javascript/conditionals",
+      "title": "Conditionals"
+    },
+    {
+      "path": "/lesson/javascript/functions",
+      "title": "Functions"
+    },
+    {
+      "path": "/lesson/javascript/arrays",
+      "title": "Arrays"
+    },
+    {
+      "path": "/lesson/javascript/dom-basics",
+      "title": "DOM basics"
+    },
+    {
+      "path": "/lesson/javascript/events",
+      "title": "Events"
+    },
+    {
+      "path": "/lesson/javascript/loops",
+      "title": "Loops"
+    },
+    {
+      "path": "/lesson/javascript/type-conversion",
+      "title": "Type conversion"
+    },
+    {
+      "path": "/lesson/javascript/functions-scope",
+      "title": "Function scope and return values"
+    },
+    {
+      "path": "/lesson/javascript/objects",
+      "title": "Objects"
+    },
+    {
+      "path": "/lesson/javascript/array-methods",
+      "title": "Array methods"
+    },
+    {
+      "path": "/lesson/javascript/string-number-methods",
+      "title": "String and number methods"
+    },
+    {
+      "path": "/lesson/javascript/dom-manipulation",
+      "title": "DOM manipulation"
+    },
+    {
+      "path": "/lesson/javascript/form-interactions",
+      "title": "Form interactions"
+    },
+    {
+      "path": "/lesson/javascript/json",
+      "title": "JSON"
+    },
+    {
+      "path": "/lesson/javascript/local-storage",
+      "title": "Local Storage"
+    },
+    {
+      "path": "/lesson/javascript/error-handling",
+      "title": "Error handling"
+    },
+    {
+      "path": "/lesson/javascript/promises-async",
+      "title": "Promises and async/await"
+    },
+    {
+      "path": "/lesson/javascript/fetch",
+      "title": "Fetch fundamentals"
+    },
+    {
+      "path": "/lesson/javascript/modules-organization",
+      "title": "Modules and organization"
+    },
+    {
+      "path": "/levels",
+      "title": "Learning levels"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner",
+      "title": "HTML Beginner"
+    },
+    {
+      "path": "/levels/html-fundamentals/placement",
+      "title": "HTML placement test"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/project",
+      "title": "HTML Beginner capstone"
+    },
+    {
+      "path": "/assessment/html-fundamentals?level=beginner",
+      "title": "HTML Beginner final assessment"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-001-markup-anatomy",
+      "title": "HTML Beginner lesson 01"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-002-attributes-and-quotes",
+      "title": "HTML Beginner lesson 02"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-introduction",
+      "title": "HTML Beginner lesson 03"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-headings-paragraphs",
+      "title": "HTML Beginner lesson 04"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-links-navigation",
+      "title": "HTML Beginner lesson 05"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-003-nesting-and-parent-child",
+      "title": "HTML Beginner lesson 06"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-images-attributes",
+      "title": "HTML Beginner lesson 07"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-004-void-elements",
+      "title": "HTML Beginner lesson 08"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-005-source-whitespace",
+      "title": "HTML Beginner lesson 09"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-006-character-entities",
+      "title": "HTML Beginner lesson 10"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-007-comments",
+      "title": "HTML Beginner lesson 11"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-first-page",
+      "title": "HTML Beginner lesson 12"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-document-metadata",
+      "title": "HTML Beginner lesson 13"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-008-div-and-span",
+      "title": "HTML Beginner lesson 14"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-semantic-structure",
+      "title": "HTML Beginner lesson 15"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-009-global-id-class",
+      "title": "HTML Beginner lesson 16"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-010-id-reference-integrity",
+      "title": "HTML Beginner lesson 17"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-011-relative-file-paths",
+      "title": "HTML Beginner lesson 18"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-012-debugging-markup",
+      "title": "HTML Beginner lesson 19"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-lists-tables",
+      "title": "HTML Beginner lesson 20"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-013-table-caption-and-scope",
+      "title": "HTML Beginner lesson 21"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-014-table-row-groups",
+      "title": "HTML Beginner lesson 22"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-015-quotations",
+      "title": "HTML Beginner lesson 23"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-016-citations-and-abbreviations",
+      "title": "HTML Beginner lesson 24"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-017-code-and-preformatted-text",
+      "title": "HTML Beginner lesson 25"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-018-time-and-datetime",
+      "title": "HTML Beginner lesson 26"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-019-details-summary",
+      "title": "HTML Beginner lesson 27"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-accessible-forms",
+      "title": "HTML Beginner lesson 28"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-020-textarea",
+      "title": "HTML Beginner lesson 29"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-021-select-options",
+      "title": "HTML Beginner lesson 30"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-022-radio-checkbox-groups",
+      "title": "HTML Beginner lesson 31"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-023-form-name-value",
+      "title": "HTML Beginner lesson 32"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-form-validation",
+      "title": "HTML Beginner lesson 33"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-024-button-types",
+      "title": "HTML Beginner lesson 34"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-025-form-action-method",
+      "title": "HTML Beginner lesson 35"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-026-autocomplete-and-data-minimization",
+      "title": "HTML Beginner lesson 36"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-media",
+      "title": "HTML Beginner lesson 37"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-027-picture-responsive-images",
+      "title": "HTML Beginner lesson 38"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-028-nested-lists",
+      "title": "HTML Beginner lesson 39"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-multi-section-page",
+      "title": "HTML Beginner lesson 40"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-029-skip-link",
+      "title": "HTML Beginner lesson 41"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-030-linking-stylesheets",
+      "title": "HTML Beginner lesson 42"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-031-external-link-safety",
+      "title": "HTML Beginner lesson 43"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-032-language-and-direction-fragments",
+      "title": "HTML Beginner lesson 44"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-033-embedding-iframe",
+      "title": "HTML Beginner lesson 45"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-034-download-links",
+      "title": "HTML Beginner lesson 46"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-035-source-order-accessibility",
+      "title": "HTML Beginner lesson 47"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-036-data-attributes",
+      "title": "HTML Beginner lesson 48"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-037-title-attribute-limits",
+      "title": "HTML Beginner lesson 49"
+    },
+    {
+      "path": "/levels/html-fundamentals/beginner/lesson/html-b-038-final-html-review",
+      "title": "HTML Beginner lesson 50"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner",
+      "title": "CSS Beginner"
+    },
+    {
+      "path": "/levels/css-fundamentals/placement",
+      "title": "CSS placement test"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/project",
+      "title": "CSS Beginner capstone"
+    },
+    {
+      "path": "/assessment/css-fundamentals?level=beginner",
+      "title": "CSS Beginner final assessment"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-what-is-css",
+      "title": "CSS Beginner lesson 01"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-001-external-stylesheet",
+      "title": "CSS Beginner lesson 02"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-selectors",
+      "title": "CSS Beginner lesson 03"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-002-group-selectors",
+      "title": "CSS Beginner lesson 04"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-003-combinators-attributes",
+      "title": "CSS Beginner lesson 05"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-004-reusable-classes",
+      "title": "CSS Beginner lesson 06"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-005-css-comments-organization",
+      "title": "CSS Beginner lesson 07"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-colors-backgrounds",
+      "title": "CSS Beginner lesson 08"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-006-linear-gradients",
+      "title": "CSS Beginner lesson 09"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-007-opacity-alpha",
+      "title": "CSS Beginner lesson 10"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-typography",
+      "title": "CSS Beginner lesson 11"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-008-readable-measure",
+      "title": "CSS Beginner lesson 12"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-009-link-states",
+      "title": "CSS Beginner lesson 13"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-specificity-inheritance",
+      "title": "CSS Beginner lesson 14"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-010-source-order-cascade",
+      "title": "CSS Beginner lesson 15"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-box-model",
+      "title": "CSS Beginner lesson 16"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-011-border-box-sizing",
+      "title": "CSS Beginner lesson 17"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-012-centering-with-margin-auto",
+      "title": "CSS Beginner lesson 18"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-display-layout",
+      "title": "CSS Beginner lesson 19"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-013-overflow",
+      "title": "CSS Beginner lesson 20"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-sizing-units",
+      "title": "CSS Beginner lesson 21"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-014-min-max-sizing",
+      "title": "CSS Beginner lesson 22"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-display-visibility",
+      "title": "CSS Beginner lesson 23"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-positioning",
+      "title": "CSS Beginner lesson 24"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-023-css-shorthand",
+      "title": "CSS Beginner lesson 25"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-flexbox",
+      "title": "CSS Beginner lesson 26"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-015-flex-navigation-alignment",
+      "title": "CSS Beginner lesson 27"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-016-flex-wrap",
+      "title": "CSS Beginner lesson 28"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-responsive",
+      "title": "CSS Beginner lesson 29"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-024-responsive-background-images",
+      "title": "CSS Beginner lesson 30"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-017-image-cropping",
+      "title": "CSS Beginner lesson 31"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-grid",
+      "title": "CSS Beginner lesson 32"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-018-auto-fit-grid",
+      "title": "CSS Beginner lesson 33"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-responsive-page",
+      "title": "CSS Beginner lesson 34"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-019-logical-properties",
+      "title": "CSS Beginner lesson 35"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-pseudo-selectors",
+      "title": "CSS Beginner lesson 36"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-020-keyboard-focus",
+      "title": "CSS Beginner lesson 37"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-021-form-control-styling",
+      "title": "CSS Beginner lesson 38"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-custom-properties",
+      "title": "CSS Beginner lesson 39"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-022-color-scheme",
+      "title": "CSS Beginner lesson 40"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-web-fonts-surfaces",
+      "title": "CSS Beginner lesson 41"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-025-fluid-type-clamp",
+      "title": "CSS Beginner lesson 42"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-motion",
+      "title": "CSS Beginner lesson 43"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-026-data-table-styling",
+      "title": "CSS Beginner lesson 44"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-layout-debugging",
+      "title": "CSS Beginner lesson 45"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-027-devtools-inspection",
+      "title": "CSS Beginner lesson 46"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-028-print-styles",
+      "title": "CSS Beginner lesson 47"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-029-list-markers",
+      "title": "CSS Beginner lesson 48"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-030-checked-controls",
+      "title": "CSS Beginner lesson 49"
+    },
+    {
+      "path": "/levels/css-fundamentals/beginner/lesson/css-b-031-final-page-integration",
+      "title": "CSS Beginner lesson 50"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner",
+      "title": "JavaScript Beginner"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/placement",
+      "title": "JavaScript placement test"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/project",
+      "title": "JavaScript Beginner capstone"
+    },
+    {
+      "path": "/assessment/javascript-fundamentals?level=beginner",
+      "title": "JavaScript Beginner final assessment"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-what-is-javascript",
+      "title": "JavaScript Beginner lesson 01"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-002-console-debugging",
+      "title": "JavaScript Beginner lesson 02"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-003-comments-and-readable-code",
+      "title": "JavaScript Beginner lesson 03"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-variables",
+      "title": "JavaScript Beginner lesson 04"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-data-types",
+      "title": "JavaScript Beginner lesson 05"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-operators",
+      "title": "JavaScript Beginner lesson 06"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-conditionals",
+      "title": "JavaScript Beginner lesson 07"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-008-switch-cases",
+      "title": "JavaScript Beginner lesson 08"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-loops",
+      "title": "JavaScript Beginner lesson 09"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-010-while-loops",
+      "title": "JavaScript Beginner lesson 10"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-011-break-continue",
+      "title": "JavaScript Beginner lesson 11"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-type-conversion",
+      "title": "JavaScript Beginner lesson 12"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-013-template-literals",
+      "title": "JavaScript Beginner lesson 13"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-functions",
+      "title": "JavaScript Beginner lesson 14"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-015-callbacks",
+      "title": "JavaScript Beginner lesson 15"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-arrays",
+      "title": "JavaScript Beginner lesson 16"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-017-destructuring",
+      "title": "JavaScript Beginner lesson 17"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-018-spread-rest",
+      "title": "JavaScript Beginner lesson 18"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-functions-scope",
+      "title": "JavaScript Beginner lesson 19"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-objects",
+      "title": "JavaScript Beginner lesson 20"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-021-set-and-map-collections",
+      "title": "JavaScript Beginner lesson 21"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-022-optional-chaining-nullish",
+      "title": "JavaScript Beginner lesson 22"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-array-methods",
+      "title": "JavaScript Beginner lesson 23"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-024-array-find",
+      "title": "JavaScript Beginner lesson 24"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-025-array-some-every-reduce",
+      "title": "JavaScript Beginner lesson 25"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-026-stable-sorting",
+      "title": "JavaScript Beginner lesson 26"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-027-non-mutating-updates",
+      "title": "JavaScript Beginner lesson 27"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-string-number-methods",
+      "title": "JavaScript Beginner lesson 28"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-029-dates-and-time",
+      "title": "JavaScript Beginner lesson 29"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-030-regular-expressions",
+      "title": "JavaScript Beginner lesson 30"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-dom-basics",
+      "title": "JavaScript Beginner lesson 31"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-032-dom-traversal",
+      "title": "JavaScript Beginner lesson 32"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-events",
+      "title": "JavaScript Beginner lesson 33"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-034-event-delegation",
+      "title": "JavaScript Beginner lesson 34"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-dom-manipulation",
+      "title": "JavaScript Beginner lesson 35"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-036-safe-dom-rendering",
+      "title": "JavaScript Beginner lesson 36"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-form-interactions",
+      "title": "JavaScript Beginner lesson 37"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-038-accessible-interaction-state",
+      "title": "JavaScript Beginner lesson 38"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-json",
+      "title": "JavaScript Beginner lesson 39"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-040-url-search-params",
+      "title": "JavaScript Beginner lesson 40"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-local-storage",
+      "title": "JavaScript Beginner lesson 41"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-042-storage-privacy-limits",
+      "title": "JavaScript Beginner lesson 42"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-error-handling",
+      "title": "JavaScript Beginner lesson 43"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-044-throw-and-error-messages",
+      "title": "JavaScript Beginner lesson 44"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-promises-async",
+      "title": "JavaScript Beginner lesson 45"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-046-timers-and-cleanup",
+      "title": "JavaScript Beginner lesson 46"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-fetch",
+      "title": "JavaScript Beginner lesson 47"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-048-fetch-status-checks",
+      "title": "JavaScript Beginner lesson 48"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/js-modules-organization",
+      "title": "JavaScript Beginner lesson 49"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/beginner/lesson/javascript-b-050-beginner-browser-project",
+      "title": "JavaScript Beginner lesson 50"
+    },
+    {
+      "path": "/login",
+      "title": "Login"
+    },
+    {
+      "path": "/signup",
+      "title": "Sign up"
+    },
+    {
+      "path": "/forgot-password",
+      "title": "Forgot password"
+    },
+    {
+      "path": "/reset-password",
+      "title": "Reset password"
+    },
+    {
+      "path": "/auth/callback",
+      "title": "Auth callback"
+    },
+    {
+      "path": "/dashboard",
+      "title": "Dashboard"
+    },
+    {
+      "path": "/profile",
+      "title": "Profile"
+    }
   ]
 }

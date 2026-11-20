@@ -1,17 +1,38 @@
-import { useEffect, useState } from 'react';
-import { FOUNDATION_PATH_IDS, resolveVantaRoute, type FoundationPathId } from './content/learningSystem';
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
+import { FOUNDATION_PATH_IDS, getPathForLesson, resolveVantaRoute, type FoundationPathId } from './content/learningSystem';
 import { messages, type Locale } from './i18n/messages';
 import { getStudentPortalCopy } from './i18n/studentPortal';
 import { useAuth } from './auth/AuthProvider';
-import LearningLesson from './components/LearningLesson';
-import LearningSystemPage from './components/LearningSystemPage';
-import StartLesson from './components/StartLesson';
-import { AuthGatewayLoadingPage, ProtectedStudentArea, StudentAuthPage } from './components/StudentAccountPages';
-import StudentIntroPage from './components/StudentIntroPage';
 import { useStudentProgress } from './state/StudentProgressProvider';
 import { hasSeenIntro, markIntroSeen } from './utils/introState';
-import LearningHomePage from './components/LearningHomePage';
-import { getLearningLessonCopy } from './i18n/foundationLessonCopy';
+
+const LearningLesson = lazy(() => import('./components/LearningLesson'));
+const LearningSystemPage = lazy(() => import('./components/LearningSystemPage'));
+const StartLesson = lazy(() => import('./components/StartLesson'));
+const StudentIntroPage = lazy(() => import('./components/StudentIntroPage'));
+const LearningHomePage = lazy(() => import('./components/LearningHomePage'));
+const LearningLevelsPage = lazy(() => import('./components/LearningLevelsPage'));
+const BeginnerCoursePage = lazy(() => import('./components/BeginnerCoursePage'));
+const BeginnerLessonPage = lazy(() => import('./components/BeginnerLessonPage'));
+const BeginnerPlacementPage = lazy(() => import('./components/BeginnerPlacementPage'));
+const BeginnerAssessmentPage = lazy(() => import('./components/BeginnerAssessmentPage'));
+const BeginnerProjectPage = lazy(() => import('./components/BeginnerProjectPage'));
+const PathAssessmentPage = lazy(() => import('./components/PathAssessmentPage'));
+const GuidedProjectsPage = lazy(() => import('./components/GuidedProjectsPage'));
+const AuthGatewayLoadingPage = lazy(() => import('./components/StudentAccountPages').then((pages) => ({ default: pages.AuthGatewayLoadingPage })));
+const ProtectedStudentArea = lazy(() => import('./components/StudentAccountPages').then((pages) => ({ default: pages.ProtectedStudentArea })));
+const StudentAuthPage = lazy(() => import('./components/StudentAccountPages').then((pages) => ({ default: pages.StudentAuthPage })));
+
+function RouteLoading({ locale }: { locale: Locale }) {
+  return (
+    <main className="app-shell app-route-loading" aria-busy="true">
+      <p className="student-loading-state" role="status" aria-live="polite">
+        <span className="student-loading-mark" aria-hidden="true" />
+        {locale === 'ar' ? 'جارٍ تحميل الصفحة…' : 'Loading page…'}
+      </p>
+    </main>
+  );
+}
 
 function readSavedLocale(): Locale {
   try {
@@ -29,17 +50,31 @@ function App() {
   const studentCopy = getStudentPortalCopy(locale);
   const isArabic = locale === 'ar';
   const route = resolveVantaRoute(currentPath);
-  const lessonCopy = route.kind === 'lesson' && route.lessonId !== 'html-introduction'
-    ? getLearningLessonCopy(locale, route.lessonId)
+  const lessonPathCopy = route.kind === 'lesson' && route.lessonId !== 'html-introduction'
+    ? copy.learningSystem.paths[getPathForLesson(route.lessonId)]
     : null;
   const auth = useAuth();
   const studentProgress = useStudentProgress();
   const routeTitle = route.kind === 'lesson'
     ? route.lessonId === 'html-introduction'
       ? copy.lesson.metaTitle
-      : lessonCopy?.metaTitle ?? copy.metaTitle
-    : route.kind === 'learning-path'
-      ? copy.learningSystem.paths[route.pathId].metaTitle
+      : lessonPathCopy?.metaTitle ?? copy.metaTitle
+      : route.kind === 'levels'
+        ? `${studentCopy.appShell.levels} | Mabda`
+      : route.kind === 'beginner-course'
+        ? `${copy.learningSystem.paths[route.pathId].title} — ${isArabic ? 'المبتدئ' : 'Beginner'} | Mabda`
+      : route.kind === 'placement-test'
+        ? `${isArabic ? 'اختبار تحديد المستوى' : 'Placement check'} — ${copy.learningSystem.paths[route.pathId].title} | Mabda`
+      : route.kind === 'beginner-lesson'
+        ? `${copy.learningSystem.paths[route.pathId].title} | Mabda`
+      : route.kind === 'beginner-project'
+        ? `${copy.learningSystem.ui.projectsTitle} — ${copy.learningSystem.paths[route.pathId].title} | Mabda`
+      : route.kind === 'learning-path'
+        ? copy.learningSystem.paths[route.pathId].metaTitle
+      : route.kind === 'path-assessment'
+        ? `${copy.learningSystem.ui.finalAssessmentTitle} — ${copy.learningSystem.paths[route.pathId].title} | Mabda`
+        : route.kind === 'guided-projects'
+          ? `${copy.learningSystem.ui.projectsPageTitle} | Mabda`
       : route.kind === 'path-catalog'
         ? copy.learningSystem.catalog.metaTitle
         : route.kind === 'student-auth'
@@ -58,9 +93,23 @@ function App() {
   const routeDescription = route.kind === 'lesson'
     ? route.lessonId === 'html-introduction'
       ? copy.lesson.metaDescription
-      : lessonCopy?.metaDescription ?? copy.metaDescription
+      : lessonPathCopy?.metaDescription ?? copy.metaDescription
+    : route.kind === 'levels'
+      ? (isArabic ? 'استكشف مستويات HTML وCSS وJavaScript وحدد نقطة بداية مناسبة.' : 'Explore HTML, CSS, and JavaScript levels and choose a starting point.')
+    : route.kind === 'beginner-course'
+      ? (isArabic ? 'مستوى مبتدئ منظم مع تقدم محفوظ محليًا لهذه الجلسة.' : 'A structured beginner level with progress stored locally for this session.')
+    : route.kind === 'placement-test'
+      ? (isArabic ? 'اختبار تشخيصي اختياري يقترح نقطة بداية بناءً على المهارات.' : 'An optional diagnostic that recommends a starting point based on skills.')
+    : route.kind === 'beginner-lesson'
+      ? copy.learningSystem.paths[route.pathId].metaDescription
+    : route.kind === 'beginner-project'
+      ? (isArabic ? 'المشروع العملي الختامي لمستوى المبتدئ.' : 'The practical capstone project for Beginner.')
     : route.kind === 'learning-path'
       ? copy.learningSystem.paths[route.pathId].metaDescription
+        : route.kind === 'path-assessment'
+          ? copy.learningSystem.ui.finalAssessmentBody
+          : route.kind === 'guided-projects'
+            ? copy.learningSystem.ui.projectsPageIntro
         : route.kind === 'path-catalog'
           ? copy.learningSystem.catalog.metaDescription
           : route.kind === 'student-auth'
@@ -127,15 +176,20 @@ function App() {
     setCurrentPath(window.location.pathname);
     window.scrollTo({ top: 0, behavior: 'auto' });
   };
+  const withRouteLoading = (children: ReactNode) => (
+    <Suspense fallback={<RouteLoading locale={locale} />}>
+      {children}
+    </Suspense>
+  );
 
 
   if (route.kind === 'student-auth') {
     const introEligible = route.mode === 'login' || route.mode === 'signup' || route.mode === 'forgot-password';
     if (introEligible && auth.loading) {
-      return <AuthGatewayLoadingPage locale={locale} onSwitchLocale={switchLocale} />;
+      return withRouteLoading(<AuthGatewayLoadingPage locale={locale} onSwitchLocale={switchLocale} />);
     }
     if (introEligible && !auth.user && !introCompleted) {
-      return (
+      return withRouteLoading(
         <StudentIntroPage
           locale={locale}
           onSwitchLocale={switchLocale}
@@ -143,50 +197,82 @@ function App() {
             markIntroSeen();
             setIntroCompleted(true);
           }}
-        />
+        />,
       );
     }
-    return <StudentAuthPage key={route.mode} locale={locale} onSwitchLocale={switchLocale} onNavigate={navigateAuth} mode={route.mode} />;
+    return withRouteLoading(<StudentAuthPage key={route.mode} locale={locale} onSwitchLocale={switchLocale} onNavigate={navigateAuth} mode={route.mode} />);
   }
 
   if (isAuthGatewayPending) {
-    return <AuthGatewayLoadingPage locale={locale} onSwitchLocale={switchLocale} />;
+    return withRouteLoading(<AuthGatewayLoadingPage locale={locale} onSwitchLocale={switchLocale} />);
   }
 
   if (isProtectedArea && !auth.user) {
-    return <AuthGatewayLoadingPage locale={locale} onSwitchLocale={switchLocale} />;
+    return withRouteLoading(<AuthGatewayLoadingPage locale={locale} onSwitchLocale={switchLocale} />);
   }
 
   if (route.kind === 'student-area') {
-    return <ProtectedStudentArea locale={locale} onSwitchLocale={switchLocale} page={route.page} />;
+    return withRouteLoading(<ProtectedStudentArea locale={locale} onSwitchLocale={switchLocale} page={route.page} />);
+  }
+
+  if (route.kind === 'levels') {
+    return withRouteLoading(<LearningLevelsPage locale={locale} onSwitchLocale={switchLocale} />);
+  }
+
+  if (route.kind === 'beginner-course') {
+    return withRouteLoading(<BeginnerCoursePage pathId={route.pathId} locale={locale} onSwitchLocale={switchLocale} />);
+  }
+
+  if (route.kind === 'beginner-lesson') {
+    return withRouteLoading(<BeginnerLessonPage pathId={route.pathId} lessonId={route.lessonId} locale={locale} onSwitchLocale={switchLocale} />);
+  }
+
+  if (route.kind === 'placement-test') {
+    return withRouteLoading(<BeginnerPlacementPage pathId={route.pathId} locale={locale} onSwitchLocale={switchLocale} />);
+  }
+
+  if (route.kind === 'beginner-project') {
+    return withRouteLoading(<BeginnerProjectPage pathId={route.pathId} locale={locale} onSwitchLocale={switchLocale} />);
   }
 
   if (route.kind === 'lesson') {
     if (route.lessonId === 'html-introduction') {
-      return (
+      return withRouteLoading(
         <StartLesson
           locale={locale}
           onSwitchLocale={switchLocale}
           onComplete={(score, total) => studentProgress.completeLessonQuiz('html-introduction', score, total)}
-        />
+        />,
       );
     }
-    return (
+    return withRouteLoading(
       <LearningLesson
         lessonId={route.lessonId}
         locale={locale}
         onSwitchLocale={switchLocale}
         onComplete={(score, total) => studentProgress.completeLessonQuiz(route.lessonId, score, total)}
-      />
+      />,
     );
   }
 
   if (route.kind === 'path-catalog' || route.kind === 'learning-path' || route.kind === 'not-found') {
-    return <LearningSystemPage locale={locale} onSwitchLocale={switchLocale} route={route} />;
+    return withRouteLoading(<LearningSystemPage locale={locale} onSwitchLocale={switchLocale} route={route} />);
+  }
+
+  if (route.kind === 'path-assessment') {
+    return withRouteLoading(
+      new URLSearchParams(window.location.search).get('level') === 'beginner'
+        ? <BeginnerAssessmentPage pathId={route.pathId} locale={locale} onSwitchLocale={switchLocale} />
+        : <PathAssessmentPage pathId={route.pathId} locale={locale} onSwitchLocale={switchLocale} />,
+    );
+  }
+
+  if (route.kind === 'guided-projects') {
+    return withRouteLoading(<GuidedProjectsPage locale={locale} onSwitchLocale={switchLocale} />);
   }
 
   if (route.kind === 'landing') {
-    return <LearningHomePage locale={locale} onSwitchLocale={switchLocale} />;
+    return withRouteLoading(<LearningHomePage locale={locale} onSwitchLocale={switchLocale} />);
   }
 
   return null;

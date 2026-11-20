@@ -13,7 +13,7 @@ import { useAuth } from '../auth/AuthProvider';
 import { useStudentProgress } from '../state/StudentProgressProvider';
 import { createQuizChoiceOrder, getOrderedQuizChoices } from '../utils/quizChoices';
 import LearningHeader from './LearningHeader';
-import PracticeStudio from './PracticeStudio';
+import LazyPracticeStudio from './LazyPracticeStudio';
 import ProgrammingLanguageLabel from './ProgrammingLanguageLabel';
 import { practiceStudioMessages } from '../i18n/practiceStudio';
 
@@ -22,6 +22,8 @@ export type LearningLessonProps = {
   locale: Locale;
   onSwitchLocale: () => void;
   onComplete: (score: number, total: number) => Promise<boolean>;
+  onQuizPassed?: () => void;
+  navigation?: { backHref?: string; nextHref?: string | null; previousHref?: string | null };
 };
 
 type LessonFlow = 'learn' | 'practice' | 'quiz' | 'result';
@@ -49,7 +51,7 @@ function InlineCodeText({ text }: { text: string }) {
   );
 }
 
-function LearningLesson({ lessonId, locale, onSwitchLocale, onComplete }: LearningLessonProps) {
+function LearningLesson({ lessonId, locale, onSwitchLocale, onComplete, onQuizPassed, navigation }: LearningLessonProps) {
   const landingCopy = messages[locale];
   const systemCopy = landingCopy.learningSystem;
   const copy = getLearningLessonCopy(locale, lessonId);
@@ -97,9 +99,9 @@ function LearningLesson({ lessonId, locale, onSwitchLocale, onComplete }: Learni
     : firstTryScore >= Math.ceil(copy.questions.length * 0.6)
       ? ui.goodResult
       : ui.keepPracticingResult;
-  const previousLesson = previousLessonId ? getLessonHref(previousLessonId) : null;
-  const nextLesson = nextLessonId ? getLessonHref(nextLessonId) : null;
-  const pathHref = getLearningPathHref(pathId);
+  const previousLesson = navigation ? navigation.previousHref ?? null : previousLessonId ? getLessonHref(previousLessonId) : null;
+  const nextLesson = navigation ? navigation.nextHref ?? null : nextLessonId ? getLessonHref(nextLessonId) : null;
+  const pathHref = navigation ? navigation.backHref ?? getLearningPathHref(pathId) : getLearningPathHref(pathId);
   const practiceUi = practiceStudioMessages[locale];
 
   useEffect(() => {
@@ -159,6 +161,7 @@ function LearningLesson({ lessonId, locale, onSwitchLocale, onComplete }: Learni
 
   const continueQuiz = () => {
     if (questionIndex === copy.questions.length - 1) {
+      onQuizPassed?.();
       setFlow('result');
       void persistQuizResult();
       return;
@@ -283,7 +286,7 @@ function LearningLesson({ lessonId, locale, onSwitchLocale, onComplete }: Learni
 
         {practiceOpened && (
           <section className="learning-practice-shell" hidden={flow !== 'practice'}>
-            <PracticeStudio
+            <LazyPracticeStudio
               lessonId={lessonId}
               lessonTitle={copy.title}
               expectedOutcome={copy.outcomeText}

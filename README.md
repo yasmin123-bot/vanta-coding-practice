@@ -2,11 +2,13 @@
 
 Mabda is the beginner coding-learning product developed by the VANTA team. The existing repository and persistence identifiers keep their VANTA names for compatibility; this is not a new application or a new database tenant. VANTA's team logo assets are preserved, not redesigned.
 
-The bilingual product includes a learning Home, path catalog, and three active foundation paths: HTML (5 lessons), CSS (8 lessons), and JavaScript (9 lessons). Each lesson offers explanations, examples, an unsolved Practice Studio exercise, and a four-option quiz with stable randomized options, feedback, retries, and first-attempt scoring. Programming fundamentals beyond these foundations, problem-solving, challenges, projects, AI assistance, and competitions remain planned unless explicitly identified as current functionality.
+The bilingual product includes a learning Home, path catalog, and three established foundation paths: HTML (12 lessons), CSS (19 lessons), and JavaScript (23 lessons), for 54 canonical lessons. The separate Beginner-level experience now structures 50 lessons per subject (150 subject lesson slots total), reusing those canonical lessons where appropriate and adding bilingual explanations, practical exercises, quizzes, and optional sequential placement checks. It also includes three end-of-level assessments and three guided capstone briefs with requirements, milestones, and self-review rubrics. Intermediate and Advanced remain visibly unavailable; open-ended challenges, AI assistance, and competitions remain planned.
 
 Practice Studio uses CodeMirror for HTML, CSS, and JavaScript. It provides static diagnostics with locations and suggestions, an isolated iframe preview, runtime JavaScript feedback, stale-preview status, and a separate exercise checklist. Running code or passing the checklist does not complete a lesson or change a quiz result. Reset restores the unsolved starter locally; it does not overwrite a cloud draft. Signed-in learners can explicitly save and restore their account-owned draft. Guests are told their draft is not cloud-saved. This is educational iframe isolation, not an absolute security guarantee or a full VS Code implementation.
 
 Real Supabase email/password authentication, confirmation/recovery callbacks, dashboard/profile UI guards, and account-owned progress are integrated. RLS is the database authorization boundary; UI route guards are not a substitute for it. Quiz results are client-submitted learning summaries, not server-verified awards or credentials. A live authenticated sign-up/login/recovery/persistence test still requires a usable, confirmed test-account session; build success or guest tests cannot establish it.
+
+The new Beginner-level progress is intentionally tab-session-only at this stage: starting placement, lesson completion, the final assessment, and capstone self-check are stored in `sessionStorage`, not uploaded to Supabase or account progress. Closing the tab may clear it. Canonical foundation lesson progress continues to use the existing account-backed service when authenticated. Intermediate unlock remains unavailable until a later release.
 
 ## Run locally
 
@@ -31,7 +33,7 @@ git diff --check
 npm run preview
 ```
 
-Unit/contract tests cover locale parity, quiz identity and ordering, progress derivation, safe return paths, unsolved starters, validators, diagnostics locations, and preview document boundaries. They do not prove RLS isolation or authenticated persistence. Browser acceptance evidence and the remaining-work roadmap are documented separately. Vite currently warns about chunks above 500 KB; route/content and parser chunking remain performance work, not a suppressed warning.
+Unit/contract tests cover locale parity, quiz identity and ordering, progress derivation, safe return paths, unsolved starters, validators, diagnostics locations, and preview document boundaries. They do not prove RLS isolation or authenticated persistence. Browser acceptance evidence and the remaining-work roadmap are documented separately. Pages, lesson copy, and Practice Studio are loaded on demand; the current build still warns about a 534.66 KB deferred curriculum chunk (160.40 KB gzip). Further subject-specific lazy loading is a performance follow-up; the warning is not suppressed.
 
 Optional browser acceptance uses Python Playwright, installed Chromium, and Node >=22.15. Start a build preview first, then run:
 
@@ -39,6 +41,7 @@ Optional browser acceptance uses Python Playwright, installed Chromium, and Node
 BASE_URL=http://127.0.0.1:5175 EVIDENCE_DIR=/tmp/mabda-browser-acceptance python3 tests/browser_acceptance.py
 BASE_URL=http://127.0.0.1:5175 EVIDENCE_DIR=/tmp/mabda-auth-intro-acceptance python3 tests/auth_intro_acceptance.py
 BASE_URL=http://127.0.0.1:5175 EVIDENCE_DIR=/tmp/mabda-app-shell-acceptance python3 tests/app_shell_acceptance.py
+BASE_URL=http://127.0.0.1:5175 EVIDENCE_DIR=/tmp/mabda-beginner-levels-acceptance python3 tests/beginner_levels_acceptance.py
 ```
 
 Pass `THEME=dark` to the main acceptance harness to exercise the same flow in Dark mode. Additional focused checks use the same `BASE_URL` / `EVIDENCE_DIR` settings:

@@ -279,7 +279,37 @@
 .student-auth-links p {
   margin: 0;
 }
-
+.student-auth-otp-actions {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  margin-top: 2px;
+}
+.student-auth-inline-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-copper-light);
+  font: inherit;
+  font-size: 0.8rem;
+  line-height: 1.65;
+  text-align: start;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.student-auth-inline-button:hover { color: var(--color-ink); }
+.student-auth-inline-button:disabled {
+  color: var(--color-muted);
+  cursor: not-allowed;
+  text-decoration: none;
+}
+.mabda-auth-otp-form #auth-email-otp {
+  text-align: center;
+  letter-spacing: 0.28em;
+  font-family: var(--font-code);
+  font-size: 1.15rem;
+}
 .student-auth-links a,
 .student-dashboard-footer a {
   color: var(--color-copper-light);
@@ -2281,4 +2311,178 @@
 
 @media (prefers-reduced-motion: reduce) {
   .student-milestone-progress > span { transition: none; }
+}
+
+
+/* Compact profile path summaries; lesson lists stay available in native disclosures. */
+.student-profile-learning {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.student-profile-course-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 12px;
+}
+
+.student-profile-course-card {
+  display: grid;
+  align-content: start;
+  gap: 11px;
+  padding: clamp(16px, 2vw, 22px);
+}
+
+.student-profile-course-card .student-profile-card-heading {
+  align-items: flex-start;
+}
+
+.student-profile-course-card h2 {
+  font-family: var(--font-display), var(--font-body);
+  font-size: 1.08rem;
+  font-weight: 760;
+}
+
+.student-profile-course-card .student-profile-learning-state {
+  max-width: 52%;
+  padding: 4px 8px;
+  color: var(--color-muted);
+  background: var(--color-info-bg);
+  border: 1px solid var(--color-hairline);
+  border-radius: 999px;
+  font-size: 0.67rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.student-profile-course-card .student-profile-learning-state.is-in-progress,
+.student-profile-course-card .student-profile-learning-state.is-completed {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+}
+
+.student-profile-course-card .student-profile-learning-state.is-getting-started {
+  color: var(--color-primary);
+}
+
+.student-profile-learning-label,
+.student-profile-course-count {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.student-profile-course-card .student-progress-track {
+  margin: 0;
+}
+
+.student-profile-course-count {
+  color: var(--color-ink);
+  font-weight: 620;
+}
+
+.student-profile-course-action {
+  width: fit-content;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 1px;
+  font-size: 0.78rem;
+}
+
+.student-profile-course-details {
+  margin-top: 4px;
+  border-top: 1px solid var(--color-hairline);
+}
+
+.student-profile-course-details > summary {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-block: 8px;
+  color: var(--color-muted);
+  cursor: pointer;
+  font-size: 0.73rem;
+  font-weight: 650;
+  list-style: none;
+}
+
+.student-profile-course-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.student-profile-course-details > summary::after {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-inline-end: 2px solid currentColor;
+  border-block-end: 2px solid currentColor;
+  content: '';
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform var(--motion-fast);
+}
+
+.student-profile-course-details[open] > summary::after {
+  transform: rotate(225deg) translate(-2px, -1px);
+}
+
+.student-profile-course-details > summary span:nth-child(2) {
+  margin-inline-start: auto;
+  font-family: var(--font-code);
+  font-size: 0.67rem;
+}
+
+.student-profile-course-details > summary:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.student-profile-course-details .student-profile-quiz-list {
+  max-height: 330px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  margin-top: 2px;
+  border-top: 1px solid var(--color-hairline);
+}
+
+.student-profile-course-details .student-profile-quiz-list li {
+  align-items: flex-start;
+  gap: 8px;
+  padding-block: 9px;
+}
+
+.student-profile-course-details .student-profile-quiz-list strong {
+  flex: 0 0 auto;
+  max-width: 42%;
+  font-size: 0.66rem;
+  text-align: end;
+}
+
+.student-profile-secondary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 980px) {
+  .student-profile-course-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .student-profile-course-grid,
+  .student-profile-secondary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .student-profile-course-card {
+    padding: 16px;
+  }
 }

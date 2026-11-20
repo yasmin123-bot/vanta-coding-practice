@@ -4,8 +4,9 @@ import os
 import traceback
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+from browser_origin import sanitize_diagnostic_text, validate_local_base_url
 
-BASE = os.environ.get('BASE_URL', 'http://127.0.0.1:5175').rstrip('/')
+BASE = validate_local_base_url(os.environ.get('BASE_URL', 'http://127.0.0.1:5175'))
 OUT = Path(os.environ.get('EVIDENCE_DIR', '/tmp/mabda-foundation2-practice'))
 OUT.mkdir(parents=True, exist_ok=True)
 checks = []
@@ -25,13 +26,25 @@ def check(name, passed, detail=None):
 def enter_practice(page, route):
     page.goto(BASE + route, wait_until='networkidle')
     for _ in range(24):
-        if page.locator('[data-testid="practice-studio"]').count() and page.locator('[data-testid="practice-studio"]').is_visible():
+        studio = page.locator('[data-testid="practice-studio"]')
+        if studio.count() and studio.is_visible():
             page.locator('.cm-content').wait_for()
             return
         next_button = page.locator('.learning-lesson-button.button-primary, .lesson-flow-controls .button-primary').first
         if not next_button.count():
             break
+        progress = page.locator('.learning-flow-progress-track, .lesson-flow-progress-track').first
+        current = int(progress.get_attribute('aria-valuenow') or '0')
+        maximum = int(progress.get_attribute('aria-valuemax') or '0')
         next_button.click()
+        if maximum and current >= maximum:
+            studio.wait_for(state='visible', timeout=15000)
+            page.locator('.cm-content').wait_for()
+            return
+        page.wait_for_function("""(before) => {
+          const progress = document.querySelector('.learning-flow-progress-track, .lesson-flow-progress-track');
+          return progress && progress.getAttribute('aria-valuenow') !== before;
+        }""", arg=str(current))
     raise AssertionError(f'Practice not reachable at {route}')
 
 
@@ -61,7 +74,7 @@ def switch_to_preview_on_mobile(page, width):
 
 
 def record_page_error(error):
-    message = str(error)
+    message = sanitize_diagnostic_text(error)
     if expected_iframe_syntax_error[0] and ('Unexpected token' in message or 'missingFunction is not defined' in message):
         observed_expected_iframe_errors.append(message)
     else:
@@ -75,7 +88,7 @@ try:
             for locale in ['ar', 'en']:
                 page = browser.new_page(viewport={'width': width, 'height': height})
                 page.on('pageerror', record_page_error)
-                page.on('console', lambda message: console_errors.append(message.text) if message.type == 'error' and not message.location.get('url', '').startswith('about:srcdoc') else None)
+                page.on('console', lambda message: console_errors.append(sanitize_diagnostic_text(message.text)) if message.type == 'error' and not message.location.get('url', '').startswith('about:srcdoc') else None)
                 page.goto(BASE)
                 page.evaluate('([l]) => {localStorage.setItem("mabda-theme","light");localStorage.setItem("vanta-locale",l)}', [locale])
 
@@ -198,7 +211,7 @@ try:
         check('No browser console errors', not console_errors, console_errors)
         browser.close()
 except Exception:
-    result['failure'] = traceback.format_exc()
+    result['failure'] = sanitize_diagnostic_text(traceback.format_exc())
 finally:
     result.update(checks=checks, pageErrors=page_errors, expectedIframeSyntaxErrors=observed_expected_iframe_errors, consoleErrors=console_errors, passed=sum(item['passed'] for item in checks), total=len(checks))
     (OUT / 'results.json').write_text(json.dumps(result, ensure_ascii=False, indent=2))

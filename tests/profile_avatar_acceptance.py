@@ -15,8 +15,9 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from playwright.sync_api import sync_playwright
+from browser_origin import sanitize_diagnostic_text, validate_local_base_url
 
-BASE = os.environ.get('BASE_URL', 'http://127.0.0.1:5175').rstrip('/')
+BASE = validate_local_base_url(os.environ.get('BASE_URL', 'http://127.0.0.1:5175'))
 OUT = Path(os.environ.get('EVIDENCE_DIR', '/tmp/mabda-profile-avatar-acceptance'))
 OUT.mkdir(parents=True, exist_ok=True)
 RESULT = {
@@ -189,8 +190,8 @@ def run():
             page.set_default_timeout(15000)
             add_synthetic_session(page, locale, theme)
             page.route(SUPABASE_URL + '/**', mock_supabase)
-            page.on('pageerror', lambda error: RESULT['errors'].append(str(error)))
-            page.on('console', lambda message: RESULT['errors'].append(message.text) if message.type == 'error' else None)
+            page.on('pageerror', lambda error: RESULT['errors'].append(sanitize_diagnostic_text(error)))
+            page.on('console', lambda message: RESULT['errors'].append(sanitize_diagnostic_text(message.text)) if message.type == 'error' else None)
             page.goto(BASE + '/profile', wait_until='domcontentloaded')
             page.get_by_role('heading', name='ملفك الشخصي' if locale == 'ar' else 'Your profile').wait_for()
             page.wait_for_function("document.documentElement.dataset.theme === " + json.dumps(theme))
@@ -199,6 +200,12 @@ def run():
             check(f'{locale}-{theme}-{width}: theme applied', page.locator('html').get_attribute('data-theme') == theme)
             check(f'{locale}-{theme}-{width}: profile avatar and upload control visible', page.locator('.student-profile-panel .mabda-student-avatar').is_visible() and page.locator('input[type="file"][accept*="image/png"]').count() == 1)
             check(f'{locale}-{theme}-{width}: header avatar link exists', page.locator('.mabda-app-avatar-link .mabda-student-avatar--header').count() == 1)
+            cards = page.locator('.student-profile-course-card')
+            check(f'{locale}-{theme}-{width}: three concise course cards', cards.count() == 3 and [cards.nth(i).locator('h2').inner_text().strip() for i in range(3)] == ['HTML', 'CSS', 'JavaScript'])
+            expected_not_started = 'لم يبدأ بعد' if locale == 'ar' else 'Not started'
+            check(f'{locale}-{theme}-{width}: empty remote progress is clearly not started', all(expected_not_started in cards.nth(i).locator('.student-profile-learning-state').inner_text() for i in range(3)) and all(cards.nth(i).locator('[role="progressbar"]').get_attribute('aria-valuenow') == '0' for i in range(3)))
+            check(f'{locale}-{theme}-{width}: lesson lists are collapsed by default', all(cards.nth(i).locator('details').count() == 1 and cards.nth(i).locator('details').evaluate('(el) => !el.open') and not cards.nth(i).locator('details li').first.is_visible() for i in range(3)))
+            check(f'{locale}-{theme}-{width}: each course has a real next-lesson link', all(cards.nth(i).locator('.student-profile-course-action').get_attribute('href').startswith('/lesson/') for i in range(3)))
             check(f'{locale}-{theme}-{width}: no horizontal overflow', page.evaluate('document.documentElement.scrollWidth <= document.documentElement.clientWidth'))
             if locale == 'ar' and width == 390:
                 page.screenshot(path=str(OUT / 'profile-avatar-ar-mobile.png'), full_page=True)
@@ -213,8 +220,8 @@ def run():
         page.set_default_timeout(15000)
         add_synthetic_session(page, 'ar', 'dark')
         page.route(SUPABASE_URL + '/**', mock_supabase)
-        page.on('pageerror', lambda error: RESULT['errors'].append(str(error)))
-        page.on('console', lambda message: RESULT['errors'].append(message.text) if message.type == 'error' else None)
+        page.on('pageerror', lambda error: RESULT['errors'].append(sanitize_diagnostic_text(error)))
+        page.on('console', lambda message: RESULT['errors'].append(sanitize_diagnostic_text(message.text)) if message.type == 'error' else None)
         page.goto(BASE + '/profile', wait_until='domcontentloaded')
         page.get_by_role('heading', name='ملفك الشخصي').wait_for()
         input_file = page.locator('input[type="file"]')
@@ -251,7 +258,7 @@ def run():
 try:
     run()
 except Exception:
-    RESULT['failure'] = traceback.format_exc()
+    RESULT['failure'] = sanitize_diagnostic_text(traceback.format_exc())
 finally:
     (OUT / 'results.json').write_text(json.dumps(RESULT, ensure_ascii=False, indent=2))
     print(json.dumps({

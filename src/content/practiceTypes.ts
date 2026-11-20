@@ -62,6 +62,13 @@ export type CssDeclarationRule = PracticeRuleBase & {
   valueMatch?: 'exact' | 'semantic-color';
   /** Require a trailing semicolon for this exercise requirement (CSS itself permits omitting the final one). */
   requireSemicolon?: boolean;
+  scope?: 'any' | 'outside-media' | 'inside-media';
+};
+
+export type CssForbidDeclarationRule = PracticeRuleBase & {
+  type: 'css-forbid-declaration';
+  target: string;
+  property: string;
 };
 
 export type CssSelectorRule = PracticeRuleBase & {
@@ -88,8 +95,11 @@ export type JavaScriptDeclarationRule = PracticeRuleBase & {
   type: 'js-declaration';
   target: string;
   property: 'const' | 'let';
-  expectedType?: 'number' | 'string' | 'boolean' | 'array';
+  expectedType?: 'number' | 'string' | 'boolean' | 'array' | 'object';
   expectedValue?: string | number | boolean;
+  initializerCall?: string;
+  initializerCallArgument?: string | number;
+  initializerCallArgumentIndex?: number;
 };
 
 export type JavaScriptCallRule = PracticeRuleBase & {
@@ -98,6 +108,11 @@ export type JavaScriptCallRule = PracticeRuleBase & {
   argument?: string | number;
   argumentIndex?: number;
   requireCallback?: boolean;
+  minimumArguments?: number;
+  argumentType?: 'number' | 'string';
+  argumentTypes?: Record<number, 'number' | 'string'>;
+  argumentVariable?: string;
+  withinLoopVariable?: string;
 };
 
 export type JavaScriptComparisonRule = PracticeRuleBase & {
@@ -165,6 +180,8 @@ export type JavaScriptRangeExpressionRule = PracticeRuleBase & {
   variable: string;
   lowerBound: number;
   upperBound: number;
+  operator?: '<' | '<=' | '>' | '>=';
+  requireIncrement?: boolean;
 };
 
 export type JavaScriptConditionBranchesRule = PracticeRuleBase & {
@@ -183,6 +200,13 @@ export type JavaScriptFunctionBehaviorRule = PracticeRuleBase & {
   parameter: string;
   operator: '*' | '+' | '-' | '/';
   operand: number;
+};
+
+export type JavaScriptFunctionReturnRule = PracticeRuleBase & {
+  type: 'js-function-return';
+  functionName: string;
+  parameter: string;
+  method: string;
 };
 
 export type JavaScriptArrayAccessRule = PracticeRuleBase & {
@@ -211,8 +235,61 @@ export type JavaScriptGuardRule = PracticeRuleBase & {
   variable: string;
 };
 
+export type JavaScriptMethodAssignmentRule = PracticeRuleBase & {
+  type: 'js-method-assignment';
+  target: string;
+  source?: string;
+  method?: string;
+  callTarget?: string;
+  argument?: string | number;
+  argumentIndex?: number;
+  argumentType?: 'number' | 'string';
+  minimumArguments?: number;
+  requireCallback?: boolean;
+};
+
+export type HtmlElementRule = PracticeRuleBase & {
+  type: 'html-element';
+  tag: string;
+  minimumCount?: number;
+  parentTag?: string;
+  minimumTextLength?: number;
+  textIncludes?: string;
+  requiredAttributes?: string[];
+  minimumAttributeLengths?: Record<string, number>;
+  attributeValues?: Record<string, string>;
+  attributePrefixes?: Record<string, string>;
+  minimumPerParent?: { parentTag: string; count: number };
+  ancestorTag?: string;
+  sameContainerAs?: { containerTag: string; requiredChildren: Array<{ tag: string; count: number }> };
+};
+
+export type HtmlDocumentRule = PracticeRuleBase & {
+  type: 'html-document';
+  check: 'doctype' | 'html-root' | 'charset' | 'viewport' | 'title' | 'lang' | 'direction';
+  expected?: string;
+};
+
+export type HtmlListRule = PracticeRuleBase & {
+  type: 'html-list';
+  tag: 'ul' | 'ol';
+  minimumLists?: number;
+  minimumItems: number;
+  directChildren?: boolean;
+};
+
+export type HtmlLabelControlRule = PracticeRuleBase & {
+  type: 'html-label-control';
+  inputType?: string;
+  requireRequired?: boolean;
+  minimumPairs?: number;
+  formScoped?: boolean;
+  fieldsetScoped?: boolean;
+};
+
 export type PracticeValidationRule =
   | CssDeclarationRule
+  | CssForbidDeclarationRule
   | CssSelectorRule
   | CssMediaRule
   | CssDeclarationInMediaRule
@@ -231,6 +308,12 @@ export type PracticeValidationRule =
   | JavaScriptFunctionBehaviorRule
   | JavaScriptArrayAccessRule
   | JavaScriptPropertyAssignmentRule
-  | JavaScriptGuardRule;
+  | JavaScriptGuardRule
+  | JavaScriptFunctionReturnRule
+  | JavaScriptMethodAssignmentRule
+  | HtmlElementRule
+  | HtmlDocumentRule
+  | HtmlListRule
+  | HtmlLabelControlRule;
 
 export type LocalizedExerciseCopy = Record<'ar' | 'en', string>;
