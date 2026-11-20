@@ -5,7 +5,7 @@ import type { SyntaxNode } from '@lezer/common';
 import type { Locale } from '../i18n/messages';
 import { practiceStudioMessages } from '../i18n/practiceStudio';
 import type { PracticeRequirementReason, PracticeValidationRule } from '../content/practiceTypes';
-import { getCssDeclarationFacts, isCssColorKeyword, normalizeCssColor, normalizeCssMediaCondition, suggestCssProperty } from './cssAnalysis';
+import { getCssDeclarationFacts, getCssLayerOrderDeclarations, isCssColorKeyword, normalizeCssColor, normalizeCssMediaCondition, suggestCssProperty } from './cssAnalysis';
 import { makePracticeRequirementResult } from './practiceResults';
 
 type AstNode = {
@@ -62,6 +62,11 @@ function cssRuleValueMatches(actual: string, expected: string, property: string,
   return cssColorComparable(actual, property, semantic) === cssColorComparable(expected, property, semantic);
 }
 
+function cssRuleAcceptsValue(actual: string, rule: { value: string; valueAlternatives?: string[]; property: string; valueMatch?: 'exact' | 'semantic-color' }): boolean {
+  return [rule.value, ...(rule.valueAlternatives ?? [])]
+    .some((expected) => cssRuleValueMatches(actual, expected, rule.property, rule.valueMatch === 'semantic-color'));
+}
+
 function isExpression(node: AstNode): boolean {
   return /^(?:VariableName|VariableDefinition|Number|NumberLiteral|String|ArrayExpression|ObjectExpression|CallExpression|MemberExpression|BinaryExpression|UnaryExpression|UpdateExpression|ArrowFunction|FunctionExpression|TemplateString|RegExp)$/.test(node.name)
     || node.name === 'true' || node.name === 'false' || node.name === 'null';
@@ -97,8 +102,8 @@ function literalValue(source: string, node: AstNode): string | number | boolean 
     const value = Number(text(source, node).replaceAll('_', ''));
     return Number.isFinite(value) ? value : undefined;
   }
-  if (node.name === 'true') return true;
-  if (node.name === 'false') return false;
+  if (node.name === 'true' || (node.name === 'BooleanLiteral' && text(source, node) === 'true')) return true;
+  if (node.name === 'false' || (node.name === 'BooleanLiteral' && text(source, node) === 'false')) return false;
   if (node.name === 'null') return null;
   return undefined;
 }
@@ -134,6 +139,113 @@ function callParts(node: AstNode, source: string) {
   return { callee: normalized(text(source, callee)), args: expressionChildren(argsNode) };
 }
 
+function normalizedMemberPath(value: string): string {
+  return normalized(value).replace(/\?\./g, '.').replace(/\[\s*(['"])([\w$.-]+)\1\s*\]/g, '.$2');
+}
+
+function constructorName(node: AstNode, source: string): string | null {
+  if (node.name !== 'NewExpression') return null;
+  const callee = node.children.find((child) => child.name !== 'new' && child.name !== 'ArgList' && child.name !== '(' && child.name !== ')');
+  return callee ? normalizedMemberPath(text(source, callee)) : null;
+}
+
+function objectPropertyMatches(object: AstNode, source: string, requirement: { key: string; value?: string | number | boolean; valueVariable?: string }): boolean {
+  if (object.name !== 'ObjectExpression') return false;
+  return object.children.filter((child) => child.name === 'Property').some((property) => {
+    const keyNode = property.children.find((child) => child.name === 'PropertyDefinition');
+    if (!keyNode || text(source, keyNode) !== requirement.key) return false;
+    const valueNode = property.children.find((child) => child !== keyNode && child.name !== ':' && child.name !== ',');
+    if (requirement.valueVariable !== undefined) {
+      return valueNode
+        ? normalizedMemberPath(text(source, valueNode)) === requirement.valueVariable
+        : text(source, keyNode) === requirement.valueVariable;
+    }
+    if (requirement.value !== undefined) return Boolean(valueNode && literalValue(source, valueNode) === requirement.value);
+    return true;
+  });
+}
+
+function returnObjectKeys(fn: AstNode, source: string): Set<string> {
+  const keys = new Set<string>();
+  for (const statement of allNodes(fn).filter((node) => node.name === 'ReturnStatement')) {
+    const object = statement.children.find((child) => child.name === 'ObjectExpression');
+    if (!object) continue;
+    for (const property of object.children.filter((child) => child.name === 'Property')) {
+      const key = property.children.find((child) => child.name === 'PropertyDefinition');
+      if (key) keys.add(text(source, key));
+    }
+  }
+  return keys;
+}
+
+function constructorContractMatches(fnNodes: AstNode[], source: string, contract: NonNullable<Extract<PracticeValidationRule, { type: 'js-function-contract' }>['requiredConstructorContracts']>[number]): boolean {
+  return fnNodes.filter((node) => node.name === 'NewExpression' && constructorName(node, source) === contract.constructor).some((node) => {
+    const args = expressionChildren(node.children.find((child) => child.name === 'ArgList') ?? node);
+    const acceptedFirstArguments = [contract.firstArgument, ...(contract.firstArgumentAlternatives ?? [])].filter((value): value is string => Boolean(value));
+    if (acceptedFirstArguments.length && (!args[0] || !acceptedFirstArguments.includes(normalizedMemberPath(text(source, args[0]))))) return false;
+    if (!contract.properties?.length) return true;
+    const options = args.find((argument) => argument.name === 'ObjectExpression');
+    return Boolean(options && contract.properties.every((property) => objectPropertyMatches(options, source, property)));
+  });
+}
+
+function methodCallMatches(node: AstNode, fnNodes: AstNode[], source: string, requirement: NonNullable<Extract<PracticeValidationRule, { type: 'js-function-contract' }>['requiredMethodCalls']>[number]): boolean {
+  const call = callParts(node, source);
+  if (!call) return false;
+  const callee = node.children.find((child) => child.name !== 'ArgList' && child.name !== '(' && child.name !== ')');
+  if (!callee || callee.name !== 'MemberExpression') return false;
+  const property = callee.children.find((child) => child.name === 'PropertyName');
+  const receiver = callee.children.find((child) => child.name !== 'PropertyName' && child.name !== '.' && child.name !== '?.');
+  if (!property || text(source, property) !== requirement.method || !receiver) return false;
+  if (requirement.argument !== undefined && (!call.args[0] || normalizedMemberPath(text(source, call.args[0])) !== requirement.argument)) return false;
+  if (requirement.receiverConstructor) {
+    const directMatch = constructorName(receiver, source) === requirement.receiverConstructor;
+    const variableName = receiver.name === 'VariableName' ? text(source, receiver) : null;
+    const boundMatch = Boolean(variableName && fnNodes.some((candidate) => {
+      const declaration = declarationInfo(candidate, source);
+      return declaration?.name === variableName && constructorName(declaration.initializer ?? candidate, source) === requirement.receiverConstructor;
+    }));
+    if (!directMatch && !boundMatch) return false;
+  }
+  if (requirement.receiverVariable && normalizedMemberPath(text(source, receiver)) !== requirement.receiverVariable) return false;
+  return true;
+}
+
+function guardConditionMatches(fnNodes: AstNode[], source: string, requirement: string): boolean {
+  const canonical = (value: string) => normalizedMemberPath(normalized(value).replace(/^\((.*)\)$/, '$1'));
+  return fnNodes.some((node) => node.name === 'IfStatement'
+    && canonical(text(source, node.children.find((child) => child.name === 'ParenthesizedExpression') ?? node)) === canonical(requirement));
+}
+
+function nullGuardMatches(node: AstNode, source: string, variable: string): boolean {
+  if (node.name !== 'ConditionalExpression') return false;
+  const expressions = expressionChildren(node);
+  if (expressions.length !== 3) return false;
+  const condition = binaryParts(expressions[0], source);
+  if (!condition || !['===', '=='].includes(condition.operator)) return false;
+  const comparesNull = (left: AstNode, right: AstNode) => (
+    (targetText(left, source) === variable && literalValue(source, right) === null)
+    || (targetText(right, source) === variable && literalValue(source, left) === null)
+  );
+  return comparesNull(condition.left, condition.right)
+    && (literalValue(source, expressions[1]) === null || literalValue(source, expressions[2]) === null);
+}
+
+function nullishFallbackMatches(node: AstNode, source: string, value: string, fallbackCall: string): boolean {
+  const parts = binaryParts(node, source);
+  return Boolean(parts && parts.operator === '??' && targetText(parts.left, source) === value
+    && allNodes(parts.right).some((child) => callParts(child, source)?.callee === fallbackCall));
+}
+
+function awaitedNodeMatches(node: AstNode, source: string, requirement: { kind: 'parameter' | 'call'; name: string }): boolean {
+  if (node.name !== 'AwaitExpression') return false;
+  const expression = expressionChildren(node)[0];
+  if (!expression) return false;
+  return requirement.kind === 'parameter'
+    ? expression.name === 'VariableName' && text(source, expression) === requirement.name
+    : callParts(expression, source)?.callee === requirement.name;
+}
+
 function callIsInsideLoopFor(node: AstNode, source: string, variable: string): boolean {
   let ancestor = node.parent;
   while (ancestor) {
@@ -154,6 +266,98 @@ function namedFunctionNodes(root: AstNode, source: string, functionName: string)
     const declaration = declarationInfo(node, source);
     return declaration?.name === functionName && (declaration.initializer?.name === 'ArrowFunction' || declaration.initializer?.name === 'FunctionExpression');
   });
+}
+
+function functionContractMatches(root: AstNode, source: string, rule: Extract<PracticeValidationRule, { type: 'js-function-contract' }>): boolean {
+  const fn = namedFunctionNodes(root, source, rule.functionName).find((candidate) => !containsError(candidate));
+  if (!fn) return false;
+  const fnNodes = allNodes(fn);
+  if (rule.requireAsync && !fn.children.some((node) => node.name === 'async')) return false;
+  if (rule.requireTryCatch && !fnNodes.some((node) => node.name === 'TryStatement'
+    && descendants(node).some((child) => child.name === 'CatchClause'))) return false;
+  if (rule.requireFinally && !fnNodes.some((node) => node.name === 'TryStatement'
+    && descendants(node).some((child) => child.name.toLowerCase().includes('finally')))) return false;
+  if (rule.parameters) {
+    const params = fnNodes.find((node) => node.name === 'ParamList');
+    const actual = params?.children.filter((node) => node.name === 'VariableDefinition').map((node) => text(source, node)) ?? [];
+    if (actual.length !== rule.parameters.length || actual.some((name, index) => name !== rule.parameters?.[index])) return false;
+  }
+  const calls = fnNodes.map((node) => callParts(node, source)).filter((value): value is NonNullable<typeof value> => value !== null);
+  if (rule.requiredCalls?.some((name) => !calls.some((call) => call.callee === name))) return false;
+  if (rule.requiredCallMethods?.some((name) => !calls.some((call) => call.callee.endsWith(`.${name}`)))) return false;
+  if (rule.requiredConstructors?.some((name) => !fnNodes.some((node) => constructorName(node, source) === name))) return false;
+  if (rule.requiredMembers?.some((name) => !fnNodes.some((node) => node.name === 'MemberExpression'
+    && normalizedMemberPath(text(source, node)) === normalizedMemberPath(name)))) return false;
+  if (rule.requiredMemberGroups?.some((group) => !group.some((name) => fnNodes.some((node) => node.name === 'MemberExpression'
+    && normalizedMemberPath(text(source, node)) === normalizedMemberPath(name))))) return false;
+  if (rule.requiredConstructorContracts?.some((contract) => !constructorContractMatches(fnNodes, source, contract))) return false;
+  if (rule.requiredMethodCalls?.some((requirement) => !fnNodes.some((node) => methodCallMatches(node, fnNodes, source, requirement)))) return false;
+  if (rule.requiredStrings?.some((value) => !fnNodes.some((node) => node.name === 'String' && unquote(source, node) === value))) return false;
+  if (rule.requiredNumbers?.some((value) => !fnNodes.some((node) => (node.name === 'Number' || node.name === 'NumberLiteral')
+    && literalValue(source, node) === value))) return false;
+  if (rule.requiredObjectProperties?.some((requirement) => !fnNodes.some((node) => node.name === 'ObjectExpression'
+    && objectPropertyMatches(node, source, requirement)))) return false;
+  if (rule.requiredReturnedCalls?.some((name) => !fnNodes.some((node) => node.name === 'ReturnStatement'
+    && descendants(node).some((child) => {
+      const callee = callParts(child, source)?.callee;
+      return callee === name || callee?.endsWith(`.${name}`);
+    })))) return false;
+  const returnedKeys = returnObjectKeys(fn, source);
+  if (rule.requiredReturnObjectKeys?.some((key) => !returnedKeys.has(key))) return false;
+  if (rule.awaitedParameters?.some((name) => !fnNodes.some((node) => node.name === 'AwaitExpression'
+    && descendants(node).some((child) => child.name === 'VariableName' && text(source, child) === name)))) return false;
+  if (rule.awaitedMemberPaths?.some((path) => !fnNodes.some((node) => node.name === 'AwaitExpression'
+    && descendants(node).some((child) => child.name === 'MemberExpression'
+      && normalizedMemberPath(text(source, child)) === normalizedMemberPath(path))))) return false;
+  if (rule.awaitedCalls?.some((name) => !fnNodes.some((node) => node.name === 'AwaitExpression'
+    && descendants(node).some((child) => callParts(child, source)?.callee === name)))) return false;
+  if (rule.awaitedOrder) {
+    let cursor = -1;
+    for (const requirement of rule.awaitedOrder) {
+      const awaited = fnNodes.filter((node) => awaitedNodeMatches(node, source, requirement)).find((node) => node.from > cursor);
+      if (!awaited) return false;
+      cursor = awaited.from;
+    }
+  }
+  if (rule.requiredGuardConditions?.some((condition) => !guardConditionMatches(fnNodes, source, condition))) return false;
+  if (rule.nullGuardVariables?.some((variable) => !fnNodes.some((node) => nullGuardMatches(node, source, variable)))) return false;
+  if (rule.requiredNullishFallbacks?.some(({ value, fallbackCall }) => !fnNodes.some((node) => nullishFallbackMatches(node, source, value, fallbackCall)))) return false;
+  if (rule.requiredThrownMessages?.some((message) => !fnNodes.some((node) => constructorName(node, source) === 'Error'
+    && expressionChildren(node.children.find((child) => child.name === 'ArgList') ?? node).some((argument) => literalValue(source, argument) === message)))) return false;
+  return true;
+}
+
+function exportStatus(root: AstNode, source: string, target: string): { publicName: boolean; localName: boolean } {
+  let publicName = false;
+  let localName = false;
+  for (const declaration of root.children.filter((node) => node.name === 'ExportDeclaration')) {
+    for (const child of declaration.children) {
+      if (child.name === 'FunctionDeclaration' || child.name === 'ClassDeclaration') {
+        const name = child.children.find((node) => node.name === 'VariableDefinition');
+        if (name && text(source, name) === target) publicName = localName = true;
+      }
+      if (child.name === 'VariableDeclaration') {
+        const info = declarationInfo(child, source);
+        if (info?.name === target) publicName = localName = true;
+      }
+      if (child.name === 'ExportGroup') {
+        for (const specifier of child.children.filter((node) => node.name === 'ExportSpecifier')) {
+          const names = descendants(specifier).filter((node) => node.name === 'VariableName').map((node) => text(source, node));
+          if (names[0] === target) localName = true;
+          if ((names.at(-1) ?? names[0]) === target) publicName = true;
+        }
+        // Lezer represents an unaliased export as direct VariableName children.
+        const directNames = child.children.filter((node) => node.name === 'VariableName').map((node) => text(source, node));
+        if (directNames.includes(target)) publicName = localName = true;
+      }
+    }
+  }
+  return { publicName, localName };
+}
+
+function exportMatches(root: AstNode, source: string, target: string, expected: boolean): boolean {
+  const status = exportStatus(root, source, target);
+  return expected ? status.publicName : !status.publicName && !status.localName;
 }
 
 function targetText(node: AstNode, source: string): string {
@@ -293,7 +497,20 @@ function selectorListIncludes(selectorList: string, target: string): boolean {
   return selectors.some((selector) => normalized(selector) === normalized(target));
 }
 
+function orderedSubsequence(actual: string[], expected: string[]): boolean {
+  let cursor = -1;
+  for (const name of expected) {
+    const next = actual.findIndex((candidate, index) => index > cursor && candidate === name);
+    if (next < 0) return false;
+    cursor = next;
+  }
+  return true;
+}
+
 function cssRuleMatches(root: AstNode, source: string, rule: PracticeValidationRule): boolean {
+  if (rule.type === 'css-layer-order') {
+    return getCssLayerOrderDeclarations(source).some((layers) => orderedSubsequence(layers, rule.layers));
+  }
   if (rule.type === 'css-selector') {
     return allNodes(root).some((node) => {
       if (node.name !== 'RuleSet') return false;
@@ -310,13 +527,16 @@ function cssRuleMatches(root: AstNode, source: string, rule: PracticeValidationR
       && declaration.property === rule.property.trim().toLowerCase());
   }
   if (rule.type !== 'css-declaration' && rule.type !== 'css-declaration-in-media') return false;
+  const targets = rule.type === 'css-declaration' ? [rule.target, ...(rule.targetAlternatives ?? [])] : [rule.target];
   const expectedMedia = rule.type === 'css-declaration-in-media' ? normalizeCssMediaCondition(rule.media) : null;
-  return getCssDeclarationFacts(source).some((declaration) => selectorListIncludes(declaration.selector, rule.target)
+  return getCssDeclarationFacts(source).some((declaration) => targets.some((target) => selectorListIncludes(declaration.selector, target))
     && (expectedMedia === null || normalizeCssMediaCondition(declaration.media ?? '') === expectedMedia)
     && (rule.type !== 'css-declaration' || rule.scope === undefined || rule.scope === 'any'
       || (rule.scope === 'outside-media' ? !declaration.media : Boolean(declaration.media)))
     && declaration.property === rule.property.trim().toLowerCase()
-    && cssRuleValueMatches(declaration.value, rule.value, rule.property, rule.valueMatch === 'semantic-color')
+    && (rule.type !== 'css-declaration' || !rule.layer || declaration.layer === rule.layer)
+    && (rule.type !== 'css-declaration' || !rule.container || normalizedMediaCondition(declaration.container ?? '') === normalizedMediaCondition(rule.container))
+    && cssRuleAcceptsValue(declaration.value, rule)
     && (!rule.requireSemicolon || declaration.hasSemicolon));
 }
 
@@ -329,6 +549,12 @@ type PracticeEvidence = {
 };
 
 function cssEvidence(root: AstNode, source: string, rule: PracticeValidationRule): PracticeEvidence {
+  if (rule.type === 'css-layer-order') {
+    const orders = getCssLayerOrderDeclarations(source);
+    return cssRuleMatches(root, source, rule)
+      ? { passed: true, reason: 'satisfied', severity: 'hint' }
+      : { passed: false, reason: orders.length ? 'wrong-structure' : 'missing', severity: orders.length ? 'warning' : 'hint' };
+  }
   if (rule.type === 'css-selector') {
     const ruleSets = allNodes(root).filter((node) => node.name === 'RuleSet');
     const exact = ruleSets.find((node) => {
@@ -362,20 +588,21 @@ function cssEvidence(root: AstNode, source: string, rule: PracticeValidationRule
   if (rule.type !== 'css-declaration' && rule.type !== 'css-declaration-in-media') {
     return { passed: false, reason: 'missing', severity: 'hint' };
   }
+  const targets = rule.type === 'css-declaration' ? [rule.target, ...(rule.targetAlternatives ?? [])] : [rule.target];
   if (cssRuleMatches(root, source, rule)) {
     const expectedMedia = rule.type === 'css-declaration-in-media' ? normalizeCssMediaCondition(rule.media) : null;
-    const exact = getCssDeclarationFacts(source).find((item) => item.selector === normalized(rule.target)
+    const exact = getCssDeclarationFacts(source).find((item) => targets.some((target) => item.selector === normalized(target))
       && item.property === rule.property.toLowerCase()
       && (expectedMedia === null || normalizeCssMediaCondition(item.media ?? '') === expectedMedia)
       && (rule.type !== 'css-declaration' || rule.scope === undefined || rule.scope === 'any'
         || (rule.scope === 'outside-media' ? !item.media : Boolean(item.media)))
-      && cssRuleValueMatches(item.value, rule.value, rule.property, rule.valueMatch === 'semantic-color')
+      && cssRuleAcceptsValue(item.value, rule)
       && (!rule.requireSemicolon || item.hasSemicolon));
     return { passed: true, reason: 'satisfied', from: exact?.from, to: exact?.to, severity: 'hint' };
   }
 
   const declarations = getCssDeclarationFacts(source);
-  const selectorDeclarations = declarations.filter((item) => item.selector === normalized(rule.target));
+  const selectorDeclarations = declarations.filter((item) => targets.some((target) => item.selector === normalized(target)));
   const scopedDeclarations = rule.type === 'css-declaration-in-media'
     ? selectorDeclarations.filter((item) => normalizeCssMediaCondition(item.media ?? '') === normalizeCssMediaCondition(rule.media))
     : rule.scope === 'outside-media' ? selectorDeclarations.filter((item) => !item.media)
@@ -387,7 +614,7 @@ function cssEvidence(root: AstNode, source: string, rule: PracticeValidationRule
   }
   if (sameProperty) return { passed: false, reason: 'wrong-value', from: sameProperty.valueFrom, to: sameProperty.valueTo, severity: 'warning' };
 
-  const sameValue = scopedDeclarations.find((item) => cssRuleValueMatches(item.value, rule.value, rule.property, rule.valueMatch === 'semantic-color'));
+  const sameValue = scopedDeclarations.find((item) => cssRuleAcceptsValue(item.value, rule));
   if (sameValue) {
     const typo = suggestCssProperty(sameValue.property);
     if (typo) return { passed: false, reason: 'unknown-property', from: sameValue.propertyFrom, to: sameValue.propertyTo, severity: 'error' };
@@ -420,6 +647,8 @@ function jsRelatedNodes(root: AstNode, source: string, rule: PracticeValidationR
   if (rule.type === 'js-if' || rule.type === 'js-condition-branches' || rule.type === 'js-guard') return nodes.filter((node) => node.name === 'IfStatement');
   if (rule.type === 'js-array') return nodes.filter((node) => declarationInfo(node, source)?.name === rule.target);
   if (rule.type === 'js-function') return nodes.filter((node) => text(source, node).includes(rule.target));
+  if (rule.type === 'js-function-contract') return namedFunctionNodes(root, source, rule.functionName);
+  if (rule.type === 'js-export') return nodes.filter((node) => node.name === 'ExportDeclaration' && text(source, node).includes(rule.target));
   if (rule.type === 'js-selector-binding') return nodes.filter((node) => declarationInfo(node, source)?.name === rule.variable);
   if (rule.type === 'js-range-expression') return nodes.filter((node) => node.name === 'ForStatement');
   if (rule.type === 'js-function-behavior') return nodes.filter((node) => node.name === 'FunctionDeclaration' && text(source, node).includes(rule.functionName));
@@ -442,7 +671,10 @@ function localizedRule(rule: PracticeValidationRule, locale: Locale) {
 function explainEvidence(rule: PracticeValidationRule, evidence: PracticeEvidence, code: string, locale: Locale): string {
   const copy = practiceStudioMessages[locale];
   const { label } = localizedRule(rule, locale);
-  if (evidence.passed) return copy.validationFeedback.passed(label);
+  if (evidence.passed) {
+    const scopeNote = (locale === 'ar' ? rule.resultNote_ar : rule.resultNote_en)?.trim();
+    return [copy.validationFeedback.passed(label), scopeNote].filter(Boolean).join(' ');
+  }
   switch (evidence.reason) {
     case 'syntax': return copy.validationFeedback.syntax(label);
     case 'wrong-structure': return copy.validationFeedback.wrongStructure(label);
@@ -624,6 +856,10 @@ function jsRuleMatches(root: AstNode, source: string, html: string, rule: Practi
         if (!isDeclaration && !isFunctionExpression) return false;
         return !rule.parameter || descendants(node).some((child) => child.name === 'VariableDefinition' && text(source, child) === rule.parameter);
       });
+    case 'js-function-contract':
+      return !containsError(root) && functionContractMatches(root, source, rule);
+    case 'js-export':
+      return !containsError(root) && exportMatches(root, source, rule.target, rule.exported);
     case 'js-selector-binding':
       return selectorBinding(root, source, html, rule.variable, rule.selector, rule.expectedTag);
     case 'js-range-expression':

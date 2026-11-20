@@ -1,0 +1,43 @@
+import { describe, expect, it } from 'vitest';
+import { getJourneyLesson } from '../src/content/journeyCurriculum';
+import { validatePracticeRules } from '../src/utils/practiceValidation';
+
+const scenarios = [
+  { id: 'css-i-cascade', level: 'intermediate', path: 'css-fundamentals', lang: 'css', solution: '@layer components, utilities;\n@layer components { .card h2 { margin: 0; } }\n@layer utilities { .card h2 { margin: 1rem; } }', wrong: (s: string) => s.replace('@layer components, utilities', '@layer utilities, components') },
+  { id: 'css-i-component-boundaries', level: 'intermediate', path: 'css-fundamentals', lang: 'css', solution: '.profile-card .profile-card__action { color: #fff; }', wrong: (s: string) => `${s}\nbutton { color: #444; }` },
+  { id: 'html-p-language-subtrees', level: 'professional', path: 'html-fundamentals', lang: 'html', solution: '<html lang="ar" dir="rtl"><body><p>استخدم <span lang="en" dir="ltr">Web Components 101</span>.</p></body></html>', wrong: (s: string) => s.replace('lang="en"', 'lang="ar"') },
+  { id: 'css-p-cascade', level: 'professional', path: 'css-fundamentals', lang: 'css', solution: '@layer base, components;\n@layer base { :where(h1, h2, h3) { line-height: 1.15; } }\n@layer components { .dialog { display: grid; } }', wrong: (s: string) => s.replace('@layer base, components', '@layer components, base') },
+  { id: 'css-p-revert-layer', level: 'professional', path: 'css-fundamentals', lang: 'css', solution: '@layer base, components, utilities;\n@layer base { .notice { color: #526477; } }\n@layer utilities { .text-warning { color: #a33; } .notice.text-warning.quiet { color: revert-layer; } }', wrong: (s: string) => s.replace('@layer utilities {', '@layer components {') },
+  { id: 'css-p-layout', level: 'professional', path: 'css-fundamentals', lang: 'css', solution: '.card-region { container-type: inline-size; }\n.card { display: grid; grid-template-columns: minmax(0, 1fr) auto; }\n@container (max-width: 32rem) { .card { grid-template-columns: minmax(0, 1fr); } }', wrong: (s: string) => s.replace('display: grid;', 'display: block;') },
+  { id: 'js-i-intl-currency', level: 'intermediate', path: 'javascript-fundamentals', lang: 'javascript', solution: 'function formatPrice(amount, currency, locale) { return new Intl.NumberFormat(locale, { style: "currency", currency }).format(amount); }', wrong: (s: string) => s.replace('Intl.NumberFormat', 'String') },
+  { id: 'js-p-export-surface', level: 'professional', path: 'javascript-fundamentals', lang: 'javascript', solution: 'function parseInternal(input) { return String(input).trim(); }\nexport function createTask(input) { return { title: parseInternal(input) }; }\nexport function updateTask(task, patch) { return { ...task, ...patch }; }', wrong: (s: string) => s.replace('function parseInternal', 'export function parseInternal') },
+  { id: 'js-p-feature-isolation', level: 'professional', path: 'javascript-fundamentals', lang: 'javascript', solution: 'async function initOptionalAnalytics(config) { await config.ready; try { return await config.load(); } catch (error) { return { available: false }; } }', wrong: (s: string) => s.replace('await config.ready', 'config.ready') },
+  { id: 'js-p-configuration-boundary', level: 'professional', path: 'javascript-fundamentals', lang: 'javascript', solution: 'function parseConfig(env) { const url = new URL(env.API_BASE_URL); const timeout = Number(env.REQUEST_TIMEOUT_MS); if (url.protocol !== "https:" || !Number.isFinite(timeout) || timeout < 100 || timeout > 30000) throw new Error("Invalid API_BASE_URL or REQUEST_TIMEOUT_MS"); return { apiBaseUrl: url.toString(), requestTimeoutMs: timeout }; }', wrong: (s: string) => s.replace('env.API_BASE_URL', 'env.BASE_URL') },
+  { id: 'js-p-backoff', level: 'professional', path: 'javascript-fundamentals', lang: 'javascript', solution: 'async function requestWithRetry(request, sleep, options = {}) { const { idempotent = false, idempotencyKey, maxAttempts = 3, baseMs = 200, maxDelayMs = 5000, random = Math.random, now = Date.now } = options; if (!idempotent && !(typeof idempotencyKey === "string" && idempotencyKey.trim())) throw new Error("Retry requires idempotency or a stable idempotencyKey"); for (let attempt = 0; attempt < maxAttempts; attempt++) { const response = await request({ headers: idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {} }); if (![429, 503].includes(response.status) || attempt === maxAttempts - 1) return response; const raw = response.headers?.get?.("Retry-After"); const seconds = Number(raw); const date = raw && !Number.isFinite(seconds) ? Date.parse(raw) : NaN; const serverDelay = seconds !== null && Number.isFinite(seconds) ? Math.ceil(seconds * 1000) : Number.isFinite(date) ? Math.max(0, date - now()) : null; const ceiling = Math.min(maxDelayMs, baseMs * 2 ** attempt); const delay = serverDelay ?? Math.floor(Math.min(1, Math.max(0, Number(random()) || 0)) * ceiling); if (delay > maxDelayMs) return response; await sleep(delay); } }', wrong: (s: string) => s.replace('serverDelay ?? Math.floor', 'serverDelay || Math.floor') },
+  { id: 'js-p-timeout', level: 'professional', path: 'javascript-fundamentals', lang: 'javascript', solution: 'async function fetchWithTimeout(url, ms, signal) { if (signal?.aborted) throw signal.reason ?? new DOMException("Aborted", "AbortError"); const controller = new AbortController(); let timedOut = false; const onAbort = () => controller.abort(signal.reason); signal?.addEventListener("abort", onAbort, { once: true }); if (signal?.aborted) onAbort(); const timer = setTimeout(() => { timedOut = true; controller.abort("timeout"); }, ms); try { return await fetch(url, { signal: controller.signal }); } catch (error) { if (timedOut) throw new Error("Request timed out"); if (signal?.aborted) throw signal.reason ?? error; throw error; } finally { clearTimeout(timer); signal?.removeEventListener("abort", onAbort); } }', wrong: (s: string) => s.replaceAll('signal?.aborted', 'signal?.notAborted') },
+  { id: 'js-p-resilience', level: 'professional', path: 'javascript-fundamentals', lang: 'javascript', solution: 'function normalizeTasks(value) { if (!Array.isArray(value)) return { records: [], rejected: [{ raw: value, reason: "expected-array" }] }; const records = []; const rejected = []; value.forEach((item, index) => { if (item && typeof item.id === "string" && item.id.trim() && typeof item.title === "string" && item.title.trim()) records.push(item); else rejected.push({ index, raw: item, reason: "invalid-record" }); }); return { records, rejected }; }', wrong: (s: string) => s.replace('raw: item, ', '') },
+] as const;
+
+describe('High-severity Mabda journey validation', () => {
+  it.each(scenarios)('$id rejects the untouched starter, accepts an aligned solution, and rejects an obvious defect', (testCase) => {
+    const lesson = getJourneyLesson(testCase.level, testCase.path, testCase.id);
+    expect(lesson, testCase.id).toBeDefined();
+    const results = (source: string) => validatePracticeRules(testCase.lang, source, lesson!.validationRules);
+    const validate = (source: string) => results(source).every((result) => result.passed);
+    expect(validate(lesson!.starterCode), `${testCase.id}: starter must remain incomplete`).toBe(false);
+    expect(validate(testCase.solution), `${testCase.id}: aligned solution failed: ${JSON.stringify(results(testCase.solution).filter((result) => !result.passed).map(({ id, reason, explanation }) => ({ id, reason, explanation })))}`).toBe(true);
+    expect(validate(testCase.wrong(testCase.solution)), `${testCase.id}: obvious defect should fail`).toBe(false);
+  });
+
+  it('H3 accepts case-insensitive lang/dir values at the root and language-changing span', () => {
+    const lesson = getJourneyLesson('professional', 'html-fundamentals', 'html-p-language-subtrees');
+    const source = '<html lang="AR" dir="RTL"><body><p>استخدم <span lang="EN" dir="LTR">Web Components 101</span>.</p></body></html>';
+    expect(validatePracticeRules('html', source, lesson!.validationRules).every((result) => result.passed)).toBe(true);
+  });
+
+  it('H7 rejects a formatter call whose formatted value is ignored', () => {
+    const lesson = getJourneyLesson('intermediate', 'javascript-fundamentals', 'js-i-intl-currency');
+    const ignored = 'function formatPrice(amount, currency, locale) { const formatter = new Intl.NumberFormat(locale, { style: "currency", currency }); formatter.format(amount); return amount; }';
+    expect(validatePracticeRules('javascript', ignored, lesson!.validationRules).every((result) => result.passed)).toBe(false);
+  });
+});

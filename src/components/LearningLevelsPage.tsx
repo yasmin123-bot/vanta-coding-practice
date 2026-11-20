@@ -2,11 +2,18 @@ import { FOUNDATION_PATH_IDS, getBeginnerCourseHref, getLearningPathHref, getPla
 import { messages, type Locale } from '../i18n/messages';
 import { getLearningLevelsCopy } from '../i18n/learningLevels';
 import LearningHeader from './LearningHeader';
+import { getBeginnerLessons, getPersistedBeginnerLessonIds } from '../content/beginnerCurriculum';
+import { getSessionBeginnerProgress } from '../utils/sessionBeginnerProgress';
+import { getJourneyCourseGate, getJourneyProgress } from '../utils/journeyProgress';
+import { useStudentProgress } from '../state/StudentProgressProvider';
 
 function LearningLevelsPage({ locale, onSwitchLocale }: { locale: Locale; onSwitchLocale: () => void }) {
   const isArabic = locale === 'ar';
   const copy = getLearningLevelsCopy(locale);
   const learningCopy = messages[locale].learningSystem;
+  const studentProgress = useStudentProgress();
+  const beginnerProgress = getSessionBeginnerProgress();
+  const journeyProgress = getJourneyProgress();
   const count = new Intl.NumberFormat(isArabic ? 'ar' : 'en-US').format(50);
   const lessonsLabel = copy.lessonsCount.replace('{count}', count);
 
@@ -23,6 +30,9 @@ function LearningLevelsPage({ locale, onSwitchLocale }: { locale: Locale; onSwit
         <section className="learning-levels-grid" aria-label={copy.choosePath}>
           {FOUNDATION_PATH_IDS.map((pathId) => {
             const pathCopy = learningCopy.paths[pathId];
+            const savedBeginner = getPersistedBeginnerLessonIds(getBeginnerLessons(pathId), new Set(studentProgress.lessons.filter((row) => row.completed_at).map((row) => row.lesson_id)));
+            const intermediateOpen = getJourneyCourseGate('intermediate', pathId, beginnerProgress, savedBeginner, journeyProgress).unlocked;
+            const professionalOpen = getJourneyCourseGate('professional', pathId, beginnerProgress, savedBeginner, journeyProgress).unlocked;
             return (
               <article className="learning-levels-subject" key={pathId}>
                 <div className="learning-levels-subject-art">
@@ -41,14 +51,8 @@ function LearningLevelsPage({ locale, onSwitchLocale }: { locale: Locale; onSwit
                       <span className="learning-levels-tier-index" aria-hidden="true">01</span>
                       <span><strong>{copy.beginner}</strong><small>{lessonsLabel} · {copy.available}</small></span>
                     </div>
-                    <div className="learning-levels-tier is-locked" aria-disabled="true">
-                      <span className="learning-levels-tier-index" aria-hidden="true">02</span>
-                      <span><strong>{copy.intermediate}</strong><small>{copy.locked}</small></span>
-                    </div>
-                    <div className="learning-levels-tier is-locked" aria-disabled="true">
-                      <span className="learning-levels-tier-index" aria-hidden="true">03</span>
-                      <span><strong>{copy.advanced}</strong><small>{copy.locked}</small></span>
-                    </div>
+                    <TierLink index="02" label={copy.intermediate} unlocked={intermediateOpen} href={`/levels/${pathId}/intermediate`} note={intermediateOpen ? copy.available : (isArabic ? 'أكمل المبتدئ: الدروس والتقييم والمشروع' : 'Complete Beginner lessons, assessment, and project')} />
+                    <TierLink index="03" label={copy.advanced} unlocked={professionalOpen} href={`/levels/${pathId}/professional`} note={professionalOpen ? copy.available : (isArabic ? 'أكمل المتوسط ومشروعه' : 'Complete Intermediate and its capstone')} />
                   </div>
 
                   <details className="learning-levels-placement">
@@ -78,6 +82,12 @@ function LearningLevelsPage({ locale, onSwitchLocale }: { locale: Locale; onSwit
       </main>
     </div>
   );
+}
+
+function TierLink({ index, label, unlocked, href, note }: { index: string; label: string; unlocked: boolean; href: string; note: string }) {
+  const className = `learning-levels-tier ${unlocked ? 'is-available' : 'is-locked'}`;
+  const content = <><span className="learning-levels-tier-index" aria-hidden="true">{index}</span><span><strong>{label}</strong><small>{note}</small></span></>;
+  return unlocked ? <a className={className} href={href}>{content}</a> : <div className={className} aria-disabled="true">{content}</div>;
 }
 
 export default LearningLevelsPage;

@@ -17,6 +17,7 @@ const BeginnerLessonPage = lazy(() => import('./components/BeginnerLessonPage'))
 const BeginnerPlacementPage = lazy(() => import('./components/BeginnerPlacementPage'));
 const BeginnerAssessmentPage = lazy(() => import('./components/BeginnerAssessmentPage'));
 const BeginnerProjectPage = lazy(() => import('./components/BeginnerProjectPage'));
+const JourneyPage = lazy(() => import('./components/JourneyPage'));
 const PathAssessmentPage = lazy(() => import('./components/PathAssessmentPage'));
 const GuidedProjectsPage = lazy(() => import('./components/GuidedProjectsPage'));
 const AuthGatewayLoadingPage = lazy(() => import('./components/StudentAccountPages').then((pages) => ({ default: pages.AuthGatewayLoadingPage })));
@@ -69,6 +70,8 @@ function App() {
         ? `${copy.learningSystem.paths[route.pathId].title} | Mabda`
       : route.kind === 'beginner-project'
         ? `${copy.learningSystem.ui.projectsTitle} — ${copy.learningSystem.paths[route.pathId].title} | Mabda`
+      : route.kind === 'journey-course' || route.kind === 'journey-lesson' || route.kind === 'journey-assessment' || route.kind === 'journey-project'
+        ? `${isArabic ? (route.level === 'intermediate' ? 'المتوسط' : 'المحترف') : route.level} | Mabda`
       : route.kind === 'learning-path'
         ? copy.learningSystem.paths[route.pathId].metaTitle
       : route.kind === 'path-assessment'
@@ -104,6 +107,8 @@ function App() {
       ? copy.learningSystem.paths[route.pathId].metaDescription
     : route.kind === 'beginner-project'
       ? (isArabic ? 'المشروع العملي الختامي لمستوى المبتدئ.' : 'The practical capstone project for Beginner.')
+    : route.kind === 'journey-course' || route.kind === 'journey-lesson' || route.kind === 'journey-assessment' || route.kind === 'journey-project'
+      ? (isArabic ? 'منهج متدرج مع تمارين ومشروعات وتقدم محفوظ محليًا.' : 'A progressive curriculum with practice, capstones, and locally stored progress.')
     : route.kind === 'learning-path'
       ? copy.learningSystem.paths[route.pathId].metaDescription
         : route.kind === 'path-assessment'
@@ -233,6 +238,10 @@ function App() {
 
   if (route.kind === 'beginner-project') {
     return withRouteLoading(<BeginnerProjectPage pathId={route.pathId} locale={locale} onSwitchLocale={switchLocale} />);
+  }
+
+  if (route.kind === 'journey-course' || route.kind === 'journey-lesson' || route.kind === 'journey-assessment' || route.kind === 'journey-project') {
+    return withRouteLoading(<JourneyPage key={currentPath} locale={locale} onSwitchLocale={switchLocale} kind={route.kind === 'journey-course' ? 'course' : route.kind === 'journey-lesson' ? 'lesson' : route.kind === 'journey-assessment' ? 'assessment' : 'project'} pathId={'pathId' in route ? route.pathId : undefined} level={route.level} lessonId={route.kind === 'journey-lesson' ? route.lessonId : undefined} />);
   }
 
   if (route.kind === 'lesson') {

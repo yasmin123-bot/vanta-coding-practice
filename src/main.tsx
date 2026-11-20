@@ -7,6 +7,7 @@ import './styles/tokens.css';
 import './styles/global.css';
 import './styles/learning-system.css';
 import './styles/learning-levels.css';
+import './styles/journey.css';
 import './styles/student-portal.css';
 import './styles/practice-studio.css';
 import './styles/mabda.css';

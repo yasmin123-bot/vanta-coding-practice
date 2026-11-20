@@ -241,6 +241,10 @@ export type VantaRoute =
   | { kind: 'placement-test'; pathId: FoundationPathId }
   | { kind: 'beginner-lesson'; pathId: FoundationPathId; lessonId: string }
   | { kind: 'beginner-project'; pathId: FoundationPathId }
+  | { kind: 'journey-course'; pathId: FoundationPathId; level: 'intermediate' | 'professional' }
+  | { kind: 'journey-lesson'; pathId: FoundationPathId; level: 'intermediate' | 'professional'; lessonId: string }
+  | { kind: 'journey-assessment'; pathId: FoundationPathId; level: 'intermediate' | 'professional' }
+  | { kind: 'journey-project'; level: 'intermediate' | 'professional' }
   | { kind: 'learning-path'; pathId: LearningPathId }
   | { kind: 'path-assessment'; pathId: FoundationPathId }
   | { kind: 'guided-projects' }
@@ -275,6 +279,13 @@ export function getLearningLevelsHref(): string {
 
 export function getBeginnerCourseHref(pathId: FoundationPathId): string {
   return `/levels/${pathId}/beginner`;
+}
+
+export function getJourneyCourseHref(pathId: FoundationPathId, level: 'intermediate' | 'professional'): string {
+  return `/levels/${pathId}/${level}`;
+}
+export function getJourneyLessonHref(pathId: FoundationPathId, level: 'intermediate' | 'professional', lessonId: string): string {
+  return `${getJourneyCourseHref(pathId, level)}/lesson/${encodeURIComponent(lessonId)}`;
 }
 
 export function getPlacementTestHref(pathId: FoundationPathId): string {
@@ -317,6 +328,22 @@ export function resolveVantaRoute(pathname: string): VantaRoute {
   if (normalizedPath === '/projects') return { kind: 'guided-projects' };
   if (normalizedPath === '/dashboard') return { kind: 'student-area', page: 'dashboard' };
   if (normalizedPath === '/profile') return { kind: 'student-area', page: 'profile' };
+
+  const standaloneProjectMatch = normalizedPath.match(/^\/levels\/(intermediate|professional)\/project$/);
+  if (standaloneProjectMatch) return { kind: 'journey-project', level: standaloneProjectMatch[1] as 'intermediate' | 'professional' };
+
+  const journeyMatch = normalizedPath.match(/^\/levels\/([^/]+)\/(intermediate|professional)(?:\/(assessment|project|lesson\/([^/]+)))?$/);
+  if (journeyMatch && FOUNDATION_PATH_IDS.includes(journeyMatch[1] as FoundationPathId)) {
+    const pathId = journeyMatch[1] as FoundationPathId;
+    const level = journeyMatch[2] as 'intermediate' | 'professional';
+    if (journeyMatch[3] === 'assessment') return { kind: 'journey-assessment', pathId, level };
+    if (journeyMatch[3] === 'project') return { kind: 'journey-project', level };
+    if (journeyMatch[4]) {
+      try { return { kind: 'journey-lesson', pathId, level, lessonId: decodeURIComponent(journeyMatch[4]) }; }
+      catch { return { kind: 'not-found' }; }
+    }
+    return { kind: 'journey-course', pathId, level };
+  }
 
   const authMode = authModeByRoute.get(normalizedPath);
   if (authMode) return { kind: 'student-auth', mode: authMode };

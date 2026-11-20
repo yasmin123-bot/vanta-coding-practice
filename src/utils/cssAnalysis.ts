@@ -1,11 +1,13 @@
 import { cssLanguage } from '@codemirror/lang-css';
 import type { PracticeCodeLocation } from '../content/practiceTypes';
 
-type CssWalkContext = { media: string | null; selector: string | null };
+type CssWalkContext = { media: string | null; selector: string | null; layer: string | null; container: string | null };
 
 export type CssDeclarationFact = {
   selector: string;
   media: string | null;
+  layer: string | null;
+  container: string | null;
   property: string;
   value: string;
   from: number;
@@ -178,6 +180,14 @@ export function getCssDeclarationFacts(source: string): CssDeclarationFact[] {
 
   const walk = (node: import('@lezer/common').SyntaxNode, context: CssWalkContext) => {
     let current = context;
+    if (node.name === 'AtRule') {
+      const block = childNamed(node, 'Block');
+      const prelude = source.slice(node.from, block?.from ?? node.to).replace(/;\s*$/, '').trim();
+      const layer = prelude.match(/^@layer\s+([\w.-]+)/i)?.[1] ?? null;
+      const container = prelude.match(/^@container\s+(.+)$/i)?.[1]?.trim() ?? null;
+      if (layer) current = { ...current, layer };
+      if (container) current = { ...current, container };
+    }
     if (node.name === 'MediaStatement') {
       const block = childNamed(node, 'Block');
       current = {
@@ -197,6 +207,8 @@ export function getCssDeclarationFacts(source: string): CssDeclarationFact[] {
         facts.push({
           selector: current.selector,
           media: current.media,
+          layer: current.layer,
+          container: current.container,
           property: normalized(source.slice(property.from, property.to)),
           value: value.value,
           from: node.from,
@@ -212,8 +224,28 @@ export function getCssDeclarationFacts(source: string): CssDeclarationFact[] {
     for (let child = node.firstChild; child; child = child.nextSibling) walk(child, current);
   };
 
-  walk(tree.topNode, { media: null, selector: null });
+  walk(tree.topNode, { media: null, selector: null, layer: null, container: null });
   return facts;
+}
+
+/** Return top-level named @layer order statements, excluding comments and nested blocks. */
+export function getCssLayerOrderDeclarations(source: string): string[][] {
+  const declarations: string[][] = [];
+  const tree = cssLanguage.parser.parse(source);
+  const walk = (node: import('@lezer/common').SyntaxNode, insideBlock: boolean) => {
+    if (node.name === 'AtRule' && !insideBlock && !childNamed(node, 'Block')) {
+      const statement = source.slice(node.from, node.to).trim();
+      const match = statement.match(/^@layer\s+([^;{}]+)\s*;$/i);
+      if (match) {
+        const layers = match[1].split(',').map((layer) => layer.trim()).filter(Boolean);
+        if (layers.length) declarations.push(layers);
+      }
+    }
+    const nextInsideBlock = insideBlock || node.name === 'Block';
+    for (let child = node.firstChild; child; child = child.nextSibling) walk(child, nextInsideBlock);
+  };
+  walk(tree.topNode, false);
+  return declarations;
 }
 
 export function isKnownCssProperty(property: string): boolean {

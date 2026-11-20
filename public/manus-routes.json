@@ -939,6 +939,182 @@
     {
       "path": "/profile",
       "title": "Profile"
+    },
+    {
+      "path": "/levels/html-fundamentals/intermediate",
+      "title": "Intermediate html-fundamentals"
+    },
+    {
+      "path": "/levels/html-fundamentals/intermediate/assessment",
+      "title": "Intermediate assessment html-fundamentals"
+    },
+    {
+      "path": "/levels/html-fundamentals/intermediate/lesson/html-i-semantics",
+      "title": "Intermediate lesson html-i-semantics"
+    },
+    {
+      "path": "/levels/html-fundamentals/intermediate/lesson/html-i-forms",
+      "title": "Intermediate lesson html-i-forms"
+    },
+    {
+      "path": "/levels/html-fundamentals/intermediate/lesson/html-i-tables",
+      "title": "Intermediate lesson html-i-tables"
+    },
+    {
+      "path": "/levels/html-fundamentals/intermediate/lesson/html-i-media",
+      "title": "Intermediate lesson html-i-media"
+    },
+    {
+      "path": "/levels/html-fundamentals/intermediate/lesson/html-i-multipage",
+      "title": "Intermediate lesson html-i-multipage"
+    },
+    {
+      "path": "/levels/css-fundamentals/intermediate",
+      "title": "Intermediate css-fundamentals"
+    },
+    {
+      "path": "/levels/css-fundamentals/intermediate/assessment",
+      "title": "Intermediate assessment css-fundamentals"
+    },
+    {
+      "path": "/levels/css-fundamentals/intermediate/lesson/css-i-cascade",
+      "title": "Intermediate lesson css-i-cascade"
+    },
+    {
+      "path": "/levels/css-fundamentals/intermediate/lesson/css-i-layout",
+      "title": "Intermediate lesson css-i-layout"
+    },
+    {
+      "path": "/levels/css-fundamentals/intermediate/lesson/css-i-fluid",
+      "title": "Intermediate lesson css-i-fluid"
+    },
+    {
+      "path": "/levels/css-fundamentals/intermediate/lesson/css-i-states",
+      "title": "Intermediate lesson css-i-states"
+    },
+    {
+      "path": "/levels/css-fundamentals/intermediate/lesson/css-i-tokens",
+      "title": "Intermediate lesson css-i-tokens"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/intermediate",
+      "title": "Intermediate javascript-fundamentals"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/intermediate/assessment",
+      "title": "Intermediate assessment javascript-fundamentals"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/intermediate/lesson/js-i-transform",
+      "title": "Intermediate lesson js-i-transform"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/intermediate/lesson/js-i-dom",
+      "title": "Intermediate lesson js-i-dom"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/intermediate/lesson/js-i-storage",
+      "title": "Intermediate lesson js-i-storage"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/intermediate/lesson/js-i-async",
+      "title": "Intermediate lesson js-i-async"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/intermediate/lesson/js-i-modules",
+      "title": "Intermediate lesson js-i-modules"
+    },
+    {
+      "path": "/levels/html-fundamentals/professional",
+      "title": "Professional html-fundamentals"
+    },
+    {
+      "path": "/levels/html-fundamentals/professional/assessment",
+      "title": "Professional assessment html-fundamentals"
+    },
+    {
+      "path": "/levels/html-fundamentals/professional/lesson/html-p-landmarks",
+      "title": "Professional lesson html-p-landmarks"
+    },
+    {
+      "path": "/levels/html-fundamentals/professional/lesson/html-p-errors",
+      "title": "Professional lesson html-p-errors"
+    },
+    {
+      "path": "/levels/html-fundamentals/professional/lesson/html-p-enhancement",
+      "title": "Professional lesson html-p-enhancement"
+    },
+    {
+      "path": "/levels/html-fundamentals/professional/lesson/html-p-performance",
+      "title": "Professional lesson html-p-performance"
+    },
+    {
+      "path": "/levels/html-fundamentals/professional/lesson/html-p-audit",
+      "title": "Professional lesson html-p-audit"
+    },
+    {
+      "path": "/levels/css-fundamentals/professional",
+      "title": "Professional css-fundamentals"
+    },
+    {
+      "path": "/levels/css-fundamentals/professional/assessment",
+      "title": "Professional assessment css-fundamentals"
+    },
+    {
+      "path": "/levels/css-fundamentals/professional/lesson/css-p-cascade",
+      "title": "Professional lesson css-p-cascade"
+    },
+    {
+      "path": "/levels/css-fundamentals/professional/lesson/css-p-layout",
+      "title": "Professional lesson css-p-layout"
+    },
+    {
+      "path": "/levels/css-fundamentals/professional/lesson/css-p-theme",
+      "title": "Professional lesson css-p-theme"
+    },
+    {
+      "path": "/levels/css-fundamentals/professional/lesson/css-p-accessibility",
+      "title": "Professional lesson css-p-accessibility"
+    },
+    {
+      "path": "/levels/css-fundamentals/professional/lesson/css-p-performance",
+      "title": "Professional lesson css-p-performance"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/professional",
+      "title": "Professional javascript-fundamentals"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/professional/assessment",
+      "title": "Professional assessment javascript-fundamentals"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/professional/lesson/js-p-modules",
+      "title": "Professional lesson js-p-modules"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/professional/lesson/js-p-async",
+      "title": "Professional lesson js-p-async"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/professional/lesson/js-p-resilience",
+      "title": "Professional lesson js-p-resilience"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/professional/lesson/js-p-performance",
+      "title": "Professional lesson js-p-performance"
+    },
+    {
+      "path": "/levels/javascript-fundamentals/professional/lesson/js-p-tests",
+      "title": "Professional lesson js-p-tests"
+    },
+    {
+      "path": "/levels/intermediate/project",
+      "title": "Intermediate capstone"
+    },
+    {
+      "path": "/levels/professional/project",
+      "title": "Professional capstone"
     }
   ]
 }

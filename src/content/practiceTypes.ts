@@ -46,6 +46,9 @@ export type PracticeRuleBase = {
   id: string;
   note_ar: string;
   note_en: string;
+  /** Optional scope note shown when a requirement passes, e.g. a static-only limitation. */
+  resultNote_ar?: string;
+  resultNote_en?: string;
   label_ar?: string;
   label_en?: string;
   concept_ar?: string;
@@ -56,13 +59,27 @@ export type PracticeRuleBase = {
 export type CssDeclarationRule = PracticeRuleBase & {
   type: 'css-declaration';
   target: string;
+  /** Explicit equivalent selectors accepted for this declaration. */
+  targetAlternatives?: string[];
   property: string;
   value: string;
+  /** Explicit equivalent values accepted by this exercise rule. */
+  valueAlternatives?: string[];
+  /** Require the declaration to be nested in the named cascade layer. */
+  layer?: string;
+  /** Require the declaration to be nested in this exact @container prelude. */
+  container?: string;
   /** Compare valid color representations by their color value instead of raw text. */
   valueMatch?: 'exact' | 'semantic-color';
   /** Require a trailing semicolon for this exercise requirement (CSS itself permits omitting the final one). */
   requireSemicolon?: boolean;
   scope?: 'any' | 'outside-media' | 'inside-media';
+};
+
+export type CssLayerOrderRule = PracticeRuleBase & {
+  type: 'css-layer-order';
+  /** Require these named layers to appear in this order in an @layer order statement. */
+  layers: string[];
 };
 
 export type CssForbidDeclarationRule = PracticeRuleBase & {
@@ -86,6 +103,8 @@ export type CssDeclarationInMediaRule = PracticeRuleBase & {
   target: string;
   property: string;
   value: string;
+  /** Explicit equivalent values accepted by this exercise rule. */
+  valueAlternatives?: string[];
   media: string;
   valueMatch?: 'exact' | 'semantic-color';
   requireSemicolon?: boolean;
@@ -166,6 +185,53 @@ export type JavaScriptFunctionRule = PracticeRuleBase & {
   type: 'js-function';
   target: string;
   parameter?: string;
+};
+
+export type JavaScriptFunctionContractRule = PracticeRuleBase & {
+  type: 'js-function-contract';
+  functionName: string;
+  parameters?: string[];
+  requiredCalls?: string[];
+  /** Calls that must contribute to a returned expression in the function. */
+  requiredReturnedCalls?: string[];
+  requiredCallMethods?: string[];
+  requiredConstructors?: string[];
+  requiredMembers?: string[];
+  /** Each group requires at least one AST member path (dot or quoted-bracket access). */
+  requiredMemberGroups?: string[][];
+  requiredConstructorContracts?: Array<{
+    constructor: string;
+    firstArgument?: string;
+    firstArgumentAlternatives?: string[];
+    properties?: Array<{ key: string; value?: string | number | boolean; valueVariable?: string }>;
+  }>;
+  requiredMethodCalls?: Array<{
+    method: string;
+    argument?: string;
+    receiverConstructor?: string;
+    receiverVariable?: string;
+  }>;
+  requiredStrings?: string[];
+  requiredNumbers?: number[];
+  requiredObjectProperties?: Array<{ key: string; value?: string | number | boolean; valueVariable?: string }>;
+  requiredReturnObjectKeys?: string[];
+  awaitedParameters?: string[];
+  awaitedMemberPaths?: string[];
+  awaitedCalls?: string[];
+  awaitedOrder?: Array<{ kind: 'parameter' | 'call'; name: string }>;
+  requiredGuardConditions?: string[];
+  nullGuardVariables?: string[];
+  requiredNullishFallbacks?: Array<{ value: string; fallbackCall: string }>;
+  requiredThrownMessages?: string[];
+  requireAsync?: boolean;
+  requireTryCatch?: boolean;
+  requireFinally?: boolean;
+};
+
+export type JavaScriptExportRule = PracticeRuleBase & {
+  type: 'js-export';
+  target: string;
+  exported: boolean;
 };
 
 export type JavaScriptSelectorBindingRule = PracticeRuleBase & {
@@ -254,6 +320,7 @@ export type HtmlElementRule = PracticeRuleBase & {
   minimumCount?: number;
   parentTag?: string;
   minimumTextLength?: number;
+  maximumTextLength?: number;
   textIncludes?: string;
   requiredAttributes?: string[];
   minimumAttributeLengths?: Record<string, number>;
@@ -289,6 +356,7 @@ export type HtmlLabelControlRule = PracticeRuleBase & {
 
 export type PracticeValidationRule =
   | CssDeclarationRule
+  | CssLayerOrderRule
   | CssForbidDeclarationRule
   | CssSelectorRule
   | CssMediaRule
@@ -302,6 +370,8 @@ export type PracticeValidationRule =
   | JavaScriptIfRule
   | JavaScriptArrayRule
   | JavaScriptFunctionRule
+  | JavaScriptFunctionContractRule
+  | JavaScriptExportRule
   | JavaScriptSelectorBindingRule
   | JavaScriptRangeExpressionRule
   | JavaScriptConditionBranchesRule

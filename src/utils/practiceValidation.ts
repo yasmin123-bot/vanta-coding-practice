@@ -434,7 +434,7 @@ function evaluateHtmlRule(source: string, elements: HtmlElement[], rule: Extract
           const rawType = rawAttributeValue(element.attrs, attribute);
           return rawType === null || !['button', 'reset'].includes(rawType.toLowerCase());
         }
-        return actual === value;
+        return (['lang', 'dir'].includes(attribute) ? actual?.toLowerCase() === value.toLowerCase() : actual === value);
       }))
       && (!rule.attributePrefixes || Object.entries(rule.attributePrefixes).every(([attribute, prefix]) => attributeValue(element.attrs, attribute)?.startsWith(prefix)))
       && (!rule.minimumTextLength || textContent(source, element).length >= rule.minimumTextLength)
@@ -462,8 +462,8 @@ function evaluateHtmlRule(source: string, elements: HtmlElement[], rule: Extract
       const firstContent = source.search(/\S/);
       return scanHtml(source).some((token) => token.kind === 'doctype' && token.start === (firstContent < 0 ? 0 : firstContent));
     }
-    if (rule.check === 'lang') return Boolean(root && attributeValue(root.attrs, 'lang') === rule.expected);
-    if (rule.check === 'direction') return Boolean(root && attributeValue(root.attrs, 'dir') === rule.expected);
+    if (rule.check === 'lang') return Boolean(root && attributeValue(root.attrs, 'lang')?.toLowerCase() === rule.expected?.toLowerCase());
+    if (rule.check === 'direction') return Boolean(root && attributeValue(root.attrs, 'dir')?.toLowerCase() === rule.expected?.toLowerCase());
     if (rule.check === 'html-root') {
       const head = elements.find((element) => element.tag === 'head' && root && isNestedWithin(element, root));
       const body = elements.find((element) => element.tag === 'body' && root && isNestedWithin(element, root));
@@ -553,6 +553,25 @@ function validateHtmlRules(html: string, rules: readonly PracticeValidationRule[
   });
 }
 
+/**
+ * Validate a reusable set of practice rules without binding them to a
+ * FoundationLessonId. Journey courses and capstones use this adapter while
+ * sharing the same HTML and AST validators, result shape, and diagnostics.
+ */
+export function validatePracticeRules(
+  language: 'html' | 'css' | 'javascript',
+  source: PracticeSource,
+  rules: readonly PracticeValidationRule[],
+  locale: Locale = 'en',
+): PracticeCheckResult[] {
+  if (language === 'html') {
+    return validateHtmlRules(typeof source === 'string' ? source : source.html_code, rules, locale);
+  }
+  const html = typeof source === 'string' ? '' : source.html_code;
+  const code = typeof source === 'string' ? source : language === 'css' ? source.css_code : source.js_code;
+  return validateAstPractice(language, html, code, rules, locale);
+}
+
 function htmlCheckTag(id: string): string | null {
   const tags: Record<string, string> = {
     heading: 'h1', subheading: 'h2', paragraph: 'p', 'paragraph-order': 'p', 'link-element': 'a', 'link-href': 'a', 'link-text': 'a',
@@ -576,14 +595,15 @@ function htmlCheckLocation(html: string, id: string) {
 export function validatePractice(lessonId: FoundationLessonId, source: PracticeSource, locale: Locale = 'en'): PracticeCheckResult[] {
   const exercise = practiceExercises[lessonId];
   if (!HTML_LESSON_IDS.includes(lessonId as HtmlLessonId)) {
-    const code = typeof source === 'string'
-      ? source
-      : exercise.language === 'css' ? source.css_code : source.js_code;
-    const html = typeof source === 'string' ? '' : source.html_code;
-    return validateAstPractice(exercise.language as 'css' | 'javascript', html, code, exercise.validationRules ?? [], locale);
+    return validatePracticeRules(
+      exercise.language as 'css' | 'javascript',
+      source,
+      exercise.validationRules ?? [],
+      locale,
+    );
   }
   const html = typeof source === 'string' ? source : source.html_code;
-  if (exercise.validationRules?.length) return validateHtmlRules(html, exercise.validationRules, locale);
+  if (exercise.validationRules?.length) return validatePracticeRules('html', source, exercise.validationRules, locale);
   const validator = exercise.validator as PracticeValidatorId;
   const checks = runValidator(validator, html);
   const checkIds: Record<PracticeValidatorId, PracticeCheckId[]> = {
